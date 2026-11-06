@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   FileText, Upload, Send, Trash2, AlertCircle, CheckCircle,
-  Loader2, Key, X, Zap, Shield, Users, AlertTriangle,
-  HelpCircle, BookOpen, Home, Clock, ChevronRight, BarChart3,
+  Loader2, X, Zap, Shield, Users, AlertTriangle,
+  HelpCircle, BookOpen, Clock, ChevronRight, BarChart3,
   Building2, FileSearch, History, ArrowRight, Star, TrendingUp,
   Scale, Eye, Menu, Sparkles
 } from 'lucide-react';
@@ -245,12 +245,6 @@ export default function HomePage() {
   const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
   const [cursorHovered, setCursorHovered] = useState(false);
 
-  /* ── API Key State (optional — server-side keys used by default) ── */
-  const [apiKey, setApiKey]           = useState('');
-  const [groqApiKey, setGroqApiKey]   = useState('');
-  const [showKeyInput, setShowKeyInput] = useState(false);
-  const [keySaved, setKeySaved]       = useState(false);
-
   /* ── Document State ── */
   const [docText, setDocText]         = useState('');
   const [docName, setDocName]         = useState('');
@@ -303,18 +297,6 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    const savedHf = localStorage.getItem('hf_api_key');
-    const savedGroq = localStorage.getItem('groq_api_key');
-    if (savedHf) {
-      setApiKey(savedHf);
-    } else if (process.env.NEXT_PUBLIC_HF_API_KEY) {
-      setApiKey(process.env.NEXT_PUBLIC_HF_API_KEY);
-    }
-    if (savedGroq) {
-      setGroqApiKey(savedGroq);
-    }
-    // Server-side keys are always available, so mark as saved
-    setKeySaved(true);
     setHistoryState(loadHistory());
   }, []);
 
@@ -355,26 +337,11 @@ export default function HomePage() {
     ref.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  /* ── API Key Handlers (optional overrides) ── */
-  const saveKey = () => {
-    if (apiKey) localStorage.setItem('hf_api_key', apiKey);
-    if (groqApiKey) localStorage.setItem('groq_api_key', groqApiKey);
-    setKeySaved(true);
-    setShowKeyInput(false);
-  };
-
-  const clearKey = () => {
-    localStorage.removeItem('hf_api_key');
-    localStorage.removeItem('groq_api_key');
-    setApiKey('');
-    setGroqApiKey('');
-    setKeySaved(true); // Server keys still work
-  };
 
   /* ── File Extraction ── */
   /**
    * Ingest a file into the Python/FastAPI + LangChain RAG backend: parses it,
-   * chunks it, embeds it locally (HuggingFace embeddings), and stores it in a
+   * chunks it, embeds it locally (FastEmbed, all-MiniLM-L6-v2), and stores it in a
    * persisted Chroma collection. Returns the doc_id used for all later /chat calls.
    *
    * This is separate from /api/extract (Next.js) below — that route still handles
@@ -718,15 +685,6 @@ export default function HomePage() {
             Chat
           </a>
         </nav>
-
-        <div 
-          className="studio-connect-badge"
-          onMouseEnter={() => setCursorHovered(true)} 
-          onMouseLeave={() => setCursorHovered(false)}
-          onClick={() => setShowKeyInput(v => !v)}
-        >
-          API Keys (Optional) »
-        </div>
       </aside>
 
       {/* ─── Stored Document Sidebar ─── */}
@@ -805,67 +763,8 @@ export default function HomePage() {
           >
             <History className="w-3.5 h-3.5 mr-1" /> History
           </button>
-          <span className="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded px-3 py-1.5 pointer-events-auto">
-            <CheckCircle className="w-3 h-3" /> AI Ready
-          </span>
         </header>
 
-        {/* API Key Modal Window */}
-        {showKeyInput && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4">
-            <div className="studio-card max-w-lg w-full bg-studio-bg-dark border-studio-coral p-6 text-cream-white relative">
-              <button 
-                onClick={() => setShowKeyInput(false)} 
-                className="absolute top-4 right-4 text-cream-white hover:text-studio-coral"
-              >
-                <X className="w-5 h-5" />
-              </button>
-              <h3 className="heading-display text-xl mb-4">API Key Setup (Optional)</h3>
-              <p className="text-xs text-studio-gray mb-6">
-                Server-side keys are pre-configured. Only use this if you want to override with your own keys.
-              </p>
-
-              <div className="mb-4">
-                <label className="text-[10px] uppercase tracking-wider font-bold text-studio-gray block mb-1.5">HuggingFace API Key (Mistral Chunking)</label>
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={e => setApiKey(e.target.value)}
-                  placeholder="hf_xxxxxxxxxxxxxxxxxxxx"
-                  className="w-full text-sm border border-white/20 bg-black/40 rounded px-3 py-2 text-white focus:outline-none focus:border-studio-coral"
-                />
-                <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noreferrer" className="text-[10px] underline text-studio-coral mt-1 inline-block">Get free HuggingFace key →</a>
-              </div>
-
-              <div className="mb-6">
-                <label className="text-[10px] uppercase tracking-wider font-bold text-studio-gray block mb-1.5">Groq API Key (LLaMA Generation)</label>
-                <input
-                  type="password"
-                  value={groqApiKey}
-                  onChange={e => setGroqApiKey(e.target.value)}
-                  placeholder="gsk_xxxxxxxxxxxxxxxxxxxx"
-                  className="w-full text-sm border border-white/20 bg-black/40 rounded px-3 py-2 text-white focus:outline-none focus:border-studio-coral"
-                />
-                <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer" className="text-[10px] underline text-studio-coral mt-1 inline-block">Get free Groq key →</a>
-              </div>
-
-              <div className="flex gap-2">
-                <button 
-                  onClick={saveKey} 
-                  className="studio-btn text-xs"
-                >
-                  Save Override Keys
-                </button>
-                <button 
-                  onClick={clearKey} 
-                  className="studio-btn text-xs border-red-500 text-red-500 hover:bg-red-500/10"
-                >
-                  Clear Overrides
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* ─── Section I: Intro ─── */}
         <section ref={introRef} className="studio-section dark-theme justify-between">
@@ -901,7 +800,7 @@ export default function HomePage() {
             </div>
 
             <p className="max-w-md text-sm leading-relaxed text-studio-gray mt-6">
-              A high-precision legal analysis engine tailored for landlords, tenants, buyers, and sellers. Upload lease terms, property deeds, or complex transactions to explore risk indices instantly.
+              Upload a contract and ask questions about it. Answers are based on excerpts retrieved from your document.
             </p>
           </div>
 
@@ -916,19 +815,6 @@ export default function HomePage() {
             </button>
           </div>
 
-          {/* Marquee Ticker */}
-          <div className="marquee-container w-full mt-12">
-            <div className="marquee-content">
-              {[...Array(2)].map((_, idx) => (
-                <div key={idx} className="flex gap-8">
-                  <div className="marquee-item"><Sparkles className="w-5 h-5" /> 100% Client-Side Encryption</div>
-                  <div className="marquee-item"><Home className="w-5 h-5" /> Landlord & Tenant Equalizer</div>
-                  <div className="marquee-item"><Shield className="w-5 h-5" /> Instant Breach & Risk Scoring</div>
-                  <div className="marquee-item"><Zap className="w-5 h-5" /> Free HuggingFace Integration</div>
-                </div>
-              ))}
-            </div>
-          </div>
         </section>
 
         {/* ─── Section II: Upload ─── */}
@@ -1102,7 +988,7 @@ export default function HomePage() {
                       onMouseLeave={() => setCursorHovered(false)}
                     >
                       {analyzingBenefits ? (
-                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing Clauses (Mistral + Groq)...</>
+                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing clauses...</>
                       ) : (
                         <><Sparkles className="w-4 h-4 mr-2" /> Launch AI Balance Analysis</>
                       )}

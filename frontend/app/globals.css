@@ -98,27 +98,6 @@ body::-webkit-scrollbar {
   color: var(--studio-dark-text);
 }
 
-.studio-connect-badge {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 0.85rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  padding: 20px 8px;
-  background-color: var(--studio-coral);
-  color: var(--studio-bg-dark);
-  border: 1px solid var(--studio-border-dark);
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.studio-connect-badge:hover {
-  background-color: var(--studio-cream-white);
-  color: var(--studio-dark-text);
-}
-
 .studio-main {
   margin-left: 70px;
   width: calc(100% - 70px);
@@ -206,50 +185,6 @@ body::-webkit-scrollbar {
   to {
     transform: translateY(0);
   }
-}
-
-/* --- Marquee Ticker --- */
-.marquee-container {
-  width: 100vw;
-  overflow: hidden;
-  white-space: nowrap;
-  display: flex;
-  padding: 15px 0;
-  background-color: transparent;
-  border-top: 1px solid rgba(255, 78, 58, 0.2);
-  border-bottom: 1px solid rgba(255, 78, 58, 0.2);
-  z-index: 10;
-}
-
-.marquee-container.cream-mode {
-  border-top: 1px solid rgba(29, 28, 25, 0.15);
-  border-bottom: 1px solid rgba(29, 28, 25, 0.15);
-}
-
-.marquee-content {
-  display: inline-flex;
-  animation: marquee 25s linear infinite;
-  gap: 2rem;
-}
-
-@keyframes marquee {
-  0% { transform: translateX(0%); }
-  100% { transform: translateX(-50%); }
-}
-
-.marquee-item {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 1.5rem;
-  text-transform: uppercase;
-  color: var(--studio-coral);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.marquee-item.dark-mode-item {
-  color: var(--studio-dark-text);
 }
 
 /* --- Studio Cards / Brutalist Panels --- */
