@@ -8,15 +8,20 @@
     "start": "next start"
   },
   "dependencies": {
+    "lucide-react": "latest",
+    "mammoth": "1.13.0",
     "next": "latest",
+    "pdf-parse": "2.4.5",
     "react": "latest",
-    "react-dom": "latest",
-    "lucide-react": "latest"
+    "react-dom": "latest"
   },
   "devDependencies": {
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "autoprefixer": "10.6.2",
+    "postcss": "8.5.32",
+    "tailwindcss": "3.4.19",
     "typescript": "latest"
   }
 }

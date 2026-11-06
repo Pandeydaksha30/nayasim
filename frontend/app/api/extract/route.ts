@@ -17,9 +17,13 @@ export async function POST(req: NextRequest) {
     let text = '';
 
     if (type === 'application/pdf' || file.name.endsWith('.pdf')) {
-      const pdfParse = (await import('pdf-parse')).default;
-      const data = await pdfParse(buffer);
-      text = data.text;
+      const { PDFParse } = await import('pdf-parse');
+      const parser = new PDFParse({ data: buffer });
+      try {
+        text = (await parser.getText()).text;
+      } finally {
+        await parser.destroy();
+      }
     } else if (
       type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
       file.name.endsWith('.docx')
