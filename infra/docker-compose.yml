@@ -3,6 +3,7 @@
 services:
   postgres:
     image: pgvector/pgvector:0.8.0-pg17
+    restart: unless-stopped
     environment:
       POSTGRES_USER: nyayasim
       POSTGRES_PASSWORD: nyayasim_local_only
@@ -18,6 +19,7 @@ services:
 
   redis:
     image: redis:7.4-alpine
+    restart: unless-stopped
     ports:
       - "127.0.0.1:6379:6379"
 

@@ -6,8 +6,9 @@ past orders. Built on the ContractIQ base (old code kept in `legacy/contractiq/`
 
 **Status (7 Nov 2026):** frontend on demo data; Python interest/refund calculator live and
 tested; data gate passed for Haryana (see `docs/data-gate-2026-11-07.md`); order-store and
-case database schema in place and tested. Ingestion, retrieval, agents and backtest are not
-built yet.
+case database schema in place and tested; order ingestion with English + Hindi OCR built and
+piloted on 30 real orders (see `docs/ingestion.md`). Outcome extraction, retrieval, agents and
+backtest are not built yet.
 
 ## Database
 
@@ -96,6 +97,9 @@ npm run build:check   # builds into .next-check; safe while npm run dev is runni
 | `backend/tests/` | Calculator, API and database-constraint tests. |
 | `backend/scripts/data_gate_haryana.py` | Reproducible data-availability check for HRERA Gurugram. |
 | `backend/scripts/check_db.py` | Connection check with timings per address. |
+| `backend/app/ingestion/` | Listing parser, logged polite fetcher, page text + OCR, exact-offset chunker, pipeline. |
+| `backend/scripts/ingest_hrera.py` | Register the Gurugram listing and fetch N pending orders (see `docs/ingestion.md`). |
+| `backend/scripts/ingest_report.py` | What is in the order store: sources, OCR confidence, chunks, years. |
 | `frontend/app/` | Next.js pages: cases, upload, facts, questions, money, hearing, report, draft. |
 | `frontend/lib/api.ts` | API client; throws on failure, never substitutes numbers. |
 | `frontend/lib/demo-case.ts` | Fictional demo case. Every order reference is marked `DEMO`. |
