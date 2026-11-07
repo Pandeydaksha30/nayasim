@@ -21,7 +21,7 @@ from app.config import settings
 from app.ingestion.fetcher import PoliteFetcher
 from app.ingestion.hrera_listing import GURUGRAM_LIST_URL, parse_listing
 from app.ingestion.pdf_text import find_ocr
-from app.ingestion.pipeline import ingest_pending, pending_orders, register_listing
+from app.ingestion.pipeline import DatabaseUnavailable, ingest_pending, pending_orders, register_listing
 
 SOURCE = "hrera_gurugram"
 STORE = Path(__file__).resolve().parents[2] / "data" / "orders" / SOURCE
@@ -76,7 +76,11 @@ def main() -> int:
         )
         print(f"pending selected: {len(ids)}")
         started = time.monotonic()
-        rep = ingest_pending(engine, ids, fetcher, ocr, STORE)
+        try:
+            rep = ingest_pending(engine, ids, fetcher, ocr, STORE)
+        except DatabaseUnavailable as e:
+            print(f"\nSTOPPED: {e}\nStart Docker Desktop, then run the same command again to resume.")
+            return 3
         elapsed = time.monotonic() - started
         print(f"\nelapsed {elapsed / 60:.1f} min ({elapsed / max(1, rep.attempted):.0f} s per order)")
         print(

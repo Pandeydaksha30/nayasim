@@ -27,6 +27,12 @@ QUERIES = {
         SELECT count(*) AS chunks, round(avg(char_end - char_start)) AS avg_chars FROM order_chunks""",
     "fetch log": """
         SELECT count(*) AS requests, count(*) FILTER (WHERE error IS NOT NULL) AS errors FROM fetch_log""",
+    "throughput over the last hour": """
+        SELECT count(*) AS fetched_last_hour,
+               round(3600.0 / nullif(count(*), 0)) AS sec_per_order,
+               (SELECT count(*) FROM orders WHERE fetched_at IS NULL AND case_type = 'HRERA Complaints')
+                   AS complaints_pending
+        FROM orders WHERE fetched_at > now() - interval '1 hour'""",
     "fetched by decision year": """
         SELECT extract(year FROM decided_on)::int AS year, count(*) AS fetched
         FROM orders WHERE fetched_at IS NOT NULL GROUP BY 1 ORDER BY 1""",

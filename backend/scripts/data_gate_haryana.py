@@ -83,8 +83,10 @@ def main() -> None:
     (args.out / "results.json").write_text(json.dumps(results, indent=1))
     pdfs = [r for r in results if r.get("is_pdf")]
     text = [r for r in pdfs if r.get("chars", 0) > 500]
-    print(f"pdf={len(pdfs)}/{len(results)} text_layer={len(text)} scanned={len(pdfs) - len(text)} "
-          f"errors={sum('error' in r for r in results)}")
+    print(
+        f"pdf={len(pdfs)}/{len(results)} text_layer={len(text)} scanned={len(pdfs) - len(text)} "
+        f"errors={sum('error' in r for r in results)}"
+    )
 
 
 if __name__ == "__main__":

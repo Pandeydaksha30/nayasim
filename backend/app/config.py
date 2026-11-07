@@ -1,5 +1,6 @@
 """Settings read from environment variables (or backend/.env)."""
 
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,6 +15,12 @@ class Settings(BaseSettings):
     # relay accepts that connection but never answers (the port is published on IPv4 only), so
     # connecting hangs. Measured: localhost 5.08 s (timeout + fallback), 127.0.0.1 0.03 s.
     database_url: str = "postgresql+psycopg://nyayasim:nyayasim_local_only@127.0.0.1:5432/nyayasim?connect_timeout=10"
+
+    # Gemini key for field extraction. Read from GEMINI_API_KEY (Google's own variable name),
+    # normally set in backend/.env, which git ignores. Never logged or printed.
+    gemini_api_key: SecretStr | None = Field(None, validation_alias="GEMINI_API_KEY")
+    # Model id; confirm availability with: python -m scripts.extract_fields --list-models
+    gemini_model: str = "gemini-2.5-flash"
 
     @property
     def cors_origin_list(self) -> list[str]:

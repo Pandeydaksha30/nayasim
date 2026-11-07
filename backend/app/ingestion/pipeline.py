@@ -7,6 +7,7 @@ fetch itself in fetch_log) and the run moves on to the next order.
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -14,6 +15,7 @@ from pathlib import Path
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.engine import Engine
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from app.db.models import Order, OrderChunk, OrderPage
@@ -157,6 +159,10 @@ def ingest_order(
                     report.low_confidence_pages.append((label, p.page_no, p.ocr_confidence or 0.0))
 
 
+class DatabaseUnavailable(RuntimeError):
+    """The database stayed unreachable for the whole retry window; the run stops."""
+
+
 def ingest_pending(
     engine: Engine,
     order_ids: list[int],
@@ -164,11 +170,32 @@ def ingest_pending(
     ocr: OcrConfig | None,
     store_dir: Path,
     progress=print,
+    db_retry_s: float = 60.0,
+    db_retry_limit: int = 30,
 ) -> IngestReport:
+    """Ingest each order. If the database drops (e.g. Docker restarts), wait and retry the
+    same order rather than crashing; an interrupted order's transaction was rolled back, so
+    nothing half-written remains. Gives up with DatabaseUnavailable after the retry window."""
     report = IngestReport()
     for i, oid in enumerate(order_ids, 1):
-        before = len(report.failures)
-        ingest_order(engine, oid, fetcher, ocr, store_dir, report)
-        status = "FAILED: " + report.failures[-1][1] if len(report.failures) > before else "ok"
+        for attempt in range(db_retry_limit + 1):
+            before_failures, before_attempted = len(report.failures), report.attempted
+            try:
+                ingest_order(engine, oid, fetcher, ocr, store_dir, report)
+                break
+            except OperationalError as e:
+                report.attempted = before_attempted
+                del report.failures[before_failures:]
+                if attempt == db_retry_limit:
+                    raise DatabaseUnavailable(
+                        f"database unreachable for {db_retry_limit * db_retry_s / 60:.0f} min "
+                        f"at order {oid}: {str(e).splitlines()[0]}"
+                    ) from e
+                progress(
+                    f"[{i}/{len(order_ids)}] order {oid}: database unavailable, retrying in "
+                    f"{db_retry_s:.0f} s ({attempt + 1}/{db_retry_limit})"
+                )
+                time.sleep(db_retry_s)
+        status = "FAILED: " + report.failures[-1][1] if len(report.failures) > before_failures else "ok"
         progress(f"[{i}/{len(order_ids)}] order {oid}: {status}")
     return report
