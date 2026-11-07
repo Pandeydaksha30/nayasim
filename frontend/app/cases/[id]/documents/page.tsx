@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { FileIcon, PlusIcon } from "@/components/icons";
 import { getCase } from "@/lib/demo-case";
 import { fmtDate } from "@/lib/format";
 
@@ -15,7 +16,7 @@ export default async function DocumentsPage({ params }: { params: Promise<{ id: 
           <h2>Documents</h2>
           <p>Everything the report is built from. Add a new builder letter or a hearing order at any time; only the parts it affects are re-run.</p>
         </div>
-        <button className="btn" type="button">Add documents</button>
+        <button className="btn" type="button"><PlusIcon /> Add documents</button>
       </div>
 
       <div className="panel table-wrap">
@@ -26,7 +27,15 @@ export default async function DocumentsPage({ params }: { params: Promise<{ id: 
           <tbody>
             {c.documents.map((d) => (
               <tr key={d.id}>
-                <td>{d.title}<div className="small faint">{d.kind}</div></td>
+                <td>
+                  <span style={{ display: "inline-flex", gap: 10, alignItems: "flex-start" }}>
+                    <span style={{ color: "var(--primary)", marginTop: 2 }}><FileIcon /></span>
+                    <span>
+                      <span className="cell-title">{d.title}</span>
+                      <span className="cell-sub" style={{ display: "block" }}>{d.kind}</span>
+                    </span>
+                  </span>
+                </td>
                 <td className="num">{fmtDate(d.date)}</td>
                 <td className="r num">{d.pages}</td>
                 <td>{d.language}</td>
@@ -39,15 +48,20 @@ export default async function DocumentsPage({ params }: { params: Promise<{ id: 
         </table>
       </div>
 
-      <h3 style={{ margin: "32px 0 10px" }}>Case history</h3>
-      <ol style={{ listStyle: "none", padding: 0, margin: 0, borderLeft: "1px solid var(--rule-strong)" }}>
-        {c.history.map((h, i) => (
-          <li key={i} style={{ padding: "4px 0 10px 16px", position: "relative" }}>
-            <span className="num faint" style={{ marginRight: 12 }}>{fmtDate(h.date)}</span>
-            {h.text}
-          </li>
-        ))}
-      </ol>
+      <div className="panel" style={{ marginTop: 24 }}>
+        <div className="panel-head"><h3>Case history</h3></div>
+        <ol style={{ listStyle: "none", padding: "8px 18px 12px", margin: 0 }}>
+          {c.history.map((h, i) => (
+            <li
+              key={i}
+              style={{ display: "grid", gridTemplateColumns: "110px 1fr", gap: 12, padding: "10px 0", borderBottom: i < c.history.length - 1 ? "1px solid var(--border)" : "none" }}
+            >
+              <span className="num faint">{fmtDate(h.date)}</span>
+              <span>{h.text}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
     </>
   );
 }

@@ -5,7 +5,7 @@ export const metadata = { title: "Delay interest calculator" };
 
 export default function CalculatorPage() {
   return (
-    <main className="page" style={{ maxWidth: 1000 }}>
+    <main className="page" style={{ maxWidth: 1080 }}>
       <h1>Delay interest calculator</h1>
       <p className="muted" style={{ margin: "8px 0 20px", maxWidth: "64ch" }}>
         Enter what you paid and when. The calculator works out interest on each payment separately, the way RERA orders do.

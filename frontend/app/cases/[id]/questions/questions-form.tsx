@@ -24,7 +24,8 @@ export default function QuestionsForm({ caseId, questions }: { caseId: string; q
           <li key={q.id} className="panel">
             <fieldset className={styles.field}>
               <legend className={styles.legend}>
-                <span className="num faint">{i + 1}.</span> {q.question}
+                <span className={`${styles.qn} ${answers[q.id] ? styles.qnDone : ""}`}>{i + 1}</span>
+                <span>{q.question}</span>
               </legend>
               <p className={styles.why}>{q.why}</p>
               <div className={styles.options}>

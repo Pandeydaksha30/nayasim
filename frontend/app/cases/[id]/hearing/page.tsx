@@ -46,7 +46,7 @@ export default async function HearingPage({ params }: { params: Promise<{ id: st
                   <ul className={styles.cites}>
                     {a.citations.map((ct) => (
                       <li key={ct.orderId + ct.pinpoint} className={ct.status === "blocked" ? styles.blocked : undefined}>
-                        <span className="num">{ct.orderId}</span>, {ct.pinpoint}
+                        <span><span className="code">{ct.orderId}</span>, {ct.pinpoint}</span>
                         {ct.status === "verified" ? (
                           <span className={styles.ok}>verified</span>
                         ) : (

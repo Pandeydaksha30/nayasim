@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { IBM_Plex_Mono, IBM_Plex_Sans, Source_Serif_4 } from "next/font/google";
+import { IBM_Plex_Mono, Inter, Source_Serif_4 } from "next/font/google";
+import { Banner, ScaleIcon } from "@/components/icons";
+import TopNav from "@/components/top-nav";
 import "./globals.css";
 
+const sans = Inter({ subsets: ["latin"], variable: "--font-sans" });
+// Serif is reserved for legal documents (agreements, orders, the complaint draft).
 const serif = Source_Serif_4({ subsets: ["latin"], weight: ["400", "600"], variable: "--font-serif" });
-const sans = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-sans" });
 const mono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
@@ -14,24 +17,30 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${serif.variable} ${sans.variable} ${mono.variable}`}>
+    <html lang="en" className={`${sans.variable} ${serif.variable} ${mono.variable}`}>
       <body>
         <header className="topbar">
           <div className="topbar-inner">
-            <Link href="/" className="wordmark">
-              Nyaya<span>Sim</span>
+            <Link href="/" className="brand" aria-label="NyayaSim home">
+              <span className="brand-mark"><ScaleIcon size={17} /></span>
+              <span>NyayaSim</span>
             </Link>
-            <nav className="topnav" aria-label="Main">
-              <Link href="/">Cases</Link>
-              <Link href="/calculator">Interest calculator</Link>
-              <Link href="/method">How it works</Link>
-            </nav>
+            <TopNav />
             <div className="spacer" />
-            <span className="account">A. Mehra</span>
+            <div className="user">
+              <div className="user-text">
+                <span>Ananya Mehra</span>
+                <span>Homebuyer</span>
+              </div>
+              <span className="avatar" aria-hidden>AM</span>
+            </div>
           </div>
         </header>
-        <div className="demo-strip" role="note">
-          <div>Demo build. The case, project and every order reference marked DEMO are fictional.</div>
+        <div className="demo-bar">
+          <Banner tone="warn">
+            <b>Demo build.</b> The case, project and every order reference marked DEMO are fictional. Money figures are
+            computed live by the calculation service.
+          </Banner>
         </div>
         {children}
         <footer className="footer">

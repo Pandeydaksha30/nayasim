@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { computeInterest, type InterestOutput } from "@/lib/api";
 import { fmtDate, fmtINR, fmtINRShort } from "@/lib/format";
 import type { Payment } from "@/lib/types";
+import { Banner } from "./icons";
 import styles from "./interest-calculator.module.css";
 
 interface Props {
@@ -69,34 +70,37 @@ export default function InterestCalculator(props: Props) {
     <div className={styles.wrap}>
       <div className={`panel ${styles.inputs}`}>
         <label>
-          <span className="label">Promised possession</span>
+          <span className="field-label">Promised possession</span>
           <input type="date" value={promised} onChange={(e) => setPromised(e.target.value)} />
         </label>
         <label>
-          <span className="label">Extension (months)</span>
+          <span className="field-label">Extension (months)</span>
           <input type="number" min={0} max={60} value={ext} onChange={(e) => setExt(Math.max(0, Number(e.target.value) || 0))} />
         </label>
         <label>
-          <span className="label">Interest rate (% a year)</span>
+          <span className="field-label">Interest rate (% a year)</span>
           <input type="number" step={0.05} min={0} value={rate} onChange={(e) => setRate(Number(e.target.value) || 0)} />
         </label>
         <label>
-          <span className="label">Calculate up to</span>
+          <span className="field-label">Calculate up to</span>
           <input type="date" value={asOf} onChange={(e) => setAsOf(e.target.value)} />
         </label>
-        <p className={styles.basis}>
-          <b>Due date used:</b> <span className="num">{data ? fmtDate(data.possession_due) : "—"}</span>. {props.extensionBasis}
-          <br />
-          <b>Rate:</b> {props.rateBasis}
-        </p>
+        <div className={styles.basis}>
+          <p>
+            <b>Due date used:</b> <span className="num">{data ? fmtDate(data.possession_due) : "—"}</span>. {props.extensionBasis}
+          </p>
+          <p>
+            <b>Rate:</b> {props.rateBasis}
+          </p>
+        </div>
       </div>
 
       {state.kind === "error" && (
-        <div className={styles.error} role="alert">
+        <Banner tone="error">
           <b>Could not calculate.</b> {state.message}
-        </div>
+        </Banner>
       )}
-      {state.kind === "incomplete" && <p className="small" style={{ color: "var(--neg)" }}>Fill every date and amount to see the result.</p>}
+      {state.kind === "incomplete" && <Banner tone="warn">Fill in every date and amount to see the result.</Banner>}
 
       <div className={styles.compare} aria-busy={state.kind === "loading"}>
         <button type="button" className={`${styles.option} ${mode === "delay" ? styles.optionOn : ""}`} onClick={() => setMode("delay")}>
@@ -184,7 +188,7 @@ export default function InterestCalculator(props: Props) {
           </table>
         </div>
         {props.editablePayments && (
-          <div style={{ padding: "10px 12px", borderTop: "1px solid var(--rule)", display: "flex", gap: 8 }}>
+          <div style={{ padding: "10px 12px", borderTop: "1px solid var(--border)", display: "flex", gap: 8 }}>
             <button
               type="button"
               className="btn"

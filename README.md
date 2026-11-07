@@ -36,7 +36,7 @@ cd frontend; npm run dev
 
 Tests: `cd backend; .\.venv\Scripts\python.exe -m pytest`
 
-If the frontend shows "Cannot find module './NNN.js'", a dev server was running while
+If the frontend shows "Cannot find module './NNN.js'", a dev server was running while plain
 `npm run build` rewrote `.next`. Stop the dev server, delete `frontend\.next`, start again.
 
 Open http://localhost:3100. The frontend calls the API at `NEXT_PUBLIC_API_URL`
@@ -54,7 +54,7 @@ uv run ruff check .
 ```bash
 cd frontend
 npx tsc --noEmit
-npm run build
+npm run build:check   # builds into .next-check; safe while npm run dev is running
 ```
 
 ## Layout

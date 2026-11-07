@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getCase } from "@/lib/demo-case";
 import { computeInterest } from "@/lib/api";
 import { fmtDate, fmtINR } from "@/lib/format";
+import { Banner, DownloadIcon } from "@/components/icons";
 import styles from "./draft.module.css";
 
 export const metadata = { title: "Complaint draft" };
@@ -21,9 +22,9 @@ export default async function DraftPage({ params }: { params: Promise<{ id: stri
     });
   } catch (e) {
     return (
-      <div role="alert" style={{ borderLeft: "3px solid var(--neg)", background: "var(--neg-soft)", padding: "12px 16px" }}>
+      <Banner tone="error">
         <b>The draft needs the interest calculation, which failed.</b> {e instanceof Error ? e.message : ""}
-      </div>
+      </Banner>
     );
   }
   const due = result.possession_due;
@@ -36,13 +37,14 @@ export default async function DraftPage({ params }: { params: Promise<{ id: stri
           <h2>Complaint draft</h2>
           <p>Follows the UP RERA complaint format. Notes in the margin show where the draft answers a weak point from your report.</p>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="section-actions">
           <button type="button" className="btn">Copy text</button>
-          <button type="button" className="btn btn-primary">Download .docx</button>
+          <button type="button" className="btn btn-primary"><DownloadIcon /> Download .docx</button>
         </div>
       </div>
 
       <div className={styles.layout}>
+        <div className={styles.paper}>
         <article className={styles.doc}>
           <p className={styles.center}><b>BEFORE THE UTTAR PRADESH REAL ESTATE REGULATORY AUTHORITY</b></p>
           <p className={styles.center}>Complaint under Section 31 of the Real Estate (Regulation and Development) Act, 2016</p>
@@ -91,9 +93,10 @@ export default async function DraftPage({ params }: { params: Promise<{ id: stri
             letter of 10 Feb 2024 · P-5 Interest calculation · P-6 Notice to the Respondent and proof of dispatch
           </p>
         </article>
+        </div>
 
         <aside className={styles.notes}>
-          <div className={styles.note} style={{ marginTop: 300 }}>
+          <div className={styles.note}>
             <span className="label">Answers weak point 1</span>
             Explains the November 2021 payment so it cannot be read as acceptance of delay.
           </div>

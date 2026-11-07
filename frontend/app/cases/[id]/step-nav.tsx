@@ -23,7 +23,7 @@ export default function StepNav({ caseId, openQuestions, reviewFacts }: { caseId
           return (
             <li key={s.slug}>
               <Link href={href} aria-current={path === href ? "page" : undefined}>
-                <span className="n">{String(i + 1).padStart(2, "0")}</span>
+                <span className="n">{i + 1}</span>
                 <span>
                   {s.label}
                   <span className="sub">{s.sub}</span>

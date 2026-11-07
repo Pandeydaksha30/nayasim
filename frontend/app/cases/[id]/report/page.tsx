@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getCase } from "@/lib/demo-case";
 import { fmtDate, fmtINRShort, pct } from "@/lib/format";
 import { computeInterest } from "@/lib/api";
+import { Banner, DownloadIcon } from "@/components/icons";
 import styles from "./report.module.css";
 
 export const metadata = { title: "Report" };
@@ -39,8 +40,8 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           <h2>Decision report</h2>
           <p>Based on {similarCount} past orders with facts close to yours, and the simulated hearing. Read the weak points before deciding to file.</p>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button type="button" className="btn">Download PDF</button>
+        <div className="section-actions">
+          <button type="button" className="btn"><DownloadIcon /> Download PDF</button>
           <Link href={`/cases/${c.id}/draft`} className="btn btn-primary">Open complaint draft</Link>
         </div>
       </div>
@@ -72,10 +73,13 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           <div className="label">Estimated award to date</div>
           {award ? (
             <div className={styles.award}>
-              {fmtINRShort(award.low)} <span className="faint" style={{ fontWeight: 400 }}>to</span> {fmtINRShort(award.high)}
+              <span className="num">{fmtINRShort(award.low)}</span> <span className="faint" style={{ fontWeight: 400 }}>to</span>{" "}
+              <span className="num">{fmtINRShort(award.high)}</span>
             </div>
           ) : (
-            <p className={styles.calcError} role="alert"><b>Could not calculate.</b> {calcError}</p>
+            <div className={styles.calcError}>
+              <Banner tone="error"><b>Could not calculate.</b> {calcError}</Banner>
+            </div>
           )}
           <p className="small muted" style={{ margin: "10px 0 0" }}>
             Delay interest up to {fmtDate(c.asOf)}. The higher figure is the full claim. The lower one is what you get if the bench
@@ -120,9 +124,9 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       <h3 className={styles.h}>Most similar past orders</h3>
       <div className={styles.orders}>
         {c.similar.map((o) => (
-          <article key={o.id} className="panel panel-body">
+          <article key={o.id} className="panel panel-body panel-hover">
             <div className={styles.orderTop}>
-              <span className="num">{o.id}</span>
+              <span className="code">{o.id}</span>
               <span className={`tag ${o.outcome === "Allowed" ? "tag-pos" : o.outcome === "Dismissed" ? "tag-neg" : "tag-mid"}`}>
                 {o.outcome}
               </span>
@@ -134,10 +138,12 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         ))}
       </div>
 
-      <p className={styles.caveat}>
-        This report shows patterns in past orders. It is not legal advice and does not say how your bench will decide. Before filing,
-        have an advocate who appears before UP RERA review it.
-      </p>
+      <div className={styles.caveat}>
+        <Banner tone="info">
+          <b>Not legal advice.</b> This report shows patterns in past orders and does not say how your bench will decide. Before
+          filing, have an advocate who appears before the authority review it.
+        </Banner>
+      </div>
     </>
   );
 }
