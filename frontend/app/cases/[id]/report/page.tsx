@@ -1,4 +1,4 @@
-import NotBuilt from "../live/not-built";
+import LiveReport from "../live/live-report";
 import { loadCase } from "@/lib/case-source";
 import Link from "next/link";
 import { fmtDate, fmtINRShort, pct } from "@/lib/format";
@@ -10,7 +10,7 @@ export const metadata = { title: "Report" };
 
 export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
   const src = await loadCase((await params).id);
-  if (src.kind === "live") return <NotBuilt what="Decision report" caseId={src.data.id} />;
+  if (src.kind === "live") return <LiveReport c={src.data} />;
   if (src.kind !== "example") return null; // the layout shows the error
   const c = src.data;
   const { outcome, band, weakPoints, defences, similarCount } = c.report;

@@ -19,6 +19,7 @@ dependencies = [
     "rapidfuzz==3.14.6",
     "python-multipart==0.0.33",
     "fastembed==0.9.1",
+    "langgraph==1.2.20",
 ]
 
 [dependency-groups]
@@ -48,3 +49,5 @@ select = ["E", "F", "I", "B", "UP"]
 "migrations/versions/*.py" = ["E501"]
 # Holds fictional document text verbatim.
 "scripts/demo_buyer_case.py" = ["E501"]
+# Prompt text for the hearing agents.
+"app/hearing/agents.py" = ["E501"]

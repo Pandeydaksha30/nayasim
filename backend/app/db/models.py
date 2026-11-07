@@ -176,3 +176,19 @@ class Fact(Base):
     confidence: Mapped[str] = mapped_column(Text)
     confirmed: Mapped[bool] = mapped_column(server_default="false")
     created_at: Mapped[datetime] = mapped_column(server_default="now()")
+
+
+class HearingRun(Base):
+    """One simulated hearing for a buyer case (live) or a stored order (backtest)."""
+
+    __tablename__ = "hearing_runs"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    case_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("cases.id", ondelete="CASCADE"))
+    order_id: Mapped[int | None] = mapped_column(ForeignKey("orders.id", ondelete="CASCADE"))
+    cutoff: Mapped[date]
+    models: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(Text)
+    error: Mapped[str | None] = mapped_column(Text)
+    result: Mapped[dict] = mapped_column(JSONB, server_default="{}")
+    started_at: Mapped[datetime] = mapped_column(server_default="now()")
+    finished_at: Mapped[datetime | None]

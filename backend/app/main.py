@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.calculations import router as calculations_router
 from app.api.cases import router as cases_router
+from app.api.hearing import router as hearing_router
 from app.config import settings
 
 app = FastAPI(title="NyayaSim API", version="0.1.0")
@@ -22,6 +23,7 @@ app.add_middleware(
 
 app.include_router(calculations_router)
 app.include_router(cases_router)
+app.include_router(hearing_router)
 
 
 @app.get("/health")

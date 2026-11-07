@@ -156,3 +156,91 @@ export function groupFacts(facts: CaseFact[]) {
   }
   return [...groups.values()];
 }
+
+// ── Hearing (backend app/api/hearing.py) ──
+
+export interface HearingCitation {
+  precedent: string;
+  order_id?: number;
+  complaint_no?: string;
+  decided_on?: string;
+  page_no: number;
+  quote: string;
+  status: "verified" | "rejected";
+  reasons: string[];
+  stored_quote?: string | null;
+}
+
+export interface HearingArgument {
+  heading: string;
+  body: string;
+  side: "buyer" | "builder";
+  citations: HearingCitation[];
+  removed_because?: string;
+}
+
+export interface HearingResult {
+  summary: string;
+  precedents: {
+    ref: string;
+    order_id: number;
+    complaint_no: string;
+    decided_on: string;
+    outcome: string | null;
+    interest_rate_pct: string | null;
+    pages: number[];
+  }[];
+  outcome_shares: {
+    precedents: number;
+    with_record: number;
+    counts: Record<string, number>;
+    insufficient: boolean;
+    note?: string;
+    buyer_wins?: number;
+    interval_90?: [number, number];
+  };
+  award: {
+    available: boolean;
+    reason?: string;
+    rate_pct?: string;
+    rate_basis?: string;
+    principal?: string;
+    as_of?: string;
+    refund_total?: string;
+    delay_interest?: string | null;
+    delay_note?: string;
+    possession_due?: string;
+  };
+  arguments: { buyer: HearingArgument[]; builder: HearingArgument[]; removed: HearingArgument[] };
+  judge: {
+    outcome: string;
+    reasoning: string;
+    weak_points: { title: string; detail: string; fix: string }[];
+    citations: HearingCitation[];
+    citations_removed: HearingCitation[];
+  };
+}
+
+export interface HearingRun {
+  id: number;
+  status: "completed" | "failed";
+  error: string | null;
+  cutoff: string;
+  models: string;
+  started_at: string;
+  finished_at: string | null;
+  result: HearingResult;
+}
+
+/** Latest completed hearing, or null if none has been run yet. */
+export async function getHearing(caseId: string): Promise<HearingRun | null> {
+  try {
+    return await call<HearingRun>(`/api/v1/cases/${caseId}/hearing`);
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 404) return null;
+    throw e;
+  }
+}
+
+export const runHearing = (caseId: string) =>
+  call<HearingRun>(`/api/v1/cases/${caseId}/hearing`, { method: "POST" });

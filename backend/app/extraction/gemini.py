@@ -18,6 +18,37 @@ from app.extraction.order_fields import ProposedFields
 REQUEST_TIMEOUT_S = 300
 
 
+class CallTimedOut(TimeoutError):
+    pass
+
+
+def call_with_deadline(fn, seconds: float):
+    """Run ``fn`` in a daemon thread and give up after ``seconds``.
+
+    A real hearing call hung for almost 2 hours despite the SDK timeout (7 Nov 2026). This hard
+    limit does not depend on the HTTP library honouring its timeout; a stuck call is abandoned
+    (its daemon thread cannot keep the process alive) and reported as a timeout.
+    """
+    import threading
+
+    box: dict = {}
+
+    def target():
+        try:
+            box["value"] = fn()
+        except BaseException as e:  # handed to the caller below
+            box["error"] = e
+
+    t = threading.Thread(target=target, daemon=True)
+    t.start()
+    t.join(seconds)
+    if t.is_alive():
+        raise CallTimedOut(f"no answer within {seconds:.0f} s")
+    if "error" in box:
+        raise box["error"]
+    return box["value"]
+
+
 class GeminiExtractor:
     def __init__(
         self,
@@ -72,7 +103,12 @@ class GeminiExtractor:
             self._wait()
             started = time.monotonic()
             try:
-                resp = self._client.models.generate_content(model=self.model, contents=prompt, config=config)
+                resp = call_with_deadline(
+                    lambda: self._client.models.generate_content(
+                        model=self.model, contents=prompt, config=config
+                    ),
+                    REQUEST_TIMEOUT_S + 30,
+                )
             except errors.APIError as e:
                 retryable = e.code == 429 or (e.code or 0) >= 500
                 reason = (e.message or str(e)).splitlines()[0][:160]

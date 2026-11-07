@@ -8,8 +8,10 @@ export interface StepCounts {
   pages: number;
   reviewFacts: number;
   openQuestions: number;
-  /** Steps 6-8 (hearing, report, draft) exist only for the example case so far. */
+  /** Hearing and report screens are available. */
   analysisBuilt: boolean;
+  /** The complaint draft is built for the example only. */
+  draftBuilt: boolean;
 }
 
 export default function StepNav({ caseId, counts }: { caseId: string; counts: StepCounts }) {
@@ -20,9 +22,9 @@ export default function StepNav({ caseId, counts }: { caseId: string; counts: St
     { slug: "facts", label: "Facts", sub: counts.reviewFacts ? `${counts.reviewFacts} to check` : "All checked" },
     { slug: "questions", label: "Questions", sub: counts.openQuestions ? `${counts.openQuestions} unanswered` : "Done" },
     { slug: "money", label: "Money owed", sub: "Interest and refund" },
-    { slug: "hearing", label: "Simulated hearing", sub: counts.analysisBuilt ? "3 rounds" : later },
+    { slug: "hearing", label: "Simulated hearing", sub: counts.analysisBuilt ? "Arguments and bench" : later },
     { slug: "report", label: "Report", sub: counts.analysisBuilt ? "Outcome and weak points" : later },
-    { slug: "draft", label: "Complaint draft", sub: counts.analysisBuilt ? "Complaint format" : later },
+    { slug: "draft", label: "Complaint draft", sub: counts.draftBuilt ? "Complaint format" : later },
   ];
 
   return (

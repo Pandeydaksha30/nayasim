@@ -1,4 +1,4 @@
-import NotBuilt from "../live/not-built";
+import LiveHearing from "../live/live-hearing";
 import { loadCase } from "@/lib/case-source";
 import { type Speaker } from "@/lib/demo-case";
 import styles from "./hearing.module.css";
@@ -13,7 +13,7 @@ const WHO: Record<Speaker, string> = {
 
 export default async function HearingPage({ params }: { params: Promise<{ id: string }> }) {
   const src = await loadCase((await params).id);
-  if (src.kind === "live") return <NotBuilt what="Simulated hearing" caseId={src.data.id} />;
+  if (src.kind === "live") return <LiveHearing c={src.data} />;
   if (src.kind !== "example") return null; // the layout shows the error
   const c = src.data;
   const rounds = [...new Set(c.hearing.map((a) => a.round))];

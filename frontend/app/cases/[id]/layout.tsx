@@ -53,6 +53,7 @@ export default async function CaseLayout({
       reviewFacts: c.facts.filter((f) => f.confidence === "review").length,
       openQuestions: c.questions.filter((q) => !q.answer).length,
       analysisBuilt: true,
+      draftBuilt: true,
     };
   } else {
     const c = src.data;
@@ -73,7 +74,8 @@ export default async function CaseLayout({
       pages: c.documents.reduce((s, d) => s + d.page_count, 0),
       reviewFacts: c.facts.filter((f) => f.confidence === "review" && !f.confirmed).length,
       openQuestions: c.questions.filter((q) => !q.answer).length,
-      analysisBuilt: false,
+      analysisBuilt: true,
+      draftBuilt: false,
     };
   }
 

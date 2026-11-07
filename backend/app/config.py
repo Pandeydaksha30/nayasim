@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     embedding_query_prefix: str = "Represent this sentence for searching relevant passages: "
     embedding_doc_prefix: str = ""
 
+    # Hearing agents: the stronger model (measured ~30-120 s per call on the free tier).
+    hearing_model: str = "gemini-3.8-flash"
+    hearing_thinking: str | None = "low"
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
