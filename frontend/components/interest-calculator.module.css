@@ -1,0 +1,58 @@
+/* minmax(0, 1fr): let the wide payments table scroll inside its panel instead of widening the page. */
+.wrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+
+.inputs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px 16px;
+  padding: 16px;
+}
+.inputs label { display: grid; gap: 4px; }
+.inputs input, .cell {
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 14px;
+  padding: 6px 8px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r);
+  background: var(--surface);
+  color: var(--ink);
+  width: 100%;
+  min-width: 0;
+}
+.cell { width: 150px; padding: 4px 6px; }
+.basis { grid-column: 1 / -1; margin: 0; font-size: 13px; color: var(--ink-2); border-top: 1px solid var(--rule); padding-top: 12px; }
+.basis b { color: var(--ink); font-weight: 600; }
+
+.error {
+  border-left: 3px solid var(--neg);
+  background: var(--neg-soft);
+  padding: 10px 14px;
+  font-size: 14px;
+}
+.error b { font-weight: 600; }
+
+.compare[aria-busy="true"] .big { color: var(--ink-3); }
+
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.option {
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--rule);
+  border-radius: var(--r);
+  cursor: pointer;
+}
+.option:hover { border-color: var(--rule-strong); }
+.optionOn, .optionOn:hover { border-top-color: var(--accent); border-color: var(--rule-strong); border-top-color: var(--accent); }
+.big { font-family: var(--serif); font-size: 26px; font-weight: 600; line-height: 1.2; }
+
+@media (max-width: 760px) {
+  .inputs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .compare { grid-template-columns: 1fr; }
+}

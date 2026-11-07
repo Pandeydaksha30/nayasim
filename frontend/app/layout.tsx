@@ -1,30 +1,45 @@
-import type { Metadata } from 'next';
-import './globals.css';
+import type { Metadata } from "next";
+import Link from "next/link";
+import { IBM_Plex_Mono, IBM_Plex_Sans, Source_Serif_4 } from "next/font/google";
+import "./globals.css";
+
+const serif = Source_Serif_4({ subsets: ["latin"], weight: ["400", "600"], variable: "--font-serif" });
+const sans = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-sans" });
+const mono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: 'ContractIQ — Understand Any Property Contract Instantly',
-  description: 'Upload any terms & conditions, lease agreement, or property contract and ask questions in plain English. AI-powered contract analysis for real estate.',
-  keywords: ['contract analyzer', 'real estate AI', 'lease agreement', 'property contract', 'legal document analysis'],
-  openGraph: {
-    title: 'ContractIQ — Smart Contract Analysis',
-    description: 'Understand any property contract in plain English with AI',
-    type: 'website',
-  },
+  title: { default: "NyayaSim", template: "%s · NyayaSim" },
+  description: "See how a RERA hearing on your facts is likely to go, before you file.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800;900&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body style={{ fontFamily: "'Inter', sans-serif", margin: 0 }}>
+    <html lang="en" className={`${serif.variable} ${sans.variable} ${mono.variable}`}>
+      <body>
+        <header className="topbar">
+          <div className="topbar-inner">
+            <Link href="/" className="wordmark">
+              Nyaya<span>Sim</span>
+            </Link>
+            <nav className="topnav" aria-label="Main">
+              <Link href="/">Cases</Link>
+              <Link href="/calculator">Interest calculator</Link>
+              <Link href="/method">How it works</Link>
+            </nav>
+            <div className="spacer" />
+            <span className="account">A. Mehra</span>
+          </div>
+        </header>
+        <div className="demo-strip" role="note">
+          <div>Demo build. The case, project and every order reference marked DEMO are fictional.</div>
+        </div>
         {children}
+        <footer className="footer">
+          <div>
+            NyayaSim gives decision support and drafting help. It is not legal advice and does not replace an advocate.
+            Predictions come from past orders and can be wrong.
+          </div>
+        </footer>
       </body>
     </html>
   );

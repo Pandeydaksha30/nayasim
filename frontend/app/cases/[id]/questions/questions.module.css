@@ -1,0 +1,20 @@
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.field { border: none; margin: 0; padding: 16px 18px; min-width: 0; }
+.legend { font-weight: 600; padding: 0; font-size: 15.5px; }
+.why { font-size: 13.5px; color: var(--ink-2); margin: 4px 0 12px; }
+.options { display: flex; flex-wrap: wrap; gap: 8px; }
+.option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  padding: 7px 12px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r);
+  cursor: pointer;
+  background: var(--surface);
+}
+.option:hover { border-color: var(--ink-3); }
+.optionOn { border-color: var(--accent); background: var(--accent-soft); }
+.option input { margin: 0; accent-color: var(--accent); }
+.bar { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; gap: 12px; flex-wrap: wrap; }

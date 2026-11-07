@@ -1,27 +1,22 @@
 {
-  "name": "frontend",
-  "version": "1.0.0",
+  "name": "nyayasim-web",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3100",
     "build": "next build",
-    "start": "next start"
+    "start": "next start -p 3100",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "lucide-react": "latest",
-    "mammoth": "1.13.0",
-    "next": "latest",
-    "pdf-parse": "2.4.5",
-    "react": "latest",
-    "react-dom": "latest"
+    "next": "15.5.4",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
   },
   "devDependencies": {
-    "@types/node": "latest",
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
-    "autoprefixer": "10.6.2",
-    "postcss": "8.5.32",
-    "tailwindcss": "3.4.19",
-    "typescript": "latest"
+    "@types/node": "22.15.3",
+    "@types/react": "19.1.2",
+    "@types/react-dom": "19.1.2",
+    "typescript": "5.8.3"
   }
 }

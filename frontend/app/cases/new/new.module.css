@@ -1,0 +1,51 @@
+.checklist {
+  margin: 20px 0;
+  padding-left: 20px;
+  color: var(--ink-2);
+}
+.checklist li { margin-bottom: 4px; }
+.checklist b { color: var(--ink); font-weight: 600; }
+
+.drop {
+  border: 1px dashed var(--rule-strong);
+  border-radius: var(--r);
+  background: var(--surface);
+  padding: 32px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.dropActive { border-color: var(--accent); background: var(--accent-soft); }
+
+.select {
+  font: inherit;
+  font-size: 14px;
+  padding: 5px 6px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r);
+  background: var(--surface);
+  color: var(--ink);
+  max-width: 100%;
+}
+
+.warn {
+  margin-top: 12px;
+  font-size: 13.5px;
+  color: var(--ink);
+  border-left: 3px solid var(--mid);
+  padding: 6px 10px;
+  background: var(--mid-soft);
+}
+
+.consent {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 10px;
+  margin-top: 24px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  max-width: 70ch;
+}
+.consent input { margin-top: 3px; }
