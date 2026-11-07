@@ -79,15 +79,45 @@ def test_locate_ignores_whitespace_and_case_and_returns_exact_offsets():
     assert " ".join(original.split()).lower() == "interest at the prescribed rate of 10.85% p.a."
 
 
+def test_exact_match_is_marked_exact():
+    assert locate("interest at the prescribed rate", PAGE).match == "exact"
+
+
 @pytest.mark.parametrize(
     "quote",
     [
-        "interest at the prescribed rate of 10.8% p.a.",  # altered number
         "the promoter shall pay interest",  # paraphrase
-        "pay ... interest",  # ellipsis
+        "Interest is payable by the builder at MCLR plus two percent.",  # different sentence
+        "pay ... interest",  # ellipsis, too short for a near match
+        "10.8% p.a.",  # short and not exact: no near match allowed
         "rate",  # too short to be meaningful
         "",
     ],
 )
-def test_locate_rejects_anything_not_verbatim(quote):
+def test_locate_rejects_paraphrase_and_short_inexact_quotes(quote):
     assert locate(quote, PAGE) is None
+
+
+# Real case (order RERA-GRG-76-2018): the PDF's own text layer has OCR typos, and the model
+# quietly fixed "alreacly" to "already".
+OCR_PAGE = (
+    "As alreacly decided in complaint no. 141 of 2018\ntitled as Brihmjeet versus ll/s. Lanclmark "
+    "Apartments Pvt.\nLtii, no case is made out. Learned counsel for the"
+)
+
+
+def test_near_match_tolerates_a_corrected_ocr_typo_and_points_at_stored_text():
+    quote = (
+        "As already decided in complaint no. 141 of 2018 titled as Brihmjeet versus ll/s. "
+        "Lanclmark Apartments Pvt. Ltii, no case is made out."
+    )
+    span = locate(quote, OCR_PAGE)
+    assert span is not None and span.match.startswith("fuzzy:")
+    stored = OCR_PAGE[span.char_start : span.char_end]
+    assert "alreacly" in stored and stored.rstrip(".").endswith("made out")
+
+
+def test_near_match_still_points_at_the_stored_number():
+    # One digit changed in a long quote still aligns, but the span holds the stored 10.85%.
+    span = locate("interest at the prescribed rate of 10.8% p.a. on the amount paid", PAGE)
+    assert span is not None and "10.85%" in PAGE[span.char_start : span.char_end]

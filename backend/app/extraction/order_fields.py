@@ -109,8 +109,12 @@ def _decimal(raw: str) -> Decimal | None:
         return None
 
 
-def _check(name: str, ev: Evidence, pages: dict[int, str], out: Verified) -> tuple[str, dict] | None:
-    """Return (value, source) if the evidence holds up, else record a rejection."""
+def _check(name: str, ev: Evidence, pages: dict[int, str], out: Verified) -> tuple[str, dict, str] | None:
+    """Return (value, source, stored_text) if the evidence holds up, else record a rejection.
+
+    ``stored_text`` is the matched span of the stored page. Values must be read from it, not
+    from the model's quote, so a model that "corrects" a number cannot change what is stored.
+    """
     if ev.value is None:
         return None
     reject = {"field": name, "value": ev.value, "quote": ev.quote, "page_no": ev.page_no}
@@ -121,8 +125,13 @@ def _check(name: str, ev: Evidence, pages: dict[int, str], out: Verified) -> tup
     if span is None:
         out.rejected.append({**reject, "reason": f"quote not found on page {ev.page_no}"})
         return None
-    source = {"page_no": ev.page_no, "char_start": span.char_start, "char_end": span.char_end}
-    return ev.value.strip(), source
+    source = {
+        "page_no": ev.page_no,
+        "char_start": span.char_start,
+        "char_end": span.char_end,
+        "match": span.match,
+    }
+    return ev.value.strip(), source, pages[ev.page_no][span.char_start : span.char_end]
 
 
 def verify(proposed: ProposedFields, pages: dict[int, str]) -> Verified:
@@ -137,7 +146,7 @@ def verify(proposed: ProposedFields, pages: dict[int, str]) -> Verified:
         ev = getattr(proposed, name)
         if (got := _check(name, ev, pages, out)) is None:
             continue
-        value, source = got
+        value, source, _stored = got
         if value not in allowed:
             reject(name, ev, f"value not one of {allowed}")
             continue
@@ -146,41 +155,41 @@ def verify(proposed: ProposedFields, pages: dict[int, str]) -> Verified:
 
     ev = proposed.possession_due
     if (got := _check("possession_due", ev, pages, out)) is not None:
-        value, source = got
+        value, source, stored = got
         try:
             wanted = date.fromisoformat(value)
         except ValueError:
             reject("possession_due", ev, "value is not YYYY-MM-DD")
         else:
-            if wanted in dates_in(ev.quote or ""):
+            if wanted in dates_in(stored):
                 out.possession_due, out.sources["possession_due"] = wanted, source
             else:
-                reject("possession_due", ev, "date not readable from the quote")
+                reject("possession_due", ev, "date not readable from the stored text")
 
     for name in ("amount_paid", "award_amount"):
         ev = getattr(proposed, name)
         if (got := _check(name, ev, pages, out)) is None:
             continue
-        value, source = got
+        value, source, stored = got
         wanted = _decimal(value)
-        if wanted is None or wanted.quantize(Decimal("0.01")) not in amounts_in(ev.quote or ""):
-            reject(name, ev, "amount not readable from the quote")
+        if wanted is None or wanted.quantize(Decimal("0.01")) not in amounts_in(stored):
+            reject(name, ev, "amount not readable from the stored text")
             continue
         setattr(out, name, wanted.quantize(Decimal("0.01")))
         out.sources[name] = source
 
     ev = proposed.interest_rate_pct
     if (got := _check("interest_rate_pct", ev, pages, out)) is not None:
-        value, source = got
+        value, source, stored = got
         wanted = _decimal(value.rstrip("%"))
-        if wanted is None or wanted not in rates_in(ev.quote or ""):
-            reject("interest_rate_pct", ev, "rate not readable from the quote")
+        if wanted is None or wanted not in rates_in(stored):
+            reject("interest_rate_pct", ev, "rate not readable from the stored text")
         else:
             out.interest_rate_pct, out.sources["interest_rate_pct"] = wanted, source
 
     for i, ev in enumerate(proposed.defences[:5]):
         if (got := _check(f"defences[{i}]", ev, pages, out)) is not None:
-            value, source = got
+            value, source, _stored = got
             out.sources[f"defences[{len(out.defences)}]"] = source
             out.defences.append(value)
 

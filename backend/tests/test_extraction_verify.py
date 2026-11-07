@@ -64,7 +64,23 @@ def test_amount_the_model_computed_is_rejected():
     # The quote is real, but 5800000 is not written in it.
     v = verify(good_proposal(amount_paid=ev("5800000", "paid a sum of Rs. 57,60,000/-", 1)), PAGES)
     assert v.amount_paid is None
-    assert v.rejected[0]["reason"] == "amount not readable from the quote"
+    assert v.rejected[0]["reason"] == "amount not readable from the stored text"
+
+
+def test_model_correcting_a_number_in_its_quote_cannot_change_the_stored_value():
+    # The page says 57,60,000. The model quotes and claims 57,80,000: the quote aligns closely,
+    # but the amount is read from the stored text, so the claim is rejected.
+    proposal = good_proposal(
+        amount_paid=ev("5780000", "booked a unit and paid a sum of Rs. 57,80,000/- to the respondent", 1)
+    )
+    v = verify(proposal, PAGES)
+    assert v.amount_paid is None
+    assert v.rejected[0]["reason"] == "amount not readable from the stored text"
+
+
+def test_source_records_how_the_quote_matched():
+    v = verify(good_proposal(), PAGES)
+    assert v.sources["outcome"]["match"] == "exact"
 
 
 def test_date_not_in_quote_is_rejected():

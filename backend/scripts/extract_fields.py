@@ -38,15 +38,20 @@ def main() -> int:
         return 2
     key = settings.gemini_api_key.get_secret_value()
 
-    from app.extraction.gemini import GeminiExtractor, list_models
+    from app.extraction.gemini import GeminiExtractor, list_models, ping
 
     if args.list_models or args.check_key:
         models = list_models(key)
-        print(f"key works: {len(models)} models available")
+        print(f"key works: {len(models)} models listed")
         if args.list_models:
             print("\n".join(models))
         if args.model not in models:
             print(f"warning: configured model {args.model!r} is not in this key's list")
+        try:
+            print(f"test call to {args.model}: replied {ping(key, args.model)!r}")
+        except Exception as e:  # reported, and the exit code says it failed
+            print(f"test call to {args.model} FAILED: {type(e).__name__}: {str(e)[:200]}")
+            return 1
         return 0
 
     if args.limit:
@@ -57,8 +62,11 @@ def main() -> int:
         report = ExtractReport()
         started = time.monotonic()
         for i, oid in enumerate(ids, 1):
+            print(f"[{i}/{len(ids)}] order {oid}: sending...", flush=True)
+            extractor.last_call_s = None
             status = extract_order(engine, oid, extractor, REVIEW_LOG, report)
-            print(f"[{i}/{len(ids)}] order {oid}: {status}")
+            took = f" (model {extractor.last_call_s:.0f} s)" if extractor.last_call_s else ""
+            print(f"[{i}/{len(ids)}] order {oid}: {status}{took}", flush=True)
         elapsed = time.monotonic() - started
         print(
             f"\nattempted={report.attempted} stored={report.stored} needs_review={report.needs_review} "
