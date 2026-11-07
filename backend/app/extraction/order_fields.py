@@ -24,10 +24,11 @@ from pydantic import BaseModel, Field
 from app.extraction.parsing import amounts_in, dates_in, rates_in
 from app.extraction.quotes import locate
 
-PROMPT_VERSION = "order-fields-v1"
+PROMPT_VERSION = "order-fields-v3"  # v2: key pages only; v3: adds outcome "disposed_of"
 
 CLAIM_TYPES = ("delayed_possession", "refund", "other")
-OUTCOMES = ("allowed", "partly_allowed", "dismissed", "withdrawn", "other")
+# Must match the case_records_outcome_check constraint (migration 0002).
+OUTCOMES = ("allowed", "partly_allowed", "dismissed", "disposed_of", "withdrawn", "other")
 
 
 class Evidence(BaseModel):
@@ -60,7 +61,8 @@ Fields:
   claim_type: "delayed_possession" (buyer keeps the unit, seeks delay interest),
               "refund" (buyer withdraws, seeks refund), or "other"
   outcome: what the authority decided on the complainant's main relief: "allowed",
-           "partly_allowed", "dismissed", "withdrawn", or "other"
+           "partly_allowed", "dismissed", "disposed_of" (closed with directions or sent to
+           another forum, without allowing or dismissing it), "withdrawn", or "other"
   possession_due: the due date of possession the authority used, as YYYY-MM-DD
   amount_paid: total amount paid by the complainant, in rupees, digits only (e.g. 5760000)
   award_amount: a total amount the respondent is ordered to pay, in rupees, digits only;
@@ -69,7 +71,7 @@ Fields:
   defences: up to 5 objections the respondent (builder) raised; value = a short label,
             quote = the respondent's argument as written
 
-ORDER TEXT:
+ORDER TEXT (selected pages of the order; page numbers are the real ones):
 {pages}
 """
 

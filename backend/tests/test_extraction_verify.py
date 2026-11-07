@@ -11,7 +11,7 @@ from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from app.db.models import CaseRecord, Order, OrderPage
-from app.extraction.order_fields import Evidence, ProposedFields, verify
+from app.extraction.order_fields import PROMPT_VERSION, Evidence, ProposedFields, verify
 from app.extraction.runner import ExtractReport, extract_order, pending_for_extraction, reviewed_ids
 
 PAGES = {
@@ -167,7 +167,7 @@ def test_runner_stores_record_whose_sources_point_at_real_text(fetched_order, tm
     with Session(engine) as s:
         rec = s.get(CaseRecord, oid)
         assert rec.outcome == "allowed" and rec.interest_rate_pct == Decimal("10.850")
-        assert rec.extracted_by == "stand-in:order-fields-v1"
+        assert rec.extracted_by == f"stand-in:{PROMPT_VERSION}"
         src = rec.field_sources["possession_due"]
         page = s.scalar(select(OrderPage.text).where(OrderPage.order_id == oid, OrderPage.page_no == 1))
         assert "30.06.2021" in page[src["char_start"] : src["char_end"]]
@@ -195,3 +195,18 @@ def test_model_error_is_reported_and_order_stays_pending(fetched_order, tmp_path
     )
     assert status == "error" and "quota exceeded" in report.errors[0][1]
     assert pending_for_extraction(engine, 10) == [oid]
+
+
+def test_merge_review_logs_after_retry(tmp_path):
+    from app.extraction.runner import merge_review_logs
+
+    review, retry = tmp_path / "review.jsonl", tmp_path / "retry.jsonl"
+    review.write_text("".join(json.dumps({"order_id": i, "rejected": []}) + "\n" for i in (1, 2, 3, 4)))
+    retry.write_text(json.dumps({"order_id": 2, "rejected": [{"field": "outcome"}]}) + "\n")
+    # 1 was stored on retry, 2 failed again (new entry), 3 errored (keeps old), 4 not retried.
+    remaining = merge_review_logs(review, {1, 2}, retry)
+    lines = [json.loads(x) for x in review.read_text().splitlines()]
+    assert remaining == 3
+    assert sorted(x["order_id"] for x in lines) == [2, 3, 4]
+    assert next(x for x in lines if x["order_id"] == 2)["rejected"] == [{"field": "outcome"}]
+    assert not retry.exists()

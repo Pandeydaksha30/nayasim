@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import re
 from datetime import UTC, date
 
 import pytest
@@ -241,3 +242,21 @@ def test_downgrade_and_upgrade_again(db_engine):
     command.upgrade(cfg, "head")
     with db_engine.connect() as conn:
         assert conn.scalar(text("SELECT to_regclass('public.orders')")) is not None
+
+
+def test_disposed_of_outcome_is_accepted(db: Session):
+    order = make_order(db)
+    db.add(CaseRecord(order_id=order.id, claim_type="other", outcome="disposed_of", extracted_by="test"))
+    db.flush()
+
+
+def test_python_outcomes_match_the_database_rule(db: Session):
+    from app.extraction.order_fields import OUTCOMES
+
+    definition = db.scalar(
+        text(
+            "SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conname = 'case_records_outcome_check'"
+        )
+    )
+    in_db = set(re.findall(r"'([a-z_]+)'", definition))
+    assert in_db == set(OUTCOMES)

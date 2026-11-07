@@ -18,7 +18,13 @@ REQUEST_TIMEOUT_S = 300
 
 class GeminiExtractor:
     def __init__(
-        self, api_key: str, model: str, min_interval_s: float = 4.0, max_retries: int = 4, log=print
+        self,
+        api_key: str,
+        model: str,
+        min_interval_s: float = 4.0,
+        max_retries: int = 4,
+        log=print,
+        thinking: str | None = "low",
     ) -> None:
         from google import genai
         from google.genai import types
@@ -28,7 +34,10 @@ class GeminiExtractor:
             api_key=api_key, http_options=types.HttpOptions(timeout=REQUEST_TIMEOUT_S * 1000)
         )
         self.model = model
-        self.name = f"gemini:{model}"
+        # Extraction is copying, not reasoning: at the default level a call took 22-207 s.
+        # None leaves the model's default; otherwise minimal | low | medium | high.
+        self.thinking = thinking
+        self.name = f"gemini:{model}" + (f":think-{thinking}" if thinking else "")
         self.min_interval_s = min_interval_s
         self.max_retries = max_retries
         self.log = log
@@ -49,6 +58,11 @@ class GeminiExtractor:
             temperature=0,
             response_mime_type="application/json",
             response_schema=ProposedFields,
+            thinking_config=(
+                types.ThinkingConfig(thinking_level=types.ThinkingLevel(self.thinking.upper()))
+                if self.thinking
+                else None
+            ),
         )
         delay = 15.0
         for attempt in range(self.max_retries + 1):

@@ -14,7 +14,9 @@ class Settings(BaseSettings):
     # 127.0.0.1, not localhost: on Windows "localhost" tries IPv6 (::1) first, and Docker Desktop's
     # relay accepts that connection but never answers (the port is published on IPv4 only), so
     # connecting hangs. Measured: localhost 5.08 s (timeout + fallback), 127.0.0.1 0.03 s.
-    database_url: str = "postgresql+psycopg://nyayasim:nyayasim_local_only@127.0.0.1:5432/nyayasim?connect_timeout=10"
+    database_url: str = (
+        "postgresql+psycopg://nyayasim:nyayasim_local_only@127.0.0.1:5432/nyayasim?connect_timeout=10"
+    )
 
     # Gemini key for field extraction. Read from GEMINI_API_KEY (Google's own variable name),
     # normally set in backend/.env, which git ignores. Never logged or printed.
@@ -22,7 +24,9 @@ class Settings(BaseSettings):
     # Model id. gemini-2.5-flash is still *listed* but returns 404 for new accounts (7 Nov 2026);
     # `extract_fields --check-key` makes a real call, so it catches that. Override with
     # NYAYASIM_GEMINI_MODEL in backend/.env.
-    gemini_model: str = "gemini-3.8-flash"
+    # First pass uses the fast model (measured ~4 s/order, 10 of 15 stored); orders it cannot
+    # verify are re-run with the stronger one: extract_fields --retry-review --model gemini-3.8-flash
+    gemini_model: str = "gemini-3.5-flash-lite"
 
     @property
     def cors_origin_list(self) -> list[str]:

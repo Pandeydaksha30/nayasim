@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.db.models import CaseRecord, Order, OrderPage
 from app.extraction.order_fields import PROMPT_VERSION, Extractor, build_prompt, verify
+from app.extraction.page_select import select_pages
 
 
 @dataclass
@@ -23,6 +24,8 @@ class ExtractReport:
     errors: list[tuple[str, str]] = field(default_factory=list)
     fields_accepted: int = 0
     fields_rejected: int = 0
+    pages_sent: int = 0
+    pages_total: int = 0
 
 
 def pending_for_extraction(
@@ -48,6 +51,20 @@ def reviewed_ids(review_log: Path) -> set[int]:
     }
 
 
+def merge_review_logs(review_log: Path, retried: set[int], retry_log: Path) -> int:
+    """After a retry pass: keep entries that were not retried, plus the retried orders that
+    failed again (from ``retry_log``). Returns how many orders remain for review."""
+
+    def read(p: Path) -> list[str]:
+        return [ln for ln in p.read_text(encoding="utf-8").splitlines() if ln] if p.exists() else []
+
+    kept = [ln for ln in read(review_log) if json.loads(ln)["order_id"] not in retried]
+    again = read(retry_log)
+    review_log.write_text("".join(ln + "\n" for ln in kept + again), encoding="utf-8")
+    retry_log.unlink(missing_ok=True)
+    return len(kept) + len(again)
+
+
 def extract_order(
     engine: Engine, order_id: int, extractor: Extractor, review_log: Path, report: ExtractReport
 ) -> str:
@@ -59,7 +76,11 @@ def extract_order(
         label = f"{order.complaint_no} ({order.decided_on})"
         report.attempted += 1
         try:
-            proposed = extractor.propose(build_prompt(pages))
+            # Only key pages go to the model; verification below uses all stored pages.
+            sent = select_pages(pages)
+            report.pages_sent += len(sent)
+            report.pages_total += len(pages)
+            proposed = extractor.propose(build_prompt(sent))
         except Exception as e:  # API/network/parse errors: reported, order stays pending
             report.errors.append((label, f"{type(e).__name__}: {e}"[:300]))
             return "error"
