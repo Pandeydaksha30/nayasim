@@ -4,9 +4,11 @@
  */
 import type { Payment } from "./types";
 
-const BASE =
+// Server-side calls use 127.0.0.1: on Windows "localhost" may try IPv6 first while the API
+// listens on IPv4 only.
+export const BASE =
   typeof window === "undefined"
-    ? process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
+    ? process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000"
     : process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export interface InterestInput {

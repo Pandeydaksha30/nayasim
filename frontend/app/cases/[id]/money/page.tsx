@@ -1,12 +1,14 @@
-import { notFound } from "next/navigation";
+import LiveMoney from "../live/live-money";
+import { loadCase } from "@/lib/case-source";
 import InterestCalculator from "@/components/interest-calculator";
-import { getCase } from "@/lib/demo-case";
 
 export const metadata = { title: "Money owed" };
 
 export default async function MoneyPage({ params }: { params: Promise<{ id: string }> }) {
-  const c = getCase((await params).id);
-  if (!c) notFound();
+  const src = await loadCase((await params).id);
+  if (src.kind === "live") return <LiveMoney c={src.data} />;
+  if (src.kind !== "example") return null; // the layout shows the error
+  const c = src.data;
   return (
     <>
       <div className="section-title">

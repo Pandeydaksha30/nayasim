@@ -9,7 +9,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.buyer.documents import KINDS, UploadRejected, store_document
@@ -139,6 +139,38 @@ def _case_out(s: Session, case: Case) -> CaseOut:
         ],
         payments_total=str(payments_total.quantize(Decimal("0.01"))),
     )
+
+
+class CaseSummary(BaseModel):
+    id: uuid.UUID
+    title: str
+    claim_type: str
+    status: str
+    is_demo: bool
+    created_at: datetime
+    documents: int
+    facts: int
+
+
+@router.get("", response_model=list[CaseSummary])
+def list_cases(s: SessionDep) -> list[CaseSummary]:
+    doc_counts = dict(
+        s.execute(select(CaseDocument.case_id, func.count()).group_by(CaseDocument.case_id)).all()
+    )
+    fact_counts = dict(s.execute(select(Fact.case_id, func.count()).group_by(Fact.case_id)).all())
+    return [
+        CaseSummary(
+            id=c.id,
+            title=c.title,
+            claim_type=c.claim_type,
+            status=c.status,
+            is_demo=c.is_demo,
+            created_at=c.created_at,
+            documents=doc_counts.get(c.id, 0),
+            facts=fact_counts.get(c.id, 0),
+        )
+        for c in s.scalars(select(Case).order_by(Case.created_at.desc()))
+    ]
 
 
 @router.post("", status_code=201, response_model=CaseOut)

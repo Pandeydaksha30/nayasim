@@ -1,6 +1,6 @@
+import NotBuilt from "../live/not-built";
+import { loadCase } from "@/lib/case-source";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { getCase } from "@/lib/demo-case";
 import { fmtDate, fmtINRShort, pct } from "@/lib/format";
 import { computeInterest } from "@/lib/api";
 import { Banner, DownloadIcon } from "@/components/icons";
@@ -9,8 +9,10 @@ import styles from "./report.module.css";
 export const metadata = { title: "Report" };
 
 export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
-  const c = getCase((await params).id);
-  if (!c) notFound();
+  const src = await loadCase((await params).id);
+  if (src.kind === "live") return <NotBuilt what="Decision report" caseId={src.data.id} />;
+  if (src.kind !== "example") return null; // the layout shows the error
+  const c = src.data;
   const { outcome, band, weakPoints, defences, similarCount } = c.report;
   // Award range comes from the Python calculator, never from the model: the top is the full claim;
   // the bottom assumes the bench also excludes a further 9 months for NGT bans and the second COVID wave.

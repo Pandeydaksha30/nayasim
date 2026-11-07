@@ -1,12 +1,14 @@
-import { notFound } from "next/navigation";
-import { getCase } from "@/lib/demo-case";
+import LiveQuestions from "../live/live-questions";
+import { loadCase } from "@/lib/case-source";
 import QuestionsForm from "./questions-form";
 
 export const metadata = { title: "Questions" };
 
 export default async function QuestionsPage({ params }: { params: Promise<{ id: string }> }) {
-  const c = getCase((await params).id);
-  if (!c) notFound();
+  const src = await loadCase((await params).id);
+  if (src.kind === "live") return <LiveQuestions c={src.data} />;
+  if (src.kind !== "example") return null; // the layout shows the error
+  const c = src.data;
   return (
     <>
       <div className="section-title">

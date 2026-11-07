@@ -291,3 +291,15 @@ def test_database_rejects_a_fact_whose_quote_is_not_the_page_text(db: Session):
     db.add(bad)
     with pytest.raises((IntegrityError, InternalError)):
         db.flush()
+
+
+def test_case_list_shows_counts(api):
+    client, _, _ = api
+    a = client.post("/api/v1/cases", json={"title": "First", "is_demo": True}).json()
+    upload(client, a["id"], text_pdf([AGREEMENT_P1, AGREEMENT_P2]))
+    client.post(f"/api/v1/cases/{a['id']}/facts/extract")
+    client.post("/api/v1/cases", json={"title": "Second"})
+    listed = client.get("/api/v1/cases").json()
+    assert [c["title"] for c in listed] == ["Second", "First"]
+    first = listed[1]
+    assert first["documents"] == 1 and first["facts"] >= 5 and first["is_demo"] is True

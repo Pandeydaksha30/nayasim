@@ -1,13 +1,15 @@
-import { notFound } from "next/navigation";
+import LiveDocuments from "../live/live-documents";
+import { loadCase } from "@/lib/case-source";
 import { FileIcon, PlusIcon } from "@/components/icons";
-import { getCase } from "@/lib/demo-case";
 import { fmtDate } from "@/lib/format";
 
 export const metadata = { title: "Documents" };
 
 export default async function DocumentsPage({ params }: { params: Promise<{ id: string }> }) {
-  const c = getCase((await params).id);
-  if (!c) notFound();
+  const src = await loadCase((await params).id);
+  if (src.kind === "live") return <LiveDocuments c={src.data} />;
+  if (src.kind !== "example") return null; // the layout shows the error
+  const c = src.data;
 
   return (
     <>

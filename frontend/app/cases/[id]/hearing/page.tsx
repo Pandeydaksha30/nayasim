@@ -1,5 +1,6 @@
-import { notFound } from "next/navigation";
-import { getCase, type Speaker } from "@/lib/demo-case";
+import NotBuilt from "../live/not-built";
+import { loadCase } from "@/lib/case-source";
+import { type Speaker } from "@/lib/demo-case";
 import styles from "./hearing.module.css";
 
 export const metadata = { title: "Simulated hearing" };
@@ -11,8 +12,10 @@ const WHO: Record<Speaker, string> = {
 };
 
 export default async function HearingPage({ params }: { params: Promise<{ id: string }> }) {
-  const c = getCase((await params).id);
-  if (!c) notFound();
+  const src = await loadCase((await params).id);
+  if (src.kind === "live") return <NotBuilt what="Simulated hearing" caseId={src.data.id} />;
+  if (src.kind !== "example") return null; // the layout shows the error
+  const c = src.data;
   const rounds = [...new Set(c.hearing.map((a) => a.round))];
 
   return (
