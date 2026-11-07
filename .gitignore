@@ -19,3 +19,6 @@ backend/uploads/
 backend/chroma_db/
 uploads/
 chroma_db/
+
+# Downloaded orders and other local data
+data/
