@@ -107,13 +107,14 @@ def test_order_page_chunk_round_trip_with_full_text_search(db: Session):
             char_end=start + len(chunk_text),
             text=chunk_text,
             embedding=[0.0] * EMBEDDING_DIM,
+            embedding_model="test",
         )
     )
     db.flush()
     hit = db.scalar(
         select(OrderChunk).where(
             OrderChunk.order_id == order.id,
-            OrderChunk.tsv.op("@@")(text("plainto_tsquery('simple', 'prescribed rate')")),
+            OrderChunk.tsv.op("@@")(text("plainto_tsquery('english', 'prescribed rate')")),
         )
     )
     assert hit is not None and hit.text == "prescribed rate"

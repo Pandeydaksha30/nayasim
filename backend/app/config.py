@@ -33,6 +33,13 @@ class Settings(BaseSettings):
     # only cases marked is_demo (fictional documents) are.
     private_llm_ok: bool = False
 
+    # Local embedding model for order search (fastembed, CPU). Chosen by measurement; see
+    # docs/search.md. Its output size must equal the database column (EMBEDDING_DIM).
+    embedding_model: str = "BAAI/bge-small-en-v1.5"
+    # bge v1.5 retrieval convention: instruction on the query, nothing on passages.
+    embedding_query_prefix: str = "Represent this sentence for searching relevant passages: "
+    embedding_doc_prefix: str = ""
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

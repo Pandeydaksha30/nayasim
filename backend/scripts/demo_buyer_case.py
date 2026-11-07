@@ -65,25 +65,32 @@ def pdf(pages: list[str]) -> bytes:
 def main() -> None:
     if settings.gemini_api_key is None:
         raise SystemExit("GEMINI_API_KEY is not set in backend/.env")
-    extractor = GeminiExtractor(settings.gemini_api_key.get_secret_value(), settings.gemini_model,
-                                min_interval_s=0)
+    extractor = GeminiExtractor(
+        settings.gemini_api_key.get_secret_value(), settings.gemini_model, min_interval_s=0
+    )
     with Session(get_engine()) as s:
         case = Case(title="Mehra v. Arvant Infra (DEMO)", claim_type="delayed_possession", is_demo=True)
         s.add(case)
         s.flush()
-        for name, kind, pages in (("agreement.pdf", "agreement", AGREEMENT),
-                                  ("receipts.pdf", "receipt", RECEIPTS),
-                                  ("builder_letter.pdf", "builder_letter", LETTER)):
+        for name, kind, pages in (
+            ("agreement.pdf", "agreement", AGREEMENT),
+            ("receipts.pdf", "receipt", RECEIPTS),
+            ("builder_letter.pdf", "builder_letter", LETTER),
+        ):
             d = store_document(s, case.id, name, kind, pdf(pages), find_ocr())
             print(f"uploaded {name}: {d.page_count} pages")
         t = time.monotonic()
         summary = extract_case_facts(s, case.id, extractor)
         s.commit()
-        print(f"\nextracted {summary['facts']} facts from {summary['documents']} documents "
-              f"in {time.monotonic() - t:.0f} s; rejected {len(summary['rejected'])}; errors {summary['errors']}")
+        print(
+            f"\nextracted {summary['facts']} facts from {summary['documents']} documents "
+            f"in {time.monotonic() - t:.0f} s; rejected {len(summary['rejected'])}; errors {summary['errors']}"
+        )
         facts = s.query(Fact).filter(Fact.case_id == case.id).order_by(Fact.key).all()
         for f in facts:
-            print(f"  {f.label:24} {f.value:28} p.{f.page_no} [{f.confidence}]  \"{' '.join(f.quote.split())[:70]}\"")
+            print(
+                f'  {f.label:24} {f.value:28} p.{f.page_no} [{f.confidence}]  "{" ".join(f.quote.split())[:70]}"'
+            )
         for r in summary["rejected"]:
             print(f"  REJECTED {r['document']} {r['field']}: {r['reason']}")
         by_key: dict[str, list[str]] = {}

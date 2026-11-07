@@ -17,7 +17,7 @@ from sqlalchemy import ARRAY, BigInteger, Computed, ForeignKey, ForeignKeyConstr
 from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-EMBEDDING_DIM = 1024
+EMBEDDING_DIM = 384  # BAAI/bge-small-en-v1.5 (migration 0005)
 
 
 class Base(DeclarativeBase):
@@ -81,7 +81,8 @@ class OrderChunk(Base):
     char_end: Mapped[int]
     text: Mapped[str] = mapped_column(Text)
     embedding: Mapped[list[float] | None] = mapped_column(Vector(EMBEDDING_DIM))
-    tsv: Mapped[Any] = mapped_column(TSVECTOR, Computed("to_tsvector('simple', text)", persisted=True))
+    tsv: Mapped[Any] = mapped_column(TSVECTOR, Computed("to_tsvector('english', text)", persisted=True))
+    embedding_model: Mapped[str | None] = mapped_column(Text)
 
 
 class CaseRecord(Base):
