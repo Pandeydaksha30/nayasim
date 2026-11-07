@@ -61,6 +61,8 @@ LABELS = {
     "offer_of_possession_date": "Offer of possession",
     "revised_completion_date": "Builder's revised completion date",
     "escalation_demand": "Extra charge demanded (Rs)",
+    "amount_paid_total": "Total amount paid by the buyer (Rs)",
+    "hearing_date": "Date of the hearing",
 }
 ANSWER_LABELS = {
     "offer_of_possession": "Offer of possession received?",
