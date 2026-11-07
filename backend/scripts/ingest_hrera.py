@@ -27,6 +27,23 @@ SOURCE = "hrera_gurugram"
 STORE = Path(__file__).resolve().parents[2] / "data" / "orders" / SOURCE
 
 
+def keep_awake() -> None:
+    """Ask Windows not to idle-sleep while this process runs (released when it exits).
+
+    Uses SetThreadExecutionState; it changes no power settings. A closed lid or a manual
+    Sleep still suspends the machine.
+    """
+    if sys.platform != "win32":
+        return
+    import ctypes
+
+    es_continuous, es_system_required = 0x80000000, 0x00000001
+    if ctypes.windll.kernel32.SetThreadExecutionState(es_continuous | es_system_required) == 0:
+        print("warning: could not ask Windows to stay awake; the run stops if the PC sleeps")
+    else:
+        print("keeping the PC awake while this run lasts (closing the lid still sleeps it)")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--register", action="store_true", help="fetch the public listing and add new orders")
@@ -50,6 +67,7 @@ def main() -> int:
         )
 
     if args.fetch:
+        keep_awake()
         ocr = find_ocr()
         missing = "NOT AVAILABLE - scanned orders will be reported as failures"
         print(f"OCR: {ocr.engine_name if ocr else missing}")

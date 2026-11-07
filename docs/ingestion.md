@@ -42,7 +42,8 @@ fetched **30 complaint orders** spread across 2019–2026:
 | Speed (parallel OCR, 6 workers) | 19 orders in 3.7 min, **12 s per order** incl. the 2.5 s delay |
 
 At 12 s per order the full 13,992 orders take about **47 hours** on this laptop, so run in
-batches (e.g. `--fetch 2000` overnight). Re-runs resume where they stopped.
+batches (e.g. `--fetch 2000` overnight). Re-runs resume where they stopped. `--fetch` asks
+Windows not to idle-sleep while it runs (no power settings change; closing the lid still sleeps).
 
 Findings:
 
