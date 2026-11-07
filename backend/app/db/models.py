@@ -111,6 +111,8 @@ class Case(Base):
     title: Mapped[str] = mapped_column(Text)
     claim_type: Mapped[str] = mapped_column(Text)
     status: Mapped[str] = mapped_column(Text, server_default="draft")
+    # Fictional demo case: the only kind that may go to a model that can retain data.
+    is_demo: Mapped[bool] = mapped_column(server_default="false")
     created_at: Mapped[datetime] = mapped_column(server_default="now()")
     updated_at: Mapped[datetime] = mapped_column(server_default="now()")
 
@@ -131,6 +133,31 @@ class CaseDocument(Base):
     uploaded_at: Mapped[datetime] = mapped_column(server_default="now()")
 
     case: Mapped[Case] = relationship(back_populates="documents")
+    pages: Mapped[list[CaseDocumentPage]] = relationship(
+        back_populates="document", cascade="all, delete-orphan", order_by="CaseDocumentPage.page_no"
+    )
+
+
+class CaseDocumentPage(Base):
+    __tablename__ = "case_document_pages"
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("case_documents.id", ondelete="CASCADE"), primary_key=True
+    )
+    page_no: Mapped[int] = mapped_column(primary_key=True)
+    text: Mapped[str] = mapped_column(Text)
+    text_source: Mapped[str] = mapped_column(Text)
+    ocr_engine: Mapped[str | None] = mapped_column(Text)
+    ocr_confidence: Mapped[Decimal | None] = mapped_column(Numeric(5, 2))
+
+    document: Mapped[CaseDocument] = relationship(back_populates="pages")
+
+
+class CaseAnswer(Base):
+    __tablename__ = "case_answers"
+    case_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("cases.id", ondelete="CASCADE"), primary_key=True)
+    question_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    answer: Mapped[str] = mapped_column(Text)
+    answered_at: Mapped[datetime] = mapped_column(server_default="now()")
 
 
 class Fact(Base):

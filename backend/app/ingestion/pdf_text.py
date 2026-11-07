@@ -164,6 +164,20 @@ def extract_pages(pdf_bytes: bytes, ocr: OcrConfig | None, workers: int = OCR_WO
     return [results[n] for n in sorted(results)]
 
 
+def extract_image(image_bytes: bytes, ocr: OcrConfig | None) -> list[PageText]:
+    """A photo or scan saved as JPG/PNG: one page, always OCR."""
+    import io
+
+    from PIL import Image, ImageOps
+
+    if ocr is None:
+        raise OcrUnavailable("The image needs OCR and Tesseract is not installed.")
+    image = ImageOps.exif_transpose(Image.open(io.BytesIO(image_bytes))).convert("L")
+    engine = ocr.engine_name
+    text, conf = _ocr_image(image, ocr)
+    return [PageText(1, text, "ocr", ocr_engine=engine, ocr_confidence=conf)]
+
+
 def overall_source(pages: list[PageText]) -> str:
     kinds = {p.source for p in pages}
     return kinds.pop() if len(kinds) == 1 else "mixed"

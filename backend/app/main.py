@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.calculations import router as calculations_router
+from app.api.cases import router as cases_router
 from app.config import settings
 
 app = FastAPI(title="NyayaSim API", version="0.1.0")
@@ -15,11 +16,12 @@ app = FastAPI(title="NyayaSim API", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "PUT"],
     allow_headers=["Content-Type"],
 )
 
 app.include_router(calculations_router)
+app.include_router(cases_router)
 
 
 @app.get("/health")

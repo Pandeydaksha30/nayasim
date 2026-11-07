@@ -28,6 +28,11 @@ class Settings(BaseSettings):
     # verify are re-run with the stronger one: extract_fields --retry-review --model gemini-3.8-flash
     gemini_model: str = "gemini-3.5-flash-lite"
 
+    # Set true ONLY when the configured model does not retain or train on submitted data (a paid
+    # no-retention agreement). Until then real buyers' documents are never sent to the model;
+    # only cases marked is_demo (fictional documents) are.
+    private_llm_ok: bool = False
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

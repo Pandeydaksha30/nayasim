@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import time
 
+from pydantic import BaseModel
+
 from app.extraction.order_fields import ProposedFields
 
 # The SDK sends this to the server as the request deadline: at 120 s long orders (~40k chars)
@@ -51,13 +53,14 @@ class GeminiExtractor:
                 time.sleep(gap)
         self._last = time.monotonic()
 
-    def propose(self, prompt: str) -> ProposedFields:
+    def propose(self, prompt: str, schema: type[BaseModel] = ProposedFields) -> BaseModel:
+        """Ask for JSON matching ``schema`` (order fields by default, buyer facts in step 5)."""
         from google.genai import errors, types
 
         config = types.GenerateContentConfig(
             temperature=0,
             response_mime_type="application/json",
-            response_schema=ProposedFields,
+            response_schema=schema,
             thinking_config=(
                 types.ThinkingConfig(thinking_level=types.ThinkingLevel(self.thinking.upper()))
                 if self.thinking
@@ -95,7 +98,7 @@ class GeminiExtractor:
             self.last_call_s = time.monotonic() - started
             if resp.parsed is not None:
                 return resp.parsed
-            return ProposedFields.model_validate_json(resp.text or "")
+            return schema.model_validate_json(resp.text or "")
         raise RuntimeError("unreachable")
 
 

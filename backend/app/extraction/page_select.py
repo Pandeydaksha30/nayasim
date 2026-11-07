@@ -34,20 +34,23 @@ KEY_TERMS = [
 ]
 
 
-def _score(text: str) -> int:
-    return sum(len(p.findall(text)) for p in KEY_TERMS)
+def _score(text: str, terms: list[re.Pattern]) -> int:
+    return sum(len(p.findall(text)) for p in terms)
 
 
-def select_pages(pages: dict[int, str], max_chars: int = MAX_CHARS) -> dict[int, str]:
+def select_pages(
+    pages: dict[int, str], max_chars: int = MAX_CHARS, terms: list[re.Pattern] | None = None
+) -> dict[int, str]:
+    terms = KEY_TERMS if terms is None else terms
     if not pages:
         return {}
     numbers = sorted(pages)
     always = set(numbers[:FIRST]) | set(numbers[-LAST:])
     chosen = {n: pages[n] for n in numbers if n in always}
     used = sum(len(t) for t in chosen.values())
-    candidates = sorted((n for n in numbers if n not in always), key=lambda n: (-_score(pages[n]), n))
+    candidates = sorted((n for n in numbers if n not in always), key=lambda n: (-_score(pages[n], terms), n))
     for n in candidates:
-        if _score(pages[n]) == 0:
+        if _score(pages[n], terms) == 0:
             break
         if used + len(pages[n]) > max_chars:
             continue

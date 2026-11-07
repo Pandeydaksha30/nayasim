@@ -17,6 +17,7 @@ dependencies = [
     "pillow==12.3.0",
     "google-genai==2.8.0",
     "rapidfuzz==3.14.6",
+    "python-multipart==0.0.33",
 ]
 
 [dependency-groups]
@@ -44,3 +45,5 @@ select = ["E", "F", "I", "B", "UP"]
 [tool.ruff.lint.per-file-ignores]
 # Migrations hold SQL as text; long lines keep each column definition readable.
 "migrations/versions/*.py" = ["E501"]
+# Holds fictional document text verbatim.
+"scripts/demo_buyer_case.py" = ["E501"]
