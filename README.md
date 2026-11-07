@@ -5,8 +5,34 @@ facts is likely to go, what they could get, and where their case is weak — cit
 past orders. Built on the ContractIQ base (old code kept in `legacy/contractiq/`).
 
 **Status (7 Nov 2026):** frontend on demo data; Python interest/refund calculator live and
-tested; data gate passed for Haryana (see `docs/data-gate-2026-11-07.md`). Order store,
-retrieval, agents and backtest are not built yet.
+tested; data gate passed for Haryana (see `docs/data-gate-2026-11-07.md`); order-store and
+case database schema in place and tested. Ingestion, retrieval, agents and backtest are not
+built yet.
+
+## Database
+
+Postgres 17 + pgvector and Redis run in Docker (start Docker Desktop first):
+
+```powershell
+docker compose -f infra/docker-compose.yml up -d
+cd backend; .\.venv\Scripts\python.exe -m alembic upgrade head
+```
+
+Check the connection: `cd backend; .\.venv\Scripts\python.exe -m scripts.check_db`.
+Use `127.0.0.1`, not `localhost`, in `NYAYASIM_DATABASE_URL` on Windows: `localhost` tries
+IPv6 first and Docker Desktop leaves that connection hanging.
+
+Tables (schema in `backend/migrations/versions/0001_order_store.py`):
+
+| Table | Holds | Rule the database enforces |
+|---|---|---|
+| `fetch_log` | every download attempt | status or error must be recorded |
+| `orders` | one regulator decision | unique per source + complaint + date; fetched ⇒ hash stored |
+| `order_pages` | text of each page | OCR pages must name the OCR engine |
+| `order_chunks` | retrieval passages + embedding + full-text index | offsets must match the text exactly; page must exist |
+| `case_records` | structured outcome of an order | fixed outcome/claim vocabularies; per-field sources |
+| `cases`, `case_documents` | a buyer's case and uploads | page count > 0, no duplicate file |
+| `facts` | facts read from buyer documents | document, existing page and character span required |
 
 ## Run locally
 
@@ -34,7 +60,8 @@ cd backend; .\.venv\Scripts\python.exe -m uvicorn app.main:app --port 8000
 cd frontend; npm run dev
 ```
 
-Tests: `cd backend; .\.venv\Scripts\python.exe -m pytest`
+Tests: `cd backend; .\.venv\Scripts\python.exe -m pytest` (database tests need Docker running;
+they are skipped with a printed reason otherwise, or fail if `NYAYASIM_REQUIRE_DB=1`).
 
 If the frontend shows "Cannot find module './NNN.js'", a dev server was running while plain
 `npm run build` rewrote `.next`. Stop the dev server, delete `frontend\.next`, start again.
@@ -64,12 +91,15 @@ npm run build:check   # builds into .next-check; safe while npm run dev is runni
 | `backend/app/calculator/interest.py` | Delay-interest and refund maths. Decimal, per payment, no LLM. |
 | `backend/app/api/calculations.py` | `POST /api/v1/calculations/interest`: validates input, returns money as strings. |
 | `backend/app/main.py`, `config.py` | FastAPI app, CORS limited to configured origins. |
-| `backend/tests/` | Unit tests (hand-worked figures) and API tests. |
+| `backend/app/db/models.py` | SQLAlchemy mappings of the database tables. |
+| `backend/migrations/` | Alembic migrations (schema as plain SQL). |
+| `backend/tests/` | Calculator, API and database-constraint tests. |
 | `backend/scripts/data_gate_haryana.py` | Reproducible data-availability check for HRERA Gurugram. |
+| `backend/scripts/check_db.py` | Connection check with timings per address. |
 | `frontend/app/` | Next.js pages: cases, upload, facts, questions, money, hearing, report, draft. |
 | `frontend/lib/api.ts` | API client; throws on failure, never substitutes numbers. |
 | `frontend/lib/demo-case.ts` | Fictional demo case. Every order reference is marked `DEMO`. |
-| `infra/docker-compose.yml` | Postgres + pgvector and Redis for the order store (from step 3). |
+| `infra/docker-compose.yml` | Postgres 17 + pgvector 0.8 and Redis, bound to 127.0.0.1 only. |
 | `docs/` | Decisions and results (data gate). |
 | `legacy/contractiq/` | Original ContractIQ RAG backend, kept for reference. |
 
