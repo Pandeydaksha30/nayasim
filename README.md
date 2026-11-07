@@ -24,6 +24,21 @@ npm ci
 npm run dev
 ```
 
+On Windows PowerShell 5.1 (no `&&`; run each in its own terminal tab), after `uv sync` once:
+
+```powershell
+cd backend; .\.venv\Scripts\python.exe -m uvicorn app.main:app --port 8000
+```
+
+```powershell
+cd frontend; npm run dev
+```
+
+Tests: `cd backend; .\.venv\Scripts\python.exe -m pytest`
+
+If the frontend shows "Cannot find module './NNN.js'", a dev server was running while
+`npm run build` rewrote `.next`. Stop the dev server, delete `frontend\.next`, start again.
+
 Open http://localhost:3100. The frontend calls the API at `NEXT_PUBLIC_API_URL`
 (default `http://localhost:8000`); see `frontend/.env.example`. If the API is down, pages
 that show money say so — they never fall back to a figure computed elsewhere.
