@@ -258,27 +258,37 @@ def extract_case_facts(session: Session, case_id, extractor: FactExtractor) -> d
             "Configure a no-retention model (NYAYASIM_PRIVATE_LLM_OK=true) or use a demo case."
         )
     summary = {"documents": 0, "facts": 0, "rejected": [], "errors": []}
-    docs = session.scalars(select(CaseDocument).where(CaseDocument.case_id == case_id)).all()
-    for doc in docs:
-        pages = {p.page_no: p.text for p in doc.pages}
-        quality = {
-            p.page_no: (p.text_source, float(p.ocr_confidence) if p.ocr_confidence else None)
-            for p in doc.pages
-        }
+    # Read everything first, then end the transaction: no transaction may stay open during the
+    # slow model calls (a hearing once held one for ~2 hours while a call hung).
+    docs = [
+        (
+            d.id,
+            d.filename,
+            d.kind,
+            {p.page_no: p.text for p in d.pages},
+            {
+                p.page_no: (p.text_source, float(p.ocr_confidence) if p.ocr_confidence else None)
+                for p in d.pages
+            },
+        )
+        for d in session.scalars(select(CaseDocument).where(CaseDocument.case_id == case_id)).all()
+    ]
+    session.commit()
+    for doc_id, filename, kind, pages, quality in docs:
         try:
             proposed = extractor.propose(
-                build_prompt(doc.kind, select_pages(pages, terms=BUYER_TERMS)), ProposedBuyerFacts
+                build_prompt(kind, select_pages(pages, terms=BUYER_TERMS)), ProposedBuyerFacts
             )
         except Exception as e:  # reported per document; other documents still processed
-            summary["errors"].append({"document": doc.filename, "error": f"{type(e).__name__}: {e}"[:300]})
+            summary["errors"].append({"document": filename, "error": f"{type(e).__name__}: {e}"[:300]})
             continue
         result = verify_facts(proposed, pages, quality)
-        session.execute(delete(Fact).where(Fact.document_id == doc.id, Fact.confirmed.is_(False)))
+        session.execute(delete(Fact).where(Fact.document_id == doc_id, Fact.confirmed.is_(False)))
         for f in result.facts:
             session.add(
                 Fact(
                     case_id=case_id,
-                    document_id=doc.id,
+                    document_id=doc_id,
                     key=f.key,
                     label=f.label,
                     value=f.value,
@@ -289,8 +299,8 @@ def extract_case_facts(session: Session, case_id, extractor: FactExtractor) -> d
                     confidence=f.confidence,
                 )
             )
+        session.commit()  # this document's facts are saved before the next model call
         summary["documents"] += 1
         summary["facts"] += len(result.facts)
-        summary["rejected"] += [{"document": doc.filename, **r} for r in result.rejected]
-    session.flush()
+        summary["rejected"] += [{"document": filename, **r} for r in result.rejected]
     return summary

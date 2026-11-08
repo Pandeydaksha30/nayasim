@@ -43,17 +43,19 @@ export default function MethodPage() {
       <section className="panel panel-body" style={{ marginTop: 16 }}>
         <h2 style={{ fontSize: 16, marginBottom: 8 }}>How we test it</h2>
         <p className="muted" style={{ margin: 0 }}>
-          We build the system only on orders decided up to a cut-off date, then ask it to predict later orders and compare with what
-          actually happened. We publish how often it is right, how far its award estimates are off, and how it compares with simpler
-          methods.
+          The system is built only on orders decided up to a cut-off date, then asked to predict later orders, and its answers are
+          compared with what actually happened, and with simpler methods. The first sample runs are under way; results will be
+          published here once they are checked.
         </p>
       </section>
 
       <section id="data" className="panel panel-body" style={{ marginTop: 16 }}>
         <h2 style={{ fontSize: 16, marginBottom: 8 }}>Your documents</h2>
         <p className="muted" style={{ margin: 0 }}>
-          Documents are stored encrypted on servers in India and deleted after 90 days unless you keep the case open. You can delete a
-          case at any time. Your documents are not used to train models. We follow the Digital Personal Data Protection Act, 2023.
+          Documents are stored on the server that runs NyayaSim and are not shared with anyone. Their text is read on that server.
+          Real documents are not sent to any AI model until a model that keeps no data is set up; only documents marked as fictional
+          demo documents are. Automatic deletion, a delete button and encryption at rest are not built yet, and compliance with the
+          Digital Personal Data Protection Act, 2023 will be reviewed before NyayaSim is opened to the public.
         </p>
       </section>
 

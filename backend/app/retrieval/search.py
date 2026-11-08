@@ -126,6 +126,11 @@ def vector_ranks(
     case_type: str | None,
     limit: int = POOL,
 ) -> list[int]:
+    # The HNSW index returns ~ef_search nearest candidates and the cutoff/model filters are
+    # applied afterwards, so a strict cutoff could silently return too few rows. pgvector 0.8's
+    # iterative scan keeps searching until enough rows pass the filters.
+    s.execute(text("SET LOCAL hnsw.iterative_scan = relaxed_order"))
+    s.execute(text("SET LOCAL hnsw.ef_search = 200"))
     rows = s.execute(
         text(f"""
             SELECT c.id {_BASE}

@@ -74,6 +74,8 @@ def extract_order(
             p.page_no: p.text for p in s.scalars(select(OrderPage).where(OrderPage.order_id == order_id))
         }
         label = f"{order.complaint_no} ({order.decided_on})"
+        complaint_no = order.complaint_no
+        s.commit()  # end the read transaction: none may stay open during the model call
         report.attempted += 1
         try:
             # Only key pages go to the model; verification below uses all stored pages.
@@ -96,7 +98,7 @@ def extract_order(
                     json.dumps(
                         {
                             "order_id": order_id,
-                            "complaint_no": order.complaint_no,
+                            "complaint_no": complaint_no,
                             "at": datetime.now(UTC).isoformat(),
                             "rejected": result.rejected,
                         },

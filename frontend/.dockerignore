@@ -1,0 +1,7 @@
+node_modules
+.next
+.next-check
+.env
+.env.*
+!.env.example
+*.tsbuildinfo

@@ -40,7 +40,7 @@ export default async function CasesPage() {
         <div className="panel stat">
           <div className="label">Documents</div>
           <div className="stat-value">{error ? "—" : docs}</div>
-          <div className="stat-note">Stored privately on this computer</div>
+          <div className="stat-note">Stored privately on the NyayaSim server</div>
         </div>
         <div className="panel stat">
           <div className="label">Verified facts</div>
@@ -55,38 +55,38 @@ export default async function CasesPage() {
           <span className="small faint">{cases.length} {cases.length === 1 ? "case" : "cases"} + 1 example</span>
         </div>
         <div className="table-wrap">
-          <table className="ledger">
+          <table className="ledger stack">
             <thead>
               <tr><th>Case</th><th>Claim</th><th className="r">Documents</th><th className="r">Facts</th><th>Status</th><th>Created</th></tr>
             </thead>
             <tbody>
               {cases.map((c) => (
                 <tr key={c.id}>
-                  <td>
+                  <td data-label="Case">
                     <Link href={`/cases/${c.id}/facts`} className="cell-title">{c.title}</Link>
                     {c.is_demo && <div className="cell-sub">Demo documents</div>}
                   </td>
-                  <td>{CLAIM[c.claim_type] ?? c.claim_type}</td>
-                  <td className="r num">{c.documents}</td>
-                  <td className="r num">{c.facts}</td>
-                  <td>
+                  <td data-label="Claim">{CLAIM[c.claim_type] ?? c.claim_type}</td>
+                  <td data-label="Documents" className="r num">{c.documents}</td>
+                  <td data-label="Facts" className="r num">{c.facts}</td>
+                  <td data-label="Status">
                     <span className={`tag ${c.facts ? "tag-pos" : c.documents ? "tag-mid" : "tag-neutral"}`}>
                       {c.facts ? "Facts found" : c.documents ? "Documents uploaded" : "New"}
                     </span>
                   </td>
-                  <td className="num faint">{fmtDate(c.created_at.slice(0, 10))}</td>
+                  <td data-label="Created" className="num faint">{fmtDate(c.created_at.slice(0, 10))}</td>
                 </tr>
               ))}
               <tr>
-                <td>
+                <td data-label="Case">
                   <Link href={`/cases/${demoCase.id}/report`} className="cell-title">{demoCase.title}</Link>
                   <div className="cell-sub">Example with a full report (fictional)</div>
                 </td>
-                <td>{demoCase.claimType}</td>
-                <td className="r num">{demoCase.documents.length}</td>
-                <td className="r num">{demoCase.facts.length}</td>
-                <td><span className="tag tag-neutral">Example</span></td>
-                <td className="num faint">{fmtDate(demoCase.updated)}</td>
+                <td data-label="Claim">{demoCase.claimType}</td>
+                <td data-label="Documents" className="r num">{demoCase.documents.length}</td>
+                <td data-label="Facts" className="r num">{demoCase.facts.length}</td>
+                <td data-label="Status"><span className="tag tag-neutral">Example</span></td>
+                <td data-label="Created" className="num faint">{fmtDate(demoCase.updated)}</td>
               </tr>
             </tbody>
           </table>

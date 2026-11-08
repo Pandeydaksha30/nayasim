@@ -210,3 +210,25 @@ def test_merge_review_logs_after_retry(tmp_path):
     assert sorted(x["order_id"] for x in lines) == [2, 3, 4]
     assert next(x for x in lines if x["order_id"] == 2)["rejected"] == [{"field": "outcome"}]
     assert not retry.exists()
+
+
+def test_extraction_holds_no_transaction_during_the_model_call(fetched_order, tmp_path):
+    engine, oid = fetched_order
+    seen = []
+
+    class Watching(StandIn):
+        def propose(self, prompt):
+            from sqlalchemy import text as _t
+
+            with engine.connect() as c:
+                open_txns = c.execute(
+                    _t(
+                        "SELECT count(*) FROM pg_stat_activity WHERE datname = current_database() "
+                        "AND state = 'idle in transaction'"
+                    )
+                ).scalar()
+            seen.append(open_txns)
+            return super().propose(prompt)
+
+    extract_order(engine, oid, Watching(good_proposal()), tmp_path / "r.jsonl", ExtractReport())
+    assert seen == [0]

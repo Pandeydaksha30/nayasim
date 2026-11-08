@@ -1,0 +1,87 @@
+# NyayaSim production stack.
+#   cp infra/.env.prod.example infra/.env.prod   (fill it in)
+#   docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod up -d --build
+# With HTTPS + site password (needs a domain pointing at this server):
+#   docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod --profile https up -d --build
+name: nyayasim
+
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.0-pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nyayasim
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env.prod}
+      POSTGRES_DB: nyayasim
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nyayasim"]
+      interval: 5s
+      retries: 20
+
+  migrate:
+    build: ../backend
+    image: nyayasim-api:latest
+    command: ["alembic", "upgrade", "head"]
+    environment: &api_env
+      NYAYASIM_DATABASE_URL: postgresql+psycopg://nyayasim:${POSTGRES_PASSWORD}@postgres:5432/nyayasim?connect_timeout=10
+      NYAYASIM_CORS_ORIGINS: ${PUBLIC_WEB_URL:?set PUBLIC_WEB_URL}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      NYAYASIM_PRIVATE_LLM_OK: ${NYAYASIM_PRIVATE_LLM_OK:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    image: nyayasim-api:latest
+    restart: unless-stopped
+    environment: *api_env
+    volumes:
+      - appdata:/srv/data
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "${API_BIND:-127.0.0.1}:${API_PORT:-8000}:8000"
+
+  web:
+    build:
+      context: ../frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL:?set PUBLIC_API_URL}
+    image: nyayasim-web:latest
+    restart: unless-stopped
+    environment:
+      API_URL: http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${WEB_BIND:-127.0.0.1}:${WEB_PORT:-3000}:3000"
+
+  # Optional HTTPS front door with a site-wide password. The API has no user accounts yet, so
+  # a public deployment must not be left open.
+  caddy:
+    image: caddy:2.10-alpine
+    profiles: ["https"]
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:-}
+      BASIC_AUTH_USER: ${BASIC_AUTH_USER:-nyayasim}
+      BASIC_AUTH_HASH: ${BASIC_AUTH_HASH:-}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - web
+      - api
+
+volumes:
+  pgdata:
+  appdata:
+  caddydata:

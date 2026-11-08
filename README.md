@@ -71,6 +71,10 @@ Open http://localhost:3100. The frontend calls the API at `NEXT_PUBLIC_API_URL`
 (default `http://localhost:8000`); see `frontend/.env.example`. If the API is down, pages
 that show money say so — they never fall back to a figure computed elsewhere.
 
+## Deploy
+
+One-server Docker setup (database, API, website, optional HTTPS with a site password): see [docs/deploy.md](docs/deploy.md).
+
 ## Test
 
 ```bash

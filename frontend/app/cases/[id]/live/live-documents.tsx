@@ -13,7 +13,7 @@ export default function LiveDocuments({ c }: { c: CaseFull }) {
         <Link className="btn" href="/cases/new"><PlusIcon /> New case</Link>
       </div>
       <div className="panel table-wrap">
-        <table className="ledger">
+        <table className="ledger stack">
           <thead>
             <tr><th>Document</th><th>Type</th><th className="r">Pages</th><th>Reading</th></tr>
           </thead>
@@ -23,15 +23,15 @@ export default function LiveDocuments({ c }: { c: CaseFull }) {
             )}
             {c.documents.map((d) => (
               <tr key={d.id}>
-                <td>
-                  <span style={{ display: "inline-flex", gap: 10, alignItems: "center" }}>
+                <td data-label="Document" style={{ maxWidth: 360 }}>
+                  <span style={{ display: "inline-flex", gap: 10, alignItems: "center", minWidth: 0 }}>
                     <span style={{ color: "var(--primary)" }}><FileIcon /></span>
-                    <span className="cell-title">{d.filename}</span>
+                    <span className="cell-title cell-wrap">{d.filename}</span>
                   </span>
                 </td>
-                <td>{kindLabel(d.kind)}</td>
-                <td className="r num">{d.page_count}</td>
-                <td>
+                <td data-label="Type">{kindLabel(d.kind)}</td>
+                <td data-label="Pages" className="r num">{d.page_count}</td>
+                <td data-label="Reading">
                   {d.ocr_pages === 0 && <span className="tag tag-neutral">Text layer</span>}
                   {d.ocr_pages > 0 && d.ocr_pages < d.page_count && <span className="tag tag-mid">{d.ocr_pages} pages by OCR</span>}
                   {d.ocr_pages > 0 && d.ocr_pages === d.page_count && <span className="tag tag-mid">OCR</span>}

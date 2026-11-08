@@ -73,6 +73,8 @@ def store_document(
             existing.id, existing.filename, existing.kind, existing.page_count, ocr_pages, True
         )
 
+    session.commit()  # no transaction stays open during OCR, which can take minutes for scans
+
     # Read the text first: an unreadable file is rejected before anything is saved.
     try:
         pages = extract_pages(data, ocr) if ext == ".pdf" else extract_image(data, ocr)

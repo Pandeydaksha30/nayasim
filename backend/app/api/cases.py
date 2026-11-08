@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.buyer import documents as documents_mod
 from app.buyer.documents import KINDS, UploadRejected, store_document
 from app.buyer.facts import FactExtractor, PrivateDataBlocked, extract_case_facts
 from app.buyer.questions import questions_for, validate_answer
@@ -198,7 +199,11 @@ async def upload_document(
     _case_or_404(s, case_id)
     if kind not in KINDS:
         raise HTTPException(422, f"kind must be one of {', '.join(KINDS)}")
-    data = await file.read()
+    # Read at most one byte past the limit: an oversized upload is rejected without being
+    # held in memory in full.
+    data = await file.read(documents_mod.MAX_BYTES + 1)
+    if len(data) > documents_mod.MAX_BYTES:
+        raise HTTPException(413, "Files must be 25 MB or smaller.")
     try:
         stored = store_document(s, case_id, file.filename or "upload", kind, data, ocr)
     except UploadRejected as e:

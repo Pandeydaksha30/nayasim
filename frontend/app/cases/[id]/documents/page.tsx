@@ -22,14 +22,14 @@ export default async function DocumentsPage({ params }: { params: Promise<{ id: 
       </div>
 
       <div className="panel table-wrap">
-        <table className="ledger">
+        <table className="ledger stack">
           <thead>
             <tr><th>Document</th><th>Dated</th><th className="r">Pages</th><th>Language</th><th>Reading</th></tr>
           </thead>
           <tbody>
             {c.documents.map((d) => (
               <tr key={d.id}>
-                <td>
+                <td data-label="Document">
                   <span style={{ display: "inline-flex", gap: 10, alignItems: "flex-start" }}>
                     <span style={{ color: "var(--primary)", marginTop: 2 }}><FileIcon /></span>
                     <span>
@@ -38,10 +38,10 @@ export default async function DocumentsPage({ params }: { params: Promise<{ id: 
                     </span>
                   </span>
                 </td>
-                <td className="num">{fmtDate(d.date)}</td>
-                <td className="r num">{d.pages}</td>
-                <td>{d.language}</td>
-                <td>
+                <td data-label="Dated" className="num">{fmtDate(d.date)}</td>
+                <td data-label="Pages" className="r num">{d.pages}</td>
+                <td data-label="Language">{d.language}</td>
+                <td data-label="Reading">
                   <span className={`tag ${d.ocr === "OCR, needs review" ? "tag-mid" : "tag-neutral"}`}>{d.ocr}</span>
                 </td>
               </tr>

@@ -27,19 +27,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </Link>
             <TopNav />
             <div className="spacer" />
-            <div className="user">
-              <div className="user-text">
-                <span>Ananya Mehra</span>
-                <span>Homebuyer</span>
-              </div>
-              <span className="avatar" aria-hidden>AM</span>
-            </div>
+            <span className="tag tag-neutral" title="There are no user accounts yet">Private workspace</span>
           </div>
         </header>
         <div className="demo-bar">
           <Banner tone="warn">
-            <b>Demo build.</b> The case, project and every order reference marked DEMO are fictional. Money figures are
-            computed live by the calculation service.
+            <b>Early version.</b> The example case and anything marked DEMO are fictional. Reports show patterns in past
+            orders; they are not legal advice.
           </Banner>
         </div>
         {children}

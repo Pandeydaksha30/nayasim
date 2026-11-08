@@ -40,9 +40,11 @@ class Settings(BaseSettings):
     embedding_query_prefix: str = "Represent this sentence for searching relevant passages: "
     embedding_doc_prefix: str = ""
 
-    # Hearing agents: the stronger model (measured ~30-120 s per call on the free tier).
-    hearing_model: str = "gemini-3.8-flash"
-    hearing_thinking: str | None = "low"
+    # Hearing agents. flash-lite: a whole hearing took 12 s in the first real run, inside a normal
+    # web request. gemini-3.8-flash is stronger but took 30-120 s per call and its free daily quota
+    # ran out; set NYAYASIM_HEARING_MODEL=gemini-3.8-flash and NYAYASIM_HEARING_THINKING=low to use it.
+    hearing_model: str = "gemini-3.5-flash-lite"
+    hearing_thinking: str | None = None
 
     @property
     def cors_origin_list(self) -> list[str]:

@@ -1,0 +1,24 @@
+# HTTPS for {$DOMAIN}, behind one site-wide password.
+# Website and API share one address: /api/* and /health go to the API, everything else to the
+# website. (With the API on a separate host, browsers would not send the site password with
+# cross-origin requests, and every API call from the website would fail.)
+# Make the hash with:  docker run --rm caddy:2.10-alpine caddy hash-password --plaintext 'your password'
+
+{$DOMAIN} {
+	basic_auth {
+		{$BASIC_AUTH_USER} {$BASIC_AUTH_HASH}
+	}
+	encode zstd gzip
+	request_body {
+		max_size 26MB
+	}
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+	handle /health {
+		reverse_proxy api:8000
+	}
+	handle {
+		reverse_proxy web:3000
+	}
+}

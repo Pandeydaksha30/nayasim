@@ -103,8 +103,10 @@ def ingest_order(
             return
         report.attempted += 1
         label = f"{order.complaint_no} ({order.decided_on})"
+        pdf_url = order.pdf_url
+        s.commit()  # no transaction stays open during the download and OCR (minutes per order)
         try:
-            got = fetcher.get(order.pdf_url)
+            got = fetcher.get(pdf_url)
             if not got.body.startswith(b"%PDF"):
                 raise ValueError(f"not a PDF (starts with {got.body[:16]!r})")
             pages = extract_pages(got.body, ocr)
@@ -118,6 +120,9 @@ def ingest_order(
         store_dir.mkdir(parents=True, exist_ok=True)
         (store_dir / f"{got.sha256}.pdf").write_bytes(got.body)
 
+        order = s.get(Order, order_id)  # reloaded in a fresh transaction
+        if order.fetched_at is not None:  # another run stored it meanwhile
+            return
         n_chunks = 0
         for p in pages:
             s.add(

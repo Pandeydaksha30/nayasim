@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   // `npm run build:check` builds into .next-check so it can run while `npm run dev` uses .next.
   // (Building into the dev server's folder breaks it with "Cannot find module './NNN.js'".)
   distDir: process.env.NEXT_DIST_DIR || ".next",
+  // Self-contained server for the Docker image (frontend/Dockerfile).
+  output: "standalone",
+  poweredByHeader: false,
 };
 
 export default nextConfig;

@@ -107,16 +107,16 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
 
       <h3 className={styles.h}>What the builder is likely to argue</h3>
       <div className="panel table-wrap">
-        <table className="ledger">
+        <table className="ledger stack">
           <thead>
             <tr><th>Defence</th><th className="r">Raised in similar orders</th><th>Your answer</th></tr>
           </thead>
           <tbody>
             {defences.map((d) => (
               <tr key={d.title}>
-                <td style={{ fontWeight: 500 }}>{d.title}</td>
-                <td className="r num">{pct(d.seenIn)}</td>
-                <td className="muted">{d.answer}</td>
+                <td data-label="Defence" style={{ fontWeight: 500 }}>{d.title}</td>
+                <td data-label="Raised in similar orders" className="r num">{pct(d.seenIn)}</td>
+                <td data-label="Your answer" className="muted">{d.answer}</td>
               </tr>
             ))}
           </tbody>

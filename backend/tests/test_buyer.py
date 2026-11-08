@@ -303,3 +303,38 @@ def test_case_list_shows_counts(api):
     assert [c["title"] for c in listed] == ["Second", "First"]
     first = listed[1]
     assert first["documents"] == 1 and first["facts"] >= 5 and first["is_demo"] is True
+
+
+def test_oversized_upload_is_refused_without_reading_it_all(api, monkeypatch):
+    client, _, _ = api
+    monkeypatch.setattr(documents_mod, "MAX_BYTES", 1000)
+    case = client.post("/api/v1/cases", json={"title": "x", "is_demo": True}).json()
+    res = upload(client, case["id"], text_pdf([AGREEMENT_P1 * 5]))
+    assert res.status_code == 413 and "25 MB" in res.json()["detail"]
+
+
+def test_no_transaction_is_open_while_the_model_reads_documents(db_engine, tmp_path, monkeypatch):
+    from app.buyer.facts import extract_case_facts
+
+    monkeypatch.setattr(documents_mod, "UPLOAD_ROOT", tmp_path)
+    seen = []
+    with Session(db_engine) as s:
+        case = Case(title="t", claim_type="refund", is_demo=True)
+        s.add(case)
+        s.flush()
+        documents_mod.store_document(
+            s, case.id, "a.pdf", "agreement", text_pdf([AGREEMENT_P1, AGREEMENT_P2]), None
+        )
+        documents_mod.store_document(s, case.id, "b.pdf", "receipt", text_pdf([AGREEMENT_P2]), None)
+        s.commit()
+
+        class Watching(StandIn):
+            def propose(self, prompt, schema):
+                seen.append(s.in_transaction())
+                return super().propose(prompt, schema)
+
+        summary = extract_case_facts(s, case.id, Watching())
+        assert summary["documents"] == 2 and not summary["errors"]
+        s.execute(text("DELETE FROM cases WHERE id = :i"), {"i": case.id})
+        s.commit()
+    assert seen == [False, False]

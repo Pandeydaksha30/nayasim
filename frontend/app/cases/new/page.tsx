@@ -182,7 +182,7 @@ export default function NewCasePage() {
         <input type="checkbox" checked={isDemo} onChange={(e) => setIsDemo(e.target.checked)} disabled={!!busy} />
         <span>
           <b>These are fictional demo documents.</b> Only demo documents are sent to the AI model for now. Real documents are
-          stored and read on this computer, but fact-finding stays off until a model that keeps no data is set up.
+          stored and read on the NyayaSim server, but fact-finding stays off until a model that keeps no data is set up.
         </span>
       </label>
       <label className={styles.consent}>

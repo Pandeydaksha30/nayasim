@@ -126,13 +126,13 @@ export default async function LiveReport({ c }: { c: CaseFull }) {
         <p className="muted">No builder defence survived the citation check.</p>
       ) : (
         <div className="panel table-wrap">
-          <table className="ledger">
+          <table className="ledger stack">
             <thead><tr><th>Defence</th><th>Based on</th></tr></thead>
             <tbody>
               {r.arguments.builder.map((a, i) => (
                 <tr key={i}>
-                  <td><span className="cell-title">{a.heading}</span><div className="cell-sub">{a.body}</div></td>
-                  <td className="small">{a.citations.map((ct) => `${ct.complaint_no} p.${ct.page_no}`).join(", ")}</td>
+                  <td data-label="Defence"><span className="cell-title">{a.heading}</span><div className="cell-sub">{a.body}</div></td>
+                  <td data-label="Based on" className="small">{a.citations.map((ct) => `${ct.complaint_no} p.${ct.page_no}`).join(", ")}</td>
                 </tr>
               ))}
             </tbody>

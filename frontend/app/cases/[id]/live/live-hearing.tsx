@@ -98,14 +98,14 @@ export default async function LiveHearing({ c }: { c: CaseFull }) {
           <section className={styles.round}>
             <div className={styles.roundHead}><span className="label">Removed by the citation check</span></div>
             <div className="panel table-wrap">
-              <table className="ledger">
+              <table className="ledger stack">
                 <thead><tr><th>Side</th><th>Argument</th><th>Why removed</th></tr></thead>
                 <tbody>
                   {removed.map((a, i) => (
                     <tr key={i}>
-                      <td>{WHO[a.side]}</td>
-                      <td className="cell-title">{a.heading}</td>
-                      <td className="small muted">
+                      <td data-label="Side">{WHO[a.side]}</td>
+                      <td data-label="Argument" className="cell-title">{a.heading}</td>
+                      <td data-label="Why removed" className="small muted">
                         {a.removed_because}
                         {a.citations.filter((x) => x.status !== "verified").flatMap((x) => x.reasons).slice(0, 2).map((reason, j) => <div key={j}>· {reason}</div>)}
                       </td>
@@ -113,9 +113,9 @@ export default async function LiveHearing({ c }: { c: CaseFull }) {
                   ))}
                   {r.judge.citations_removed.map((ct, i) => (
                     <tr key={`j${i}`}>
-                      <td>Bench</td>
-                      <td>Citation of {ct.complaint_no ?? ct.precedent}, p. {ct.page_no}</td>
-                      <td className="small muted">{ct.reasons.join("; ")}</td>
+                      <td data-label="Side">Bench</td>
+                      <td data-label="Argument">Citation of {ct.complaint_no ?? ct.precedent}, p. {ct.page_no}</td>
+                      <td data-label="Why removed" className="small muted">{ct.reasons.join("; ")}</td>
                     </tr>
                   ))}
                 </tbody>
