@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_prefix="NYAYASIM_", extra="ignore")
 
     # Comma-separated list of origins allowed to call the API from a browser.
-    cors_origins: str = "http://localhost:3100"
+    cors_origins: str = "http://localhost:3100,http://127.0.0.1:3100"
 
     # Local Docker database from infra/docker-compose.yml. Override in production.
     # 127.0.0.1, not localhost: on Windows "localhost" tries IPv6 (::1) first, and Docker Desktop's
