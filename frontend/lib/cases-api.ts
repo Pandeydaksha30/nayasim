@@ -23,6 +23,7 @@ export interface CaseSummary {
   claim_type: string;
   status: string;
   is_demo: boolean;
+  shared: boolean;
   created_at: string;
   documents: number;
   facts: number;
@@ -87,12 +88,21 @@ export interface ExtractSummary {
   errors: { document: string; error: string }[];
 }
 
-async function call<T>(path: string, init?: RequestInit): Promise<T> {
+/** Server components pass the signed-in user's cookie (lib/server-session.ts); the browser sends
+ * it by itself. */
+export type Auth = { headers?: Record<string, string> };
+
+async function call<T>(path: string, init?: RequestInit, auth?: Auth): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`${BASE}${path}`, { cache: "no-store", ...init });
+    res = await fetch(`${BASE}${path}`, {
+      cache: "no-store",
+      credentials: "same-origin",
+      ...init,
+      headers: { ...(init?.headers as Record<string, string> | undefined), ...auth?.headers },
+    });
   } catch {
-    throw new ApiError(`The NyayaSim service is not reachable at ${BASE}. Start the backend and try again.`);
+    throw new ApiError("The NyayaSim service is not reachable. Start the backend and try again.");
   }
   if (!res.ok) {
     let detail = `Request failed (HTTP ${res.status}).`;
@@ -113,8 +123,8 @@ const json = (body: unknown): RequestInit => ({
   body: JSON.stringify(body),
 });
 
-export const listCases = () => call<CaseSummary[]>("/api/v1/cases");
-export const getCase = (id: string) => call<CaseFull>(`/api/v1/cases/${id}`);
+export const listCases = (auth?: Auth) => call<CaseSummary[]>("/api/v1/cases", undefined, auth);
+export const getCase = (id: string, auth?: Auth) => call<CaseFull>(`/api/v1/cases/${id}`, undefined, auth);
 export const createCase = (title: string, isDemo: boolean) =>
   call<CaseFull>("/api/v1/cases", { method: "POST", ...json({ title, is_demo: isDemo }) });
 
@@ -233,9 +243,9 @@ export interface HearingRun {
 }
 
 /** Latest completed hearing, or null if none has been run yet. */
-export async function getHearing(caseId: string): Promise<HearingRun | null> {
+export async function getHearing(caseId: string, auth?: Auth): Promise<HearingRun | null> {
   try {
-    return await call<HearingRun>(`/api/v1/cases/${caseId}/hearing`);
+    return await call<HearingRun>(`/api/v1/cases/${caseId}/hearing`, undefined, auth);
   } catch (e) {
     if (e instanceof ApiError && e.status === 404) return null;
     throw e;

@@ -4,12 +4,12 @@
  */
 import type { Payment } from "./types";
 
-// Server-side calls use 127.0.0.1: on Windows "localhost" may try IPv6 first while the API
-// listens on IPv4 only.
-export const BASE =
-  typeof window === "undefined"
-    ? process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000"
-    : process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// The browser always calls the API on the website's own address (/api/...): next.config.ts
+// forwards it to the API locally, and Caddy does in production. Same origin means the session
+// cookie is first-party and no cross-origin request is ever needed.
+// Server-side calls go straight to the API. 127.0.0.1: on Windows "localhost" may try IPv6 first
+// while the API listens on IPv4 only.
+export const BASE = typeof window === "undefined" ? process.env.API_URL ?? "http://127.0.0.1:8000" : "";
 
 export interface InterestInput {
   payments: Payment[];
@@ -70,7 +70,7 @@ export async function computeInterest(input: InterestInput, signal?: AbortSignal
     });
   } catch (e) {
     if (e instanceof DOMException && e.name === "AbortError") throw e;
-    throw new ApiError(`The calculation service is not reachable at ${BASE}. Start the backend and try again.`);
+    throw new ApiError("The calculation service is not reachable. Start the backend and try again.");
   }
   if (!res.ok) {
     let detail = `Calculation failed (HTTP ${res.status}).`;

@@ -6,9 +6,10 @@ RUN npm ci --no-audit --no-fund
 
 FROM node:22-alpine AS build
 WORKDIR /app
-# The browser calls the API at this public address; it is baked into the build.
-ARG NEXT_PUBLIC_API_URL=http://localhost:8000
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL NEXT_TELEMETRY_DISABLED=1
+# The browser calls /api on the site's own address; this server forwards it to API_URL
+# (next.config.ts rewrites, fixed at build time). Inside Docker the API is http://api:8000.
+ARG API_URL=http://api:8000
+ENV API_URL=$API_URL NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
@@ -21,5 +22,5 @@ COPY --from=build --chown=web:web /app/.next/standalone ./
 COPY --from=build --chown=web:web /app/.next/static ./.next/static
 USER web
 EXPOSE 3000
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://127.0.0.1:3000/method >/dev/null || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://127.0.0.1:3000/terms >/dev/null || exit 1
 CMD ["node", "server.js"]

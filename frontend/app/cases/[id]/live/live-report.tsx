@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Banner } from "@/components/icons";
+import { sessionAuth } from "@/lib/server-session";
 import { type CaseFull, getHearing } from "@/lib/cases-api";
 import { fmtDate, fmtINRShort, pct } from "@/lib/format";
 import styles from "../report/report.module.css";
@@ -17,7 +18,7 @@ const OUTCOME_CLASS: Record<string, string> = { allowed: styles.segPos, partly_a
 export default async function LiveReport({ c }: { c: CaseFull }) {
   let run;
   try {
-    run = await getHearing(c.id);
+    run = await getHearing(c.id, await sessionAuth());
   } catch (e) {
     return <Banner tone="error"><b>Could not load the report.</b> {e instanceof Error ? e.message : ""}</Banner>;
   }

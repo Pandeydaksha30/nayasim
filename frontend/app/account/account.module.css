@@ -1,0 +1,23 @@
+.section { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: 32px; padding: 28px 0; border-top: 1px solid var(--border); }
+.section:first-child { border-top: 0; padding-top: 4px; }
+.intro h2 { font-size: 16px; }
+.intro p { margin: 6px 0 0; font-size: 13.5px; color: var(--text-2); }
+.card { padding: 20px; display: grid; gap: 16px; }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.rowText b { display: block; font-weight: 600; }
+.rowText span { font-size: 13.5px; color: var(--text-2); }
+.control { width: 100%; height: 40px; padding: 0 12px; font: 400 14.5px var(--sans); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm); }
+.control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-ring); }
+.control[readonly] { background: var(--bg); color: var(--text-2); }
+.actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.msgOk { font-size: 13px; color: var(--pos); }
+.msgBad { font-size: 13px; color: var(--neg); }
+.danger { border-color: var(--neg-border); }
+.dangerBtn { background: var(--neg); border-color: var(--neg); color: #fff; }
+.dangerBtn:hover { background: #9f1239; border-color: #9f1239; color: #fff; }
+.dangerBtn[disabled]:hover { background: var(--neg); }
+.divider { height: 1px; background: var(--border); }
+
+@media (max-width: 760px) {
+  .section { grid-template-columns: 1fr; gap: 14px; }
+}

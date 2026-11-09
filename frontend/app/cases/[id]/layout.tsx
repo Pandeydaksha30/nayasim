@@ -27,7 +27,7 @@ export default async function CaseLayout({
   if (src.kind === "error") {
     return (
       <main className="page page-narrow">
-        <div className="crumb"><Link href="/">Cases</Link></div>
+        <div className="crumb"><Link href="/dashboard">Cases</Link></div>
         <Banner tone="error"><b>Could not load this case.</b> {src.message}</Banner>
       </main>
     );
@@ -83,7 +83,7 @@ export default async function CaseLayout({
     <>
       <div className="case-head">
         <div className="case-head-inner">
-          <div className="crumb"><Link href="/">Cases</Link> <ChevronIcon size={12} /> <span>{head.title}</span></div>
+          <div className="crumb"><Link href="/dashboard">Cases</Link> <ChevronIcon size={12} /> <span>{head.title}</span></div>
           <div className="case-title-row">
             <h1>{head.title}</h1>
             <span className="tag tag-pos">{head.status}</span>

@@ -68,3 +68,23 @@ def db(db_engine: Engine) -> Iterator[Session]:
     session.close()
     trans.rollback()
     conn.close()
+
+
+def make_user(engine: Engine, email: str = "owner@example.com"):
+    """A verified password user, committed, returned detached (for dependency overrides)."""
+    from app.auth.security import hash_password
+    from app.db.models import User
+
+    with Session(engine, expire_on_commit=False) as s:
+        s.execute(text("DELETE FROM users WHERE email = :e"), {"e": email})
+        user = User(
+            email=email,
+            name="Owner",
+            password_hash=hash_password("correct horse battery"),
+            email_verified=True,
+        )
+        s.add(user)
+        s.commit()
+        s.refresh(user)
+        s.expunge(user)
+    return user

@@ -13,7 +13,16 @@ from decimal import Decimal
 from typing import Any
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import ARRAY, BigInteger, Computed, ForeignKey, ForeignKeyConstraint, Numeric, Text
+from sqlalchemy import (
+    ARRAY,
+    BigInteger,
+    Computed,
+    DateTime,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Numeric,
+    Text,
+)
 from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -114,6 +123,8 @@ class Case(Base):
     status: Mapped[str] = mapped_column(Text, server_default="draft")
     # Fictional demo case: the only kind that may go to a model that can retain data.
     is_demo: Mapped[bool] = mapped_column(server_default="false")
+    # Owner (migration 0007). NULL only for shared demo cases created before accounts existed.
+    user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     created_at: Mapped[datetime] = mapped_column(server_default="now()")
     updated_at: Mapped[datetime] = mapped_column(server_default="now()")
 
@@ -192,3 +203,55 @@ class HearingRun(Base):
     result: Mapped[dict] = mapped_column(JSONB, server_default="{}")
     started_at: Mapped[datetime] = mapped_column(server_default="now()")
     finished_at: Mapped[datetime | None]
+
+
+# ── Accounts (migration 0007) ──
+TZ = DateTime(timezone=True)
+
+
+class User(Base):
+    __tablename__ = "users"
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default="gen_random_uuid()"
+    )
+    email: Mapped[str] = mapped_column(Text)  # always lowercase
+    name: Mapped[str] = mapped_column(Text, server_default="")
+    password_hash: Mapped[str | None] = mapped_column(Text)  # NULL: Google-only account
+    google_sub: Mapped[str | None] = mapped_column(Text)
+    email_verified: Mapped[bool] = mapped_column(server_default="false")
+    failed_logins: Mapped[int] = mapped_column(server_default="0")
+    locked_until: Mapped[datetime | None] = mapped_column(TZ)
+    created_at: Mapped[datetime] = mapped_column(TZ, server_default="now()")
+    last_login_at: Mapped[datetime | None] = mapped_column(TZ)
+
+
+class UserSession(Base):
+    __tablename__ = "user_sessions"
+    token_hash: Mapped[str] = mapped_column(Text, primary_key=True)  # SHA-256 of the cookie value
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    created_at: Mapped[datetime] = mapped_column(TZ, server_default="now()")
+    expires_at: Mapped[datetime] = mapped_column(TZ)
+    last_seen_at: Mapped[datetime] = mapped_column(TZ, server_default="now()")
+    ip: Mapped[str | None] = mapped_column(Text)
+    user_agent: Mapped[str | None] = mapped_column(Text)
+
+
+class AuthToken(Base):
+    __tablename__ = "auth_tokens"
+    token_hash: Mapped[str] = mapped_column(Text, primary_key=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    purpose: Mapped[str] = mapped_column(Text)  # verify_email | reset_password
+    created_at: Mapped[datetime] = mapped_column(TZ, server_default="now()")
+    expires_at: Mapped[datetime] = mapped_column(TZ)
+    used_at: Mapped[datetime | None] = mapped_column(TZ)
+
+
+class AuthEvent(Base):
+    __tablename__ = "auth_events"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    email: Mapped[str | None] = mapped_column(Text)
+    event: Mapped[str] = mapped_column(Text)
+    ip: Mapped[str | None] = mapped_column(Text)
+    user_agent: Mapped[str | None] = mapped_column(Text)
+    at: Mapped[datetime] = mapped_column(TZ, server_default="now()")

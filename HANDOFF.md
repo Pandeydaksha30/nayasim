@@ -72,12 +72,14 @@ Also:
    `Start-Process 'C:\Program Files\Docker\Docker\Docker Desktop.exe'`
 2. Database (only if the containers are not running):
    `cd C:\Users\pande\Downloads\CONTRACT_IQ\contractiq; docker compose -f infra/docker-compose.yml up -d`
-3. API: `cd C:\Users\pande\Downloads\CONTRACT_IQ\contractiq\backend; .\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000`
-4. Website: `cd C:\Users\pande\Downloads\CONTRACT_IQ\contractiq\frontend; npm run dev`
-5. Open http://localhost:3100 (health: http://127.0.0.1:8000/health).
+3. API: `.\scripts\dev-api.ps1` (applies migrations, then uvicorn on 127.0.0.1:8000)
+4. Website: `.\scripts\dev-web.ps1` (Next.js on :3100, forwards `/api` to the API)
+5. Open http://localhost:3100, **Create account**. Without SMTP the confirmation link is printed in
+   the API window and saved in `data\outbox\`. Ports busy: `-Port 8010 -WebPort 3110` / `-Port 3110 -ApiPort 8010`.
+   uv for Claude's shell: `C:\Users\pande\AppData\Roaming\Python\Python314\Scripts\uv.exe`.
 
 Tests and checks:
-- Backend: `cd backend; $env:NYAYASIM_REQUIRE_DB='1'; $env:NYAYASIM_REQUIRE_OCR='1'; .\.venv\Scripts\python.exe -m pytest -q` (173 pass as of ebcf9c7), then `.\.venv\Scripts\python.exe -m ruff check .`
+- Backend: `cd backend; $env:NYAYASIM_REQUIRE_DB='1'; $env:NYAYASIM_REQUIRE_OCR='1'; .\.venv\Scripts\python.exe -m pytest -q` (196 pass incl. 23 account/security tests), then `.\.venv\Scripts\python.exe -m ruff check .`
 - Frontend: `cd frontend; npx tsc --noEmit; npm run build:check` (`build:check` builds into `.next-check` so it is safe while `npm run dev` runs).
 
 ## 5. Windows / tooling gotchas (save time)
@@ -112,10 +114,14 @@ Tests and checks:
 | dcea538 | Step 9: time-split backtest (train < 2025-01-01, test ≥ 2025, merits classes only); methods: majority, buckets, single LLM, debate; accuracy + Wilson CI, macro-F1, confusion, McNemar |
 | ebcf9c7 | 10-pass review fixes (413 for >25 MB uploads, no open transactions during OCR/model calls everywhere, vector search fills its pool under strict cutoffs, hearing default flash-lite, removed inaccurate privacy/encryption text and fake user), phone-friendly stacked tables, **production Docker + Caddy deploy** (smoke-tested: all containers healthy, OCR eng+hin in container, non-root, Caddy single-origin routing + password verified) |
 | 592cd13 | API allows the local website on both `localhost:3100` and `127.0.0.1:3100` |
+| (9 Nov) | **User accounts**: migration 0007 (users, user_sessions, auth_tokens, auth_events, cases.user_id); email+password (Argon2id, verification, reset, lockout, rate limits), Google OIDC with PKCE, CSRF origin check, security headers, per-user case isolation, account deletion, daily purge; new landing, sign-in/up, account, terms/privacy (drafts) pages; same-origin `/api` forwarding; `infra/deploy.sh`, `export-data.sh`, `import-data.sh`; Caddy without site password by default (`Caddyfile.locked` keeps it). See `docs/accounts.md`, `docs/deploy.md`. Docker stack re-tested end to end |
 
 API routes: `POST /api/v1/calculations/interest`; `GET/POST /api/v1/cases`; `GET /api/v1/cases/{id}`;
 `POST /api/v1/cases/{id}/documents`; `GET .../documents/{doc}/pages/{n}`; `POST .../facts/extract`;
-`POST .../facts/{fact}/confirm`; `POST/GET /api/v1/cases/{id}/hearing`; `GET /health`.
+`POST .../facts/{fact}/confirm`; `POST/GET /api/v1/cases/{id}/hearing`; `GET /health`;
+`/api/v1/auth/*` (config, signup, verify-email, resend-verification, login, logout, logout-all,
+forgot-password, reset-password, me [GET/PATCH/DELETE], change-password, google/start, google/callback).
+All case routes need a signed-in user and check ownership.
 
 Backend scripts (`cd backend; .\.venv\Scripts\python.exe -m scripts.<name> ...`):
 `ingest_hrera` (`--register`, `--fetch N`, `--years`, `--all-types`, `--delay`), `ingest_report`,
@@ -175,11 +181,15 @@ the method, and are recorded as errors, not wrong answers.
 6. **Paid zero-retention LLM** (user to choose provider): add a provider behind the `LLM` interface in
    `app/extraction/gemini.py` / `app/hearing`, then allow real cases (`NYAYASIM_PRIVATE_LLM_OK`).
 7. **Complaint draft for real cases** (frontend `app/cases/[id]/live/not-built.tsx` currently shows "not built yet"; demo-only draft exists). Must cite only verified facts + verified orders.
-8. **Real authentication** (accounts, per-user case isolation) replacing the single site password.
-9. **DPDP compliance:** consent notice, encryption at rest for uploads, user deletion/erasure, access logs, retention policy.
+8. ~~Real authentication~~ done (docs/accounts.md). Still open: SMTP provider + Google OAuth client
+   (user creates them), 2FA, email change, Redis-backed rate limits if more than one API process.
+9. **DPDP compliance:** consent, deletion, access log and 1-year log retention are done. Still open:
+   encryption at rest for uploads, retention for inactive accounts, lawyer review of `/terms` and
+   `/privacy` (marked draft), grievance contact.
 10. **Deployment:** recommended free host = Oracle Cloud Always Free (Ampere A1, Mumbai/Hyderabad) +
-    DuckDNS name + `docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod --profile https up -d --build`
-    (see `docs/deploy.md`). Quick demo alternative: Cloudflare quick tunnel from this PC.
+    DuckDNS name + `DOMAIN=... DATA=nyayasim-data.dump bash infra/deploy.sh` (see `docs/deploy.md`).
+    Order data file: `release\nyayasim-data.dump` (168 MB, public orders only; over 100 MB, so it goes
+    in a GitHub Release or via scp, not in the repo). Quick demo alternative: Cloudflare quick tunnel from this PC.
     The user must create the Oracle account; Claude cannot.
 11. **Push to GitHub** (user creates an empty private repo): `git remote add origin <url>` then
     `git push -u origin nyayasim/foundation`. Rotate the Gemini key first.

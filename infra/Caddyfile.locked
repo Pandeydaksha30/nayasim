@@ -1,0 +1,26 @@
+# Same as Caddyfile, plus one shared site password in front of everything (private demo).
+# Make the hash with:  docker run --rm caddy:2.10-alpine caddy hash-password --plaintext 'your password'
+# Note: the Google sign-in callback also passes through this password prompt.
+
+{$DOMAIN} {
+	basic_auth {
+		{$BASIC_AUTH_USER} {$BASIC_AUTH_HASH}
+	}
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+	request_body {
+		max_size 26MB
+	}
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+	handle /health {
+		reverse_proxy api:8000
+	}
+	handle {
+		reverse_proxy web:3000
+	}
+}

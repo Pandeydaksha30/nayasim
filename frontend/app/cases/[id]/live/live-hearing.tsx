@@ -1,4 +1,5 @@
 import { Banner } from "@/components/icons";
+import { sessionAuth } from "@/lib/server-session";
 import { type CaseFull, getHearing, type HearingArgument } from "@/lib/cases-api";
 import { fmtDate } from "@/lib/format";
 import styles from "../hearing/hearing.module.css";
@@ -28,7 +29,7 @@ function ArgumentCard({ a }: { a: HearingArgument }) {
 export default async function LiveHearing({ c }: { c: CaseFull }) {
   let run;
   try {
-    run = await getHearing(c.id);
+    run = await getHearing(c.id, await sessionAuth());
   } catch (e) {
     return <Banner tone="error"><b>Could not load the hearing.</b> {e instanceof Error ? e.message : ""}</Banner>;
   }

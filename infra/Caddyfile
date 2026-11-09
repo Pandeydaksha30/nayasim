@@ -1,14 +1,15 @@
-# HTTPS for {$DOMAIN}, behind one site-wide password.
-# Website and API share one address: /api/* and /health go to the API, everything else to the
-# website. (With the API on a separate host, browsers would not send the site password with
-# cross-origin requests, and every API call from the website would fail.)
-# Make the hash with:  docker run --rm caddy:2.10-alpine caddy hash-password --plaintext 'your password'
+# HTTPS for {$DOMAIN}: automatic certificates, one address for website + API.
+# /api/* and /health go to the API, everything else to the website, so the session cookie is
+# first-party and every request is same-origin. Users sign in with their own accounts.
+# To also put the whole site behind one shared password (private demo), use Caddyfile.locked
+# (set CADDYFILE=Caddyfile.locked in infra/.env.prod).
 
 {$DOMAIN} {
-	basic_auth {
-		{$BASIC_AUTH_USER} {$BASIC_AUTH_HASH}
-	}
 	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
 	request_body {
 		max_size 26MB
 	}

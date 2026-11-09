@@ -1,97 +1,143 @@
 import Link from "next/link";
-import { Banner, PlusIcon } from "@/components/icons";
-import { type CaseSummary, listCases } from "@/lib/cases-api";
 import { demoCase } from "@/lib/demo-case";
-import { fmtDate } from "@/lib/format";
-
-const CLAIM: Record<string, string> = { delayed_possession: "Delayed possession", refund: "Refund", other: "Other" };
+import { pct } from "@/lib/format";
+import { getUser } from "@/lib/server-session";
+import styles from "./home.module.css";
 
 export const dynamic = "force-dynamic";
 
-export default async function CasesPage() {
-  let cases: CaseSummary[] = [];
-  let error: string | null = null;
-  try {
-    cases = await listCases();
-  } catch (e) {
-    error = e instanceof Error ? e.message : "Could not load cases.";
-  }
-  const docs = cases.reduce((s, c) => s + c.documents, 0);
-  const facts = cases.reduce((s, c) => s + c.facts, 0);
+const STEPS = [
+  ["Upload your papers", "Agreement, allotment letter, receipts and builder letters, including scans and Hindi text."],
+  ["Check the facts", "Dates, payments and the promised possession date, each shown with the line on the page it came from."],
+  ["Answer what is missing", "Only the questions your documents do not answer, such as whether possession was offered."],
+  ["See the money", "Delay interest and refund worked out payment by payment at the prescribed rate, by ordinary code."],
+  ["Read the hearing", "Arguments for both sides and a bench view, citing only past orders whose quotes are found in the record."],
+] as const;
 
+const LIMITS = [
+  ["Not legal advice", "NyayaSim helps you prepare. It does not replace an advocate, and it does not file anything for you."],
+  ["Predictions can be wrong", "Outcome shares describe how similar past orders ended. Your bench may decide differently."],
+  ["One authority for now", "Past orders come from HRERA Gurugram. Other authorities are planned, not yet covered."],
+  ["Early access", "Features are still being tested. Accuracy figures will be published only after they are checked."],
+] as const;
+
+export default async function HomePage() {
+  const user = await getUser();
+  const r = demoCase.report;
   return (
-    <main className="page">
-      <div className="page-head">
-        <div>
-          <h1>Cases</h1>
-          <p>Each case keeps its documents and the facts read from them, each linked to the exact page it came from.</p>
+    <main>
+      <section className={styles.hero}>
+        <div className={styles.heroInner}>
+          <div>
+            <div className={styles.kicker}>For home buyers with a RERA claim</div>
+            <h1 className={styles.title}>Prepare your complaint with the record in front of you.</h1>
+            <p className={styles.lede}>
+              NyayaSim reads your builder–buyer papers, works out what you are owed, and shows how the authority
+              decided cases like yours, with every figure traceable to a page.
+            </p>
+            <div className={styles.ctas}>
+              {user ? (
+                <Link href="/dashboard" className="btn btn-primary">Go to your cases</Link>
+              ) : (
+                <Link href="/signup" className="btn btn-primary">Create a free account</Link>
+              )}
+              <Link href={`/cases/${demoCase.id}/report`} className="btn">See an example report</Link>
+            </div>
+            <div className={styles.fine}>Free during early access. Decision support, not legal advice.</div>
+          </div>
+
+          <div className={styles.sheet} aria-label="Excerpt from the example report">
+            <div className={styles.sheetHead}>
+              <span className="label" style={{ fontSize: 11 }}>Decision report · excerpt</span>
+              <span className="tag tag-neutral">Fictional example</span>
+            </div>
+            <div className={styles.sheetBody}>
+              <div className={styles.caseName}>{demoCase.title}</div>
+              <div className={styles.caseSub}>{demoCase.claimType} · {demoCase.project}</div>
+              <div className={styles.bars}>
+                {[
+                  ["Allowed", r.outcome.allowed, ""],
+                  ["Partly allowed", r.outcome.partly, styles.fillMid],
+                  ["Dismissed", r.outcome.dismissed, styles.fillLow],
+                ].map(([label, v, cls]) => (
+                  <div key={label as string} className={styles.bar}>
+                    <span className="muted">{label}</span>
+                    <span className={styles.track}><span className={`${styles.fill} ${cls}`} style={{ width: `${(v as number) * 100}%` }} /></span>
+                    <span className={styles.pct}>{pct(v as number)}</span>
+                  </div>
+                ))}
+              </div>
+              <dl className={styles.sheetRows}>
+                <div className={styles.sheetRow}><dt>Similar past orders</dt><dd className="num">{r.similarCount}</dd></div>
+                <div className={styles.sheetRow}><dt>Weak points found</dt><dd className="num">{r.weakPoints.length}</dd></div>
+                <div className={styles.sheetRow}><dt>Citations kept only if verified</dt><dd>Yes</dd></div>
+              </dl>
+            </div>
+          </div>
         </div>
-        <Link href="/cases/new" className="btn btn-primary"><PlusIcon /> New case</Link>
+      </section>
+
+      <div className={styles.figuresWrap}>
+        <div className={styles.figures}>
+          <div className={styles.figure}>
+            <div className={styles.figureValue}>13,992</div>
+            <div className={styles.figureLabel}>public HRERA Gurugram orders searched for cases like yours</div>
+          </div>
+          <div className={styles.figure}>
+            <div className={styles.figureValue}>2018–2026</div>
+            <div className={styles.figureLabel}>decisions covered, from April 2018 to November 2026</div>
+          </div>
+          <div className={styles.figure}>
+            <div className={styles.figureValue}>65,974</div>
+            <div className={styles.figureLabel}>passages indexed, so a cited quote can be checked word for word</div>
+          </div>
+        </div>
       </div>
 
-      {error && <div style={{ marginBottom: 16 }}><Banner tone="error"><b>Your cases could not be loaded.</b> {error}</Banner></div>}
+      <section className={styles.section}>
+        <div className={styles.sectionHead}>
+          <h2>How it works</h2>
+          <p>Five steps from a folder of papers to a report you can take to your advocate.</p>
+        </div>
+        <ol className={styles.steps}>
+          {STEPS.map(([title, text], i) => (
+            <li key={title}>
+              <span className={styles.stepNo}>{String(i + 1).padStart(2, "0")}</span>
+              <span className={styles.stepTitle}>{title}</span>
+              <span className={styles.stepText}>{text}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
 
-      <div className="stats">
-        <div className="panel stat">
-          <div className="label">Your cases</div>
-          <div className="stat-value">{error ? "—" : cases.length}</div>
-          <div className="stat-note">{cases.filter((c) => c.is_demo).length} with demo documents</div>
+      <section className={styles.section}>
+        <div className={styles.sectionHead}>
+          <h2>What it is not</h2>
+          <p>The limits matter as much as the features. <Link href="/method">Read the full method</Link>.</p>
         </div>
-        <div className="panel stat">
-          <div className="label">Documents</div>
-          <div className="stat-value">{error ? "—" : docs}</div>
-          <div className="stat-note">Stored privately on the NyayaSim server</div>
+        <div className={styles.limits}>
+          {LIMITS.map(([title, text]) => (
+            <div key={title} className={styles.limit}>
+              <b>{title}</b>
+              <span>{text}</span>
+            </div>
+          ))}
         </div>
-        <div className="panel stat">
-          <div className="label">Verified facts</div>
-          <div className="stat-value">{error ? "—" : facts}</div>
-          <div className="stat-note">Each quoting its source page</div>
-        </div>
-      </div>
+      </section>
 
-      <div className="panel">
-        <div className="panel-head">
-          <h2 style={{ fontSize: 16 }}>All cases</h2>
-          <span className="small faint">{cases.length} {cases.length === 1 ? "case" : "cases"} + 1 example</span>
+      <section className={styles.closing}>
+        <div className={styles.closingBox}>
+          <div>
+            <h2>Start with the papers you already have.</h2>
+            <p>Your documents stay in your account. Delete the account and they are deleted with it.</p>
+          </div>
+          {user ? (
+            <Link href="/cases/new" className="btn btn-primary">Start a new case</Link>
+          ) : (
+            <Link href="/signup" className="btn btn-primary">Create a free account</Link>
+          )}
         </div>
-        <div className="table-wrap">
-          <table className="ledger stack">
-            <thead>
-              <tr><th>Case</th><th>Claim</th><th className="r">Documents</th><th className="r">Facts</th><th>Status</th><th>Created</th></tr>
-            </thead>
-            <tbody>
-              {cases.map((c) => (
-                <tr key={c.id}>
-                  <td data-label="Case">
-                    <Link href={`/cases/${c.id}/facts`} className="cell-title">{c.title}</Link>
-                    {c.is_demo && <div className="cell-sub">Demo documents</div>}
-                  </td>
-                  <td data-label="Claim">{CLAIM[c.claim_type] ?? c.claim_type}</td>
-                  <td data-label="Documents" className="r num">{c.documents}</td>
-                  <td data-label="Facts" className="r num">{c.facts}</td>
-                  <td data-label="Status">
-                    <span className={`tag ${c.facts ? "tag-pos" : c.documents ? "tag-mid" : "tag-neutral"}`}>
-                      {c.facts ? "Facts found" : c.documents ? "Documents uploaded" : "New"}
-                    </span>
-                  </td>
-                  <td data-label="Created" className="num faint">{fmtDate(c.created_at.slice(0, 10))}</td>
-                </tr>
-              ))}
-              <tr>
-                <td data-label="Case">
-                  <Link href={`/cases/${demoCase.id}/report`} className="cell-title">{demoCase.title}</Link>
-                  <div className="cell-sub">Example with a full report (fictional)</div>
-                </td>
-                <td data-label="Claim">{demoCase.claimType}</td>
-                <td data-label="Documents" className="r num">{demoCase.documents.length}</td>
-                <td data-label="Facts" className="r num">{demoCase.facts.length}</td>
-                <td data-label="Status"><span className="tag tag-neutral">Example</span></td>
-                <td data-label="Created" className="num faint">{fmtDate(demoCase.updated)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      </section>
     </main>
   );
 }

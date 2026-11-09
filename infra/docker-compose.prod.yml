@@ -1,7 +1,7 @@
 # NyayaSim production stack.
 #   cp infra/.env.prod.example infra/.env.prod   (fill it in)
 #   docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod up -d --build
-# With HTTPS + site password (needs a domain pointing at this server):
+# With HTTPS (needs a domain pointing at this server). Easiest: bash infra/deploy.sh
 #   docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod --profile https up -d --build
 name: nyayasim
 
@@ -27,8 +27,17 @@ services:
     environment: &api_env
       NYAYASIM_DATABASE_URL: postgresql+psycopg://nyayasim:${POSTGRES_PASSWORD}@postgres:5432/nyayasim?connect_timeout=10
       NYAYASIM_CORS_ORIGINS: ${PUBLIC_WEB_URL:?set PUBLIC_WEB_URL}
+      NYAYASIM_PUBLIC_URL: ${PUBLIC_WEB_URL}
+      NYAYASIM_COOKIE_SECURE: ${COOKIE_SECURE:-false}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       NYAYASIM_PRIVATE_LLM_OK: ${NYAYASIM_PRIVATE_LLM_OK:-false}
+      NYAYASIM_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      NYAYASIM_GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      NYAYASIM_SMTP_HOST: ${SMTP_HOST:-}
+      NYAYASIM_SMTP_PORT: ${SMTP_PORT:-587}
+      NYAYASIM_SMTP_USER: ${SMTP_USER:-}
+      NYAYASIM_SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      NYAYASIM_SMTP_FROM: ${SMTP_FROM:-NyayaSim <no-reply@localhost>}
     depends_on:
       postgres:
         condition: service_healthy
@@ -50,7 +59,8 @@ services:
     build:
       context: ../frontend
       args:
-        NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL:?set PUBLIC_API_URL}
+        # Where the website server forwards /api/* (inside the Docker network).
+        API_URL: http://api:8000
     image: nyayasim-web:latest
     restart: unless-stopped
     environment:
@@ -61,8 +71,8 @@ services:
     ports:
       - "${WEB_BIND:-127.0.0.1}:${WEB_PORT:-3000}:3000"
 
-  # Optional HTTPS front door with a site-wide password. The API has no user accounts yet, so
-  # a public deployment must not be left open.
+  # HTTPS front door: automatic certificates, website + API on one address. CADDYFILE=Caddyfile.locked
+  # adds one shared password in front of the whole site.
   caddy:
     image: caddy:2.10-alpine
     profiles: ["https"]
@@ -72,7 +82,7 @@ services:
       BASIC_AUTH_USER: ${BASIC_AUTH_USER:-nyayasim}
       BASIC_AUTH_HASH: ${BASIC_AUTH_HASH:-}
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./${CADDYFILE:-Caddyfile}:/etc/caddy/Caddyfile:ro
       - caddydata:/data
     ports:
       - "80:80"

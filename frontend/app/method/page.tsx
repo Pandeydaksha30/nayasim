@@ -54,7 +54,7 @@ export default function MethodPage() {
         <p className="muted" style={{ margin: 0 }}>
           Documents are stored on the server that runs NyayaSim and are not shared with anyone. Their text is read on that server.
           Real documents are not sent to any AI model until a model that keeps no data is set up; only documents marked as fictional
-          demo documents are. Automatic deletion, a delete button and encryption at rest are not built yet, and compliance with the
+          demo documents are. Each case is visible only to the account that created it, and deleting your account (in Account settings) deletes every case and document with it. Automatic deletion after a retention period and encryption at rest are not built yet, and compliance with the
           Digital Personal Data Protection Act, 2023 will be reviewed before NyayaSim is opened to the public.
         </p>
       </section>

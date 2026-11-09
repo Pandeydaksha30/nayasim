@@ -189,9 +189,19 @@ def test_vector_search_with_a_strict_cutoff_still_fills_the_pool(corpus):
 
     with Session(corpus) as s:
         # Only 3 chunks are before 2023-06-01; the index must keep scanning past later ones.
-        ids = vector_ranks(s, EMB.embed_query("possession"), EMB.name, date(2023, 6, 1), "hrera_gurugram",
-                           "HRERA Complaints", limit=10)
-        expected = s.scalar(text(
-            "SELECT count(*) FROM order_chunks c JOIN orders o ON o.id = c.order_id "
-            "WHERE o.decided_on < '2023-06-01' AND c.embedding IS NOT NULL"))
+        ids = vector_ranks(
+            s,
+            EMB.embed_query("possession"),
+            EMB.name,
+            date(2023, 6, 1),
+            "hrera_gurugram",
+            "HRERA Complaints",
+            limit=10,
+        )
+        expected = s.scalar(
+            text(
+                "SELECT count(*) FROM order_chunks c JOIN orders o ON o.id = c.order_id "
+                "WHERE o.decided_on < '2023-06-01' AND c.embedding IS NOT NULL"
+            )
+        )
     assert len(ids) == expected == 3

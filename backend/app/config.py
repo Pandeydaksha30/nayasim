@@ -46,6 +46,34 @@ class Settings(BaseSettings):
     hearing_model: str = "gemini-3.5-flash-lite"
     hearing_thinking: str | None = None
 
+    # ── Accounts ──
+    # Address people open the website at. Used for links in emails and the Google redirect
+    # (Google must be told exactly: <public_url>/api/v1/auth/google/callback).
+    public_url: str = "http://localhost:3100"
+    # Set true whenever the site is served over HTTPS (production): the session cookie is then
+    # only ever sent over HTTPS.
+    cookie_secure: bool = False
+    session_days: int = 30
+    # Google sign-in (OAuth client of type "Web application" in Google Cloud Console). Both empty:
+    # the "Continue with Google" button is hidden.
+    google_client_id: str = ""
+    google_client_secret: SecretStr | None = None
+    # Outgoing email (verification and password reset). smtp_host empty: emails are written to
+    # data/outbox/ and the link is logged, for local development only.
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: SecretStr | None = None
+    smtp_from: str = "NyayaSim <no-reply@localhost>"
+
+    @property
+    def google_enabled(self) -> bool:
+        return bool(self.google_client_id and self.google_client_secret)
+
+    @property
+    def allowed_origins(self) -> set[str]:
+        return {o.rstrip("/") for o in [*self.cors_origin_list, self.public_url]}
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

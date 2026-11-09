@@ -12,6 +12,7 @@ from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from app.api import hearing as hearing_api
+from app.auth.deps import current_user
 from app.buyer.facts import PrivateDataBlocked
 from app.db.models import (
     Case,
@@ -30,6 +31,7 @@ from app.hearing.inputs import CaseInput, Precedent
 from app.hearing.runner import HearingNotPossible, run_case_hearing
 from app.hearing.stats import award, outcome_shares, wilson
 from app.main import app
+from tests.conftest import make_user
 
 CUTOFF = date(2025, 1, 1)
 
@@ -307,7 +309,11 @@ def test_hearing_api_runs_and_returns_latest(world):
                 s.rollback()
                 raise
 
+    owner = make_user(engine)
+    with engine.begin() as c:
+        c.execute(text("UPDATE cases SET user_id = :u"), {"u": owner.id})
     app.dependency_overrides[get_session] = session_override
+    app.dependency_overrides[current_user] = lambda: owner
     app.dependency_overrides[hearing_api.get_hearing_llm] = StandIn
     app.dependency_overrides[hearing_api.get_search_embedder] = lambda: None
     try:

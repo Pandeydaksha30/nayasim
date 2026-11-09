@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.auth.deps import CurrentUser, case_for
 from app.buyer import documents as documents_mod
 from app.buyer.documents import KINDS, UploadRejected, store_document
 from app.buyer.facts import FactExtractor, PrivateDataBlocked, extract_case_facts
@@ -93,13 +94,6 @@ class AnswerIn(BaseModel):
     answer: str = Field(min_length=1, max_length=200)
 
 
-def _case_or_404(s: Session, case_id: uuid.UUID) -> Case:
-    case = s.get(Case, case_id)
-    if case is None:
-        raise HTTPException(404, "Case not found.")
-    return case
-
-
 def _case_out(s: Session, case: Case) -> CaseOut:
     facts = s.scalars(
         select(Fact).where(Fact.case_id == case.id).order_by(Fact.document_id, Fact.page_no, Fact.char_start)
@@ -148,13 +142,14 @@ class CaseSummary(BaseModel):
     claim_type: str
     status: str
     is_demo: bool
+    shared: bool  # a read-only demo case that belongs to no account
     created_at: datetime
     documents: int
     facts: int
 
 
 @router.get("", response_model=list[CaseSummary])
-def list_cases(s: SessionDep) -> list[CaseSummary]:
+def list_cases(s: SessionDep, user: CurrentUser) -> list[CaseSummary]:
     doc_counts = dict(
         s.execute(select(CaseDocument.case_id, func.count()).group_by(CaseDocument.case_id)).all()
     )
@@ -166,17 +161,22 @@ def list_cases(s: SessionDep) -> list[CaseSummary]:
             claim_type=c.claim_type,
             status=c.status,
             is_demo=c.is_demo,
+            shared=c.user_id is None,
             created_at=c.created_at,
             documents=doc_counts.get(c.id, 0),
             facts=fact_counts.get(c.id, 0),
         )
-        for c in s.scalars(select(Case).order_by(Case.created_at.desc()))
+        for c in s.scalars(
+            select(Case)
+            .where((Case.user_id == user.id) | (Case.user_id.is_(None) & Case.is_demo))
+            .order_by(Case.created_at.desc())
+        )
     ]
 
 
 @router.post("", status_code=201, response_model=CaseOut)
-def create_case(body: CaseIn, s: SessionDep) -> CaseOut:
-    case = Case(title=body.title, claim_type=body.claim_type, is_demo=body.is_demo)
+def create_case(body: CaseIn, s: SessionDep, user: CurrentUser) -> CaseOut:
+    case = Case(title=body.title, claim_type=body.claim_type, is_demo=body.is_demo, user_id=user.id)
     s.add(case)
     s.flush()
     s.refresh(case)
@@ -184,19 +184,20 @@ def create_case(body: CaseIn, s: SessionDep) -> CaseOut:
 
 
 @router.get("/{case_id}", response_model=CaseOut)
-def get_case(case_id: uuid.UUID, s: SessionDep) -> CaseOut:
-    return _case_out(s, _case_or_404(s, case_id))
+def get_case(case_id: uuid.UUID, s: SessionDep, user: CurrentUser) -> CaseOut:
+    return _case_out(s, case_for(s, case_id, user))
 
 
 @router.post("/{case_id}/documents", status_code=201, response_model=DocumentOut)
 async def upload_document(
     case_id: uuid.UUID,
     s: SessionDep,
+    user: CurrentUser,
     file: Annotated[UploadFile, File()],
     kind: Annotated[str, Form()],
     ocr: Annotated[OcrConfig | None, Depends(get_ocr)],
 ) -> DocumentOut:
-    _case_or_404(s, case_id)
+    case_for(s, case_id, user, write=True)
     if kind not in KINDS:
         raise HTTPException(422, f"kind must be one of {', '.join(KINDS)}")
     # Read at most one byte past the limit: an oversized upload is rejected without being
@@ -212,7 +213,10 @@ async def upload_document(
 
 
 @router.get("/{case_id}/documents/{document_id}/pages/{page_no}")
-def get_page(case_id: uuid.UUID, document_id: uuid.UUID, page_no: int, s: SessionDep) -> dict:
+def get_page(
+    case_id: uuid.UUID, document_id: uuid.UUID, page_no: int, s: SessionDep, user: CurrentUser
+) -> dict:
+    case_for(s, case_id, user)
     doc = s.get(CaseDocument, document_id)
     if doc is None or doc.case_id != case_id:
         raise HTTPException(404, "Document not found.")
@@ -230,9 +234,12 @@ def get_page(case_id: uuid.UUID, document_id: uuid.UUID, page_no: int, s: Sessio
 
 @router.post("/{case_id}/facts/extract")
 def extract_facts(
-    case_id: uuid.UUID, s: SessionDep, extractor: Annotated[FactExtractor, Depends(get_fact_extractor)]
+    case_id: uuid.UUID,
+    s: SessionDep,
+    user: CurrentUser,
+    extractor: Annotated[FactExtractor, Depends(get_fact_extractor)],
 ) -> dict:
-    _case_or_404(s, case_id)
+    case_for(s, case_id, user, write=True)
     try:
         summary = extract_case_facts(s, case_id, extractor)
     except PrivateDataBlocked as e:
@@ -241,7 +248,8 @@ def extract_facts(
 
 
 @router.post("/{case_id}/facts/{fact_id}/confirm", response_model=FactOut)
-def confirm_fact(case_id: uuid.UUID, fact_id: int, s: SessionDep) -> FactOut:
+def confirm_fact(case_id: uuid.UUID, fact_id: int, s: SessionDep, user: CurrentUser) -> FactOut:
+    case_for(s, case_id, user, write=True)
     fact = s.get(Fact, fact_id)
     if fact is None or fact.case_id != case_id:
         raise HTTPException(404, "Fact not found.")
@@ -251,8 +259,10 @@ def confirm_fact(case_id: uuid.UUID, fact_id: int, s: SessionDep) -> FactOut:
 
 
 @router.put("/{case_id}/answers/{question_id}", response_model=CaseOut)
-def answer_question(case_id: uuid.UUID, question_id: str, body: AnswerIn, s: SessionDep) -> CaseOut:
-    case = _case_or_404(s, case_id)
+def answer_question(
+    case_id: uuid.UUID, question_id: str, body: AnswerIn, s: SessionDep, user: CurrentUser
+) -> CaseOut:
+    case = case_for(s, case_id, user, write=True)
     try:
         validate_answer(question_id, body.answer)
     except KeyError as e:

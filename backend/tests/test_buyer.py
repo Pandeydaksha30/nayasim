@@ -9,6 +9,7 @@ from sqlalchemy.exc import IntegrityError, InternalError
 from sqlalchemy.orm import Session
 
 from app.api import cases as cases_api
+from app.auth.deps import current_user
 from app.buyer import documents as documents_mod
 from app.buyer.facts import FACT_SPECS, PaymentEvidence, ProposedBuyerFacts, verify_facts
 from app.buyer.questions import questions_for, validate_answer
@@ -16,6 +17,7 @@ from app.db.models import Case, CaseDocument, CaseDocumentPage, Fact
 from app.db.session import get_session
 from app.extraction.order_fields import Evidence
 from app.main import app
+from tests.conftest import make_user
 from tests.pdf_factory import text_pdf
 
 AGREEMENT_P1 = (
@@ -178,7 +180,9 @@ def api(db_engine, tmp_path, monkeypatch):
 
     stand_in = StandIn()
     monkeypatch.setattr(documents_mod, "UPLOAD_ROOT", tmp_path)
+    owner = make_user(db_engine)
     app.dependency_overrides[get_session] = session_override
+    app.dependency_overrides[current_user] = lambda: owner
     app.dependency_overrides[cases_api.get_ocr] = lambda: None
     app.dependency_overrides[cases_api.get_fact_extractor] = lambda: stand_in
     yield TestClient(app), stand_in, tmp_path

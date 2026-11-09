@@ -12,9 +12,10 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.auth.deps import CurrentUser, case_for
 from app.buyer.facts import PrivateDataBlocked
 from app.config import settings
-from app.db.models import Case, HearingRun
+from app.db.models import HearingRun
 from app.db.session import get_session
 from app.hearing.agents import LLM
 from app.hearing.runner import HearingNotPossible, run_case_hearing
@@ -78,11 +79,11 @@ def _out(run: HearingRun) -> RunOut:
 def run_hearing(
     case_id: uuid.UUID,
     s: SessionDep,
+    user: CurrentUser,
     llm: Annotated[LLM, Depends(get_hearing_llm)],
     embedder: Annotated[Embedder | None, Depends(get_search_embedder)],
 ) -> RunOut:
-    if s.get(Case, case_id) is None:
-        raise HTTPException(404, "Case not found.")
+    case_for(s, case_id, user, write=True)
     try:
         run = run_case_hearing(s, case_id, llm, embedder)
     except PrivateDataBlocked as e:
@@ -97,7 +98,8 @@ def run_hearing(
 
 
 @router.get("/{case_id}/hearing", response_model=RunOut)
-def latest_hearing(case_id: uuid.UUID, s: SessionDep) -> RunOut:
+def latest_hearing(case_id: uuid.UUID, s: SessionDep, user: CurrentUser) -> RunOut:
+    case_for(s, case_id, user)
     run = s.scalar(
         select(HearingRun)
         .where(HearingRun.case_id == case_id, HearingRun.status == "completed")

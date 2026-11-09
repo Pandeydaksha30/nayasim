@@ -88,7 +88,7 @@ export default function NewCasePage() {
 
   return (
     <main className="page page-narrow">
-      <div className="crumb"><Link href="/">Cases</Link> <ChevronIcon size={12} /> <span>New case</span></div>
+      <div className="crumb"><Link href="/dashboard">Cases</Link> <ChevronIcon size={12} /> <span>New case</span></div>
       <h1>Start a case</h1>
       <p className="muted" style={{ marginTop: 6 }}>
         Add the papers you have. Scans and phone photos are fine, in English or Hindi. Every fact we read is linked to the
