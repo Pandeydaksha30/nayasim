@@ -75,7 +75,7 @@ Starts on `http://SERVER_IP:3000` without HTTPS (the website forwards `/api` its
 machine behind a firewall.
 
 Tested 9 Nov 2026 on Docker Desktop (Windows) with a clean project copy: build, migrations, data
-import (13,992 orders / 65,974 chunks in 1 min 58 s), hybrid search inside the container, and
+import (13,992 listed orders, of which 2,019 with text; 65,974 chunks; 1 min 58 s), hybrid search inside the container, and
 sign-up → confirm → sign-in → create case through the website's `/api` forwarding.
 
 ## Before showing it to real buyers

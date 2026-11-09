@@ -80,12 +80,12 @@ export default async function HomePage() {
       <div className={styles.figuresWrap}>
         <div className={styles.figures}>
           <div className={styles.figure}>
-            <div className={styles.figureValue}>13,992</div>
-            <div className={styles.figureLabel}>public HRERA Gurugram orders searched for cases like yours</div>
+            <div className={styles.figureValue}>2,019</div>
+            <div className={styles.figureLabel}>public HRERA Gurugram orders read and searched for cases like yours, of 13,992 published</div>
           </div>
           <div className={styles.figure}>
             <div className={styles.figureValue}>2018–2026</div>
-            <div className={styles.figureLabel}>decisions covered, from April 2018 to November 2026</div>
+            <div className={styles.figureLabel}>decisions covered, from April 2018 to October 2026</div>
           </div>
           <div className={styles.figure}>
             <div className={styles.figureValue}>65,974</div>

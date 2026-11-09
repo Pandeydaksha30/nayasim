@@ -4,8 +4,9 @@ Before a home buyer files a RERA complaint against a builder, NyayaSim reads the
 works out what they are owed, and shows how the authority decided similar cases, with every
 fact tied to a page and every citation checked against the stored order.
 
-**Status (9 Nov 2026):** working end to end for one region (HRERA Gurugram, 13,992 public
-orders indexed, hybrid keyword + semantic search). User accounts with email/password and
+**Status (9 Nov 2026):** working end to end for one region (HRERA Gurugram: 13,992 orders
+listed, 2,019 downloaded and searchable with hybrid keyword + semantic search, 248 with extracted
+outcomes). See `AGENT_STATUS.md` for what is measured and what is not. User accounts with email/password and
 Google sign-in, per-user case isolation, and a tested one-command server deploy. Accuracy is
 **not** claimed yet: the 200-record hand check and a clean backtest rerun are pending
 (see `HANDOFF.md`).

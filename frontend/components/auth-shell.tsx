@@ -28,7 +28,7 @@ export default function AuthShell({ children }: { children: React.ReactNode }) {
           ))}
         </ol>
         <div className={styles.asideFoot}>
-          Built on <strong>13,992</strong> public HRERA Gurugram orders. Decision support, not legal advice.
+          Built on <strong>2,019</strong> public HRERA Gurugram orders, with more being added. Decision support, not legal advice.
         </div>
       </aside>
       <main className={styles.main}>
