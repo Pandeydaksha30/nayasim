@@ -44,6 +44,14 @@ async def _housekeeping_loop() -> None:
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    try:
+        from app.hearing.jobs import fail_interrupted_runs
+
+        n = await asyncio.to_thread(fail_interrupted_runs)
+        if n:
+            log.warning("Marked %s interrupted hearing run(s) as failed", n)
+    except Exception:  # noqa: BLE001 - the API still starts; logged with traceback
+        log.exception("Could not check for interrupted hearing runs")
     task = asyncio.create_task(_housekeeping_loop())
     yield
     task.cancel()

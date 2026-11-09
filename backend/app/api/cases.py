@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 import uuid
 from datetime import datetime
 from decimal import Decimal
@@ -11,6 +12,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
 from app.auth.deps import CurrentUser, case_for
 from app.buyer import documents as documents_mod
@@ -24,6 +26,12 @@ from app.ingestion.pdf_text import OcrConfig, find_ocr
 
 router = APIRouter(prefix="/api/v1/cases", tags=["cases"])
 SessionDep = Annotated[Session, Depends(get_session)]
+
+
+# At most this many documents are read (OCR) at the same time; each already uses several OCR
+# threads. More arrivals get a clear "busy" answer instead of slowing everyone down.
+MAX_PARALLEL_UPLOADS = 2
+_upload_slots = threading.BoundedSemaphore(MAX_PARALLEL_UPLOADS)
 
 
 def get_ocr() -> OcrConfig | None:
@@ -83,6 +91,7 @@ class CaseOut(BaseModel):
     claim_type: str
     status: str
     is_demo: bool
+    shared: bool  # read-only demo case that belongs to no account
     created_at: datetime
     documents: list[DocumentOut]
     facts: list[FactOut]
@@ -114,6 +123,7 @@ def _case_out(s: Session, case: Case) -> CaseOut:
         claim_type=case.claim_type,
         status=case.status,
         is_demo=case.is_demo,
+        shared=case.user_id is None,
         created_at=case.created_at,
         documents=[
             DocumentOut(
@@ -176,6 +186,10 @@ def list_cases(s: SessionDep, user: CurrentUser) -> list[CaseSummary]:
 
 @router.post("", status_code=201, response_model=CaseOut)
 def create_case(body: CaseIn, s: SessionDep, user: CurrentUser) -> CaseOut:
+    if body.is_demo and not settings.allow_demo_cases:
+        # Privacy: "demo" lets documents go to a model that may keep them. Users cannot choose it,
+        # or real papers could be sent there just by ticking a box.
+        raise HTTPException(403, "Demo cases cannot be created on this server. Create a normal case instead.")
     case = Case(title=body.title, claim_type=body.claim_type, is_demo=body.is_demo, user_id=user.id)
     s.add(case)
     s.flush()
@@ -205,10 +219,20 @@ async def upload_document(
     data = await file.read(documents_mod.MAX_BYTES + 1)
     if len(data) > documents_mod.MAX_BYTES:
         raise HTTPException(413, "Files must be 25 MB or smaller.")
+    if not _upload_slots.acquire(blocking=False):
+        raise HTTPException(
+            503, "NyayaSim is reading other documents right now. Please try again in a minute."
+        )
     try:
-        stored = store_document(s, case_id, file.filename or "upload", kind, data, ocr)
+        # OCR is slow, blocking work: run it on a worker thread so the server keeps answering
+        # everyone else meanwhile (this route is async, so calling it inline would stall the API).
+        stored = await run_in_threadpool(
+            store_document, s, case_id, file.filename or "upload", kind, data, ocr
+        )
     except UploadRejected as e:
         raise HTTPException(422, str(e)) from e
+    finally:
+        _upload_slots.release()
     return DocumentOut(**stored.__dict__)
 
 

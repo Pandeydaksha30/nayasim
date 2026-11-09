@@ -89,6 +89,7 @@ export default async function CaseLayout({
             <span className="tag tag-pos">{head.status}</span>
             {src.kind === "example" && <span className="tag tag-neutral">Example</span>}
             {src.kind === "live" && src.data.is_demo && <span className="tag tag-mid">Demo documents</span>}
+            {src.kind === "live" && src.data.shared && <span className="tag tag-neutral">Shared example · read-only</span>}
           </div>
           <dl className="case-meta">
             {head.meta.map(([label, value, code]) => (

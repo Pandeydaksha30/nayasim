@@ -129,6 +129,15 @@ def _ocr_image(image, ocr: OcrConfig) -> tuple[str, float]:
     return text_from_tsv(data)
 
 
+def pdf_page_count(pdf_bytes: bytes) -> int:
+    """Number of pages, read from the PDF structure without rendering anything (fast)."""
+    doc = pdfium.PdfDocument(pdf_bytes)
+    try:
+        return len(doc)
+    finally:
+        doc.close()
+
+
 def extract_pages(pdf_bytes: bytes, ocr: OcrConfig | None, workers: int = OCR_WORKERS) -> list[PageText]:
     """Text for every page. Raises OcrUnavailable if a page needs OCR and none is configured.
 

@@ -41,3 +41,14 @@ instalments, relief, extra charge paid.
 
 Known gap: a fact present in several documents (builder name in all three) is returned once
 per document; the case screen should group them as one fact with several sources.
+
+## Limits (added 10 Nov 2026)
+
+- **100 pages per PDF** (`MAX_PAGES` in `app/buyer/documents.py`), checked from the PDF structure
+  before any page is rendered or OCR'd. Larger files are refused with a message asking to split them.
+- **2 documents read at a time** per API process (`MAX_PARALLEL_UPLOADS` in `app/api/cases.py`); a
+  third upload gets HTTP 503 "try again in a minute" instead of slowing everyone down.
+- OCR runs on a worker thread, so the API keeps answering other users while a scan is read.
+- **Demo cases** (documents that may go to a data-retaining model) cannot be created by users. They
+  come only from `python -m scripts.demo_buyer_case`, or on a developer PC started with
+  `.\scripts\dev-api.ps1 -AllowDemo` (`NYAYASIM_ALLOW_DEMO_CASES=true`, never set in production).

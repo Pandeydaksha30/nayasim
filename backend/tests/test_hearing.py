@@ -297,8 +297,11 @@ def test_model_failure_is_stored_as_failed_run(world):
     assert run.status == "failed" and "model unavailable" in run.error
 
 
-def test_hearing_api_runs_and_returns_latest(world):
+def test_hearing_api_runs_and_returns_latest(world, monkeypatch):
+    from app.hearing import jobs
+
     engine, ids = world
+    monkeypatch.setattr(jobs, "get_engine", lambda: engine)  # the job opens its own session
 
     def session_override():
         with Session(engine) as s:
@@ -316,16 +319,41 @@ def test_hearing_api_runs_and_returns_latest(world):
     app.dependency_overrides[current_user] = lambda: owner
     app.dependency_overrides[hearing_api.get_hearing_llm] = StandIn
     app.dependency_overrides[hearing_api.get_search_embedder] = lambda: None
+    queued: list = []
+    app.dependency_overrides[hearing_api.get_submit] = lambda: queued.append
     try:
         client = TestClient(app)
-        assert client.get(f"/api/v1/cases/{ids['demo']}/hearing").status_code == 404
-        res = client.post(f"/api/v1/cases/{ids['demo']}/hearing")
-        assert res.status_code == 200, res.text
-        assert res.json()["result"]["judge"]["outcome"] == "allowed"
-        assert client.get(f"/api/v1/cases/{ids['demo']}/hearing").json()["id"] == res.json()["id"]
+        demo = ids["demo"]
+        assert client.get(f"/api/v1/cases/{demo}/hearing").status_code == 404
+        res = client.post(f"/api/v1/cases/{demo}/hearing")
+        assert res.status_code == 202, res.text
+        run_id = res.json()["id"]
+        assert res.json()["status"] == "running" and len(queued) == 1
+        assert client.get(f"/api/v1/cases/{demo}/hearing/active").json()["id"] == run_id
+        # A second start while one is running is refused, not duplicated.
+        assert client.post(f"/api/v1/cases/{demo}/hearing").status_code == 409
+        queued.pop()()  # the background job runs (here, on the test thread)
+        done = client.get(f"/api/v1/cases/{demo}/hearing/runs/{run_id}").json()
+        assert done["status"] == "completed" and done["result"]["judge"]["outcome"] == "allowed"
+        assert client.get(f"/api/v1/cases/{demo}/hearing").json()["id"] == run_id
+        assert client.get(f"/api/v1/cases/{demo}/hearing/active").json() is None
         assert client.post(f"/api/v1/cases/{ids['real']}/hearing").status_code == 403
     finally:
         app.dependency_overrides.clear()
+
+
+def test_interrupted_runs_are_marked_failed(world, monkeypatch):
+    from app.hearing import jobs
+
+    engine, ids = world
+    monkeypatch.setattr(jobs, "get_engine", lambda: engine)
+    with Session(engine) as s:
+        s.add(HearingRun(case_id=ids["demo"], cutoff=CUTOFF, models="m", status="running"))
+        s.commit()
+    assert jobs.fail_interrupted_runs() == 1
+    with Session(engine) as s:
+        run = s.scalar(select(HearingRun))
+    assert run.status == "failed" and "restarted" in run.error and run.finished_at is not None
 
 
 def test_a_hung_model_call_is_cut_off_by_the_hard_deadline():

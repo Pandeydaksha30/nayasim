@@ -15,10 +15,13 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.models import Case, CaseDocument, CaseDocumentPage
-from app.ingestion.pdf_text import OcrConfig, extract_image, extract_pages
+from app.ingestion.pdf_text import OcrConfig, extract_image, extract_pages, pdf_page_count
 
 UPLOAD_ROOT = Path(__file__).resolve().parents[3] / "data" / "uploads"
 MAX_BYTES = 25 * 1024 * 1024
+# A buyer's papers are rarely over 60 pages (agreements run 30-80). The cap stops one upload from
+# keeping OCR busy for hours: a 25 MB file could otherwise hold thousands of scanned pages.
+MAX_PAGES = 100
 KINDS = ("agreement", "allotment_letter", "receipt", "builder_letter", "hearing_order", "other")
 _TYPES = {b"%PDF": ".pdf", b"\x89PNG": ".png", b"\xff\xd8\xff": ".jpg"}
 
@@ -72,6 +75,17 @@ def store_document(
         return StoredDocument(
             existing.id, existing.filename, existing.kind, existing.page_count, ocr_pages, True
         )
+
+    if ext == ".pdf":
+        try:
+            n = pdf_page_count(data)
+        except Exception as e:  # damaged PDF: shown to the user
+            raise UploadRejected(f"Could not read the file: {type(e).__name__}: {e}") from e
+        if n > MAX_PAGES:
+            raise UploadRejected(
+                f"This PDF has {n} pages; the limit is {MAX_PAGES}. Split it into smaller files "
+                "(for example, the agreement and the receipts separately) and upload each one."
+            )
 
     session.commit()  # no transaction stays open during OCR, which can take minutes for scans
 

@@ -49,3 +49,12 @@ the gate and the code decide what reaches the report.
   of 4 precedent rates), matching a hand calculation; 3 arguments kept, 0 removed; bench:
   partly allowed (COVID extension); **5/5 citations exact against the stored page text,
   verified and decided before the cutoff.**
+
+## Background runs (added 10 Nov 2026)
+
+`POST /api/v1/cases/{id}/hearing` checks privacy, facts and precedents at once (403/422 straight
+away), stores a run with status `running`, returns **202**, and runs the model calls on a 2-thread
+pool (`app/hearing/jobs.py`). The page polls `GET .../hearing/runs/{run_id}` every 3 s and reloads
+when it is `completed`, or shows the stored error when `failed`. `GET .../hearing/active` lets a
+reloaded page keep waiting. A unique index allows one running hearing per case (a second start gets
+409). Runs left `running` by a restart are marked failed at the next start (migration 0008).

@@ -43,7 +43,7 @@ export default async function LiveHearing({ c }: { c: CaseFull }) {
           the stored order; an argument with any failed citation is removed before the bench sees it.
         </p>
       </div>
-      {run && c.is_demo && <RunHearingButton caseId={c.id} again />}
+      {run && c.is_demo && !c.shared && <RunHearingButton caseId={c.id} again />}
     </div>
   );
 
@@ -51,7 +51,9 @@ export default async function LiveHearing({ c }: { c: CaseFull }) {
     return (
       <>
         {header}
-        {c.is_demo ? (
+        {c.shared ? (
+          <Banner tone="info">This shared example is read-only. Create your own case to run a hearing.</Banner>
+        ) : c.is_demo ? (
           c.facts.length ? <RunHearingButton caseId={c.id} /> : <Banner tone="warn">Find facts in your documents first.</Banner>
         ) : (
           <Banner tone="info">

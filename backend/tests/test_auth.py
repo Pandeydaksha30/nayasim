@@ -420,3 +420,14 @@ def test_housekeeping_purges_old_records(env):
         s.commit()
         assert counts["sessions"] == 1 and counts["events"] == 1 and counts["tokens"] >= 1
         assert s.query(UserSession).count() == 1  # the live session from sign-up stays
+
+
+def test_users_cannot_mark_their_case_as_demo(env):
+    """Privacy: a demo case may go to a data-retaining model, so users must not be able to choose it."""
+    _, sent = env
+    c = client()
+    signup_and_verify(c, sent)
+    r = c.post("/api/v1/cases", json={"title": "Real papers", "is_demo": True})
+    assert r.status_code == 403
+    assert c.get("/api/v1/cases").json() == []
+    assert client().get("/api/v1/auth/config").json()["demo_cases"] is False

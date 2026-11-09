@@ -47,7 +47,7 @@ async function send<T>(path: string, method: string, body?: unknown): Promise<T>
 
 type Msg = { message: string };
 
-export const authConfig = () => send<{ google: boolean; email_delivery: "smtp" | "outbox" }>("/config", "GET");
+export const authConfig = () => send<{ google: boolean; email_delivery: "smtp" | "outbox"; demo_cases: boolean }>("/config", "GET");
 export const signup = (name: string, email: string, password: string, acceptTerms: boolean) =>
   send<Msg>("/signup", "POST", { name, email, password, accept_terms: acceptTerms });
 export const login = (email: string, password: string) => send<User>("/login", "POST", { email, password });

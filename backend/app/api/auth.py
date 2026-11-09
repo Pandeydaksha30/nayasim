@@ -171,7 +171,11 @@ def _send_reset(s: Session, user: User) -> None:
 @router.get("/config")
 def auth_config() -> dict:
     """What the sign-in page should offer."""
-    return {"google": settings.google_enabled, "email_delivery": "smtp" if settings.smtp_host else "outbox"}
+    return {
+        "google": settings.google_enabled,
+        "email_delivery": "smtp" if settings.smtp_host else "outbox",
+        "demo_cases": settings.allow_demo_cases,
+    }
 
 
 @router.post("/signup", status_code=202, response_model=Message)

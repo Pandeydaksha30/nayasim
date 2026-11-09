@@ -46,6 +46,12 @@ class Settings(BaseSettings):
     hearing_model: str = "gemini-3.5-flash-lite"
     hearing_thinking: str | None = None
 
+    # Lets users mark their own new case as "demo" (fictional documents, which may be sent to a
+    # data-retaining model). Developer machines only: on a public site anyone could tick it for real
+    # documents. Off by default and never set by the production compose file. Demo cases are
+    # otherwise made only by `python -m scripts.demo_buyer_case`.
+    allow_demo_cases: bool = False
+
     # ── Accounts ──
     # Address people open the website at. Used for links in emails and the Google redirect
     # (Google must be told exactly: <public_url>/api/v1/auth/google/callback).

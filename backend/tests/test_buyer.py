@@ -13,6 +13,7 @@ from app.auth.deps import current_user
 from app.buyer import documents as documents_mod
 from app.buyer.facts import FACT_SPECS, PaymentEvidence, ProposedBuyerFacts, verify_facts
 from app.buyer.questions import questions_for, validate_answer
+from app.config import settings
 from app.db.models import Case, CaseDocument, CaseDocumentPage, Fact
 from app.db.session import get_session
 from app.extraction.order_fields import Evidence
@@ -181,6 +182,7 @@ def api(db_engine, tmp_path, monkeypatch):
     stand_in = StandIn()
     monkeypatch.setattr(documents_mod, "UPLOAD_ROOT", tmp_path)
     owner = make_user(db_engine)
+    monkeypatch.setattr(settings, "allow_demo_cases", True)  # these tests use demo cases on purpose
     app.dependency_overrides[get_session] = session_override
     app.dependency_overrides[current_user] = lambda: owner
     app.dependency_overrides[cases_api.get_ocr] = lambda: None
@@ -342,3 +344,25 @@ def test_no_transaction_is_open_while_the_model_reads_documents(db_engine, tmp_p
         s.execute(text("DELETE FROM cases WHERE id = :i"), {"i": case.id})
         s.commit()
     assert seen == [False, False]
+
+
+def test_upload_over_page_limit_is_refused_before_ocr(api, monkeypatch):
+    client, _, _ = api
+    monkeypatch.setattr(documents_mod, "MAX_PAGES", 2)
+    case = client.post("/api/v1/cases", json={"title": "Long"}).json()
+    r = upload(client, case["id"], text_pdf([AGREEMENT_P1, AGREEMENT_P2, AGREEMENT_P1]))
+    assert r.status_code == 422 and "limit is 2" in r.json()["detail"]
+    assert client.get(f"/api/v1/cases/{case['id']}").json()["documents"] == []
+
+
+def test_uploads_beyond_parallel_limit_get_busy_answer(api, monkeypatch):
+    import threading
+
+    client, _, _ = api
+    monkeypatch.setattr(cases_api, "_upload_slots", threading.BoundedSemaphore(1))
+    cases_api._upload_slots.acquire()  # another upload is being read
+    case = client.post("/api/v1/cases", json={"title": "Busy"}).json()
+    r = upload(client, case["id"], text_pdf([AGREEMENT_P1]))
+    assert r.status_code == 503
+    cases_api._upload_slots.release()
+    assert upload(client, case["id"], text_pdf([AGREEMENT_P1])).status_code == 201

@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Banner, ChevronIcon, FileIcon, UploadIcon } from "@/components/icons";
+import { authConfig } from "@/lib/auth-api";
 import { createCase, DOC_KINDS, type DocKind, extractFacts, uploadDocument } from "@/lib/cases-api";
 import styles from "./new.module.css";
 
@@ -33,6 +34,11 @@ export default function NewCasePage() {
   const [dragging, setDragging] = useState(false);
   const [consent, setConsent] = useState(false);
   const [isDemo, setIsDemo] = useState(false);
+  // Only developer machines allow demo cases (NYAYASIM_ALLOW_DEMO_CASES); on a real site the option is hidden.
+  const [demoAllowed, setDemoAllowed] = useState(false);
+  useEffect(() => {
+    authConfig().then((c) => setDemoAllowed(c.demo_cases)).catch(() => setDemoAllowed(false));
+  }, []);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -178,13 +184,19 @@ export default function NewCasePage() {
         </div>
       )}
 
-      <label className={styles.consent}>
-        <input type="checkbox" checked={isDemo} onChange={(e) => setIsDemo(e.target.checked)} disabled={!!busy} />
-        <span>
-          <b>These are fictional demo documents.</b> Only demo documents are sent to the AI model for now. Real documents are
-          stored and read on the NyayaSim server, but fact-finding stays off until a model that keeps no data is set up.
-        </span>
-      </label>
+      {demoAllowed ? (
+        <label className={styles.consent}>
+          <input type="checkbox" checked={isDemo} onChange={(e) => setIsDemo(e.target.checked)} disabled={!!busy} />
+          <span>
+            <b>These are fictional demo documents</b> (developer mode). Only demo documents are sent to the AI model.
+          </span>
+        </label>
+      ) : (
+        <p className="small muted" style={{ marginTop: 20 }}>
+          Your documents are stored and read on the NyayaSim server and are not sent to any AI service that keeps data.
+          Automatic fact-finding for real documents will switch on once a model that keeps no data is set up.
+        </p>
+      )}
       <label className={styles.consent}>
         <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} disabled={!!busy} />
         <span>

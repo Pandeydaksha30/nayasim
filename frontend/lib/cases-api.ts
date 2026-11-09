@@ -66,6 +66,7 @@ export interface CaseFull {
   claim_type: string;
   status: string;
   is_demo: boolean;
+  shared: boolean;
   created_at: string;
   documents: CaseDocument[];
   facts: CaseFact[];
@@ -233,7 +234,7 @@ export interface HearingResult {
 
 export interface HearingRun {
   id: number;
-  status: "completed" | "failed";
+  status: "running" | "completed" | "failed";
   error: string | null;
   cutoff: string;
   models: string;
@@ -252,5 +253,9 @@ export async function getHearing(caseId: string, auth?: Auth): Promise<HearingRu
   }
 }
 
+/** Starts a hearing in the background; returns the run with status "running". */
 export const runHearing = (caseId: string) =>
   call<HearingRun>(`/api/v1/cases/${caseId}/hearing`, { method: "POST" });
+export const getRun = (caseId: string, runId: number) =>
+  call<HearingRun>(`/api/v1/cases/${caseId}/hearing/runs/${runId}`);
+export const getActiveRun = (caseId: string) => call<HearingRun | null>(`/api/v1/cases/${caseId}/hearing/active`);

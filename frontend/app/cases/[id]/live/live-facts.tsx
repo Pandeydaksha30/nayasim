@@ -72,7 +72,7 @@ export default function LiveFacts({ c }: { c: CaseFull }) {
         <h2>Facts from your documents</h2>
         <p>Select a fact to see the exact words it was read from. Every fact is checked against the stored page before it is shown.</p>
       </div>
-      {c.is_demo && c.documents.length > 0 && (
+      {c.is_demo && !c.shared && c.documents.length > 0 && (
         <button type="button" className="btn" disabled={busy} onClick={() => run(() => extractFacts(c.id))}>
           {busy ? "Finding facts…" : c.facts.length ? "Find facts again" : "Find facts"}
         </button>
