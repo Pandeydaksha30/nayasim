@@ -40,6 +40,13 @@ def main() -> int:
         "= the validation year; develop there, keep the 2025+ test set for final numbers)",
     )
     ap.add_argument(
+        "--input",
+        choices=["summary", "facts"],
+        default="summary",
+        help="summary = structured facts only; facts = also the parties' part of the order "
+        "(before the authority's findings; app/backtest/facts.py)",
+    )
+    ap.add_argument(
         "--query",
         choices=["current", "legacy"],
         default="current",
@@ -111,6 +118,7 @@ def main() -> int:
                 methods=methods,
                 summary=args.summary,
                 query=args.query,
+                input_mode=args.input,
             )
         )
     elapsed = time.monotonic() - t
@@ -122,6 +130,7 @@ def main() -> int:
         "search": args.search,
         "summary": args.summary,
         "query": args.query,
+        "input": args.input,
         "until": args.until.isoformat() if args.until else None,
         "elapsed_min": round(elapsed / 60, 1),
         "scores": score(rows, methods),

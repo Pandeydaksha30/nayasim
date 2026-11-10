@@ -22,6 +22,7 @@ starts**, because unclear labels make both people and models disagree.
 | Adjudication | `data/annotation/adjudication.csv` (made by `annotate-agree`) | `final` (or `blank`), `reason` |
 | Search relevance | `data/annotation/retrieval_judgements.csv` | relevance 0/1/2 per row |
 | OCR | `data/annotation/ocr/*.txt` | type exactly what the matching .png shows |
+| Facts / findings split | `data/annotation/facts_split_check.csv` | for each order: was any of the authority's own reasoning kept (Y/N)? was any of the parties' facts or reply dropped (Y/N)? |
 
 ## Fields
 
@@ -63,3 +64,14 @@ Compare the query summary with the candidate order:
 Type exactly what the page shows: same words, numbers and punctuation; Hindi in Devanagari. Line
 breaks don't matter. Skip stamps, signatures and page headers you cannot read; write `[illegible]`
 for unreadable words in the body.
+
+## Facts / findings split check
+
+The backtest's `--input facts` gives the model only the part of an order written before the
+authority's own reasoning (unit details, the complainant's facts and relief sought, the builder's
+reply). For each row, open the PDF at the shown text:
+- **authority_text_kept**: Y if anything in `last_600_chars_kept` (or earlier) is the authority
+  speaking — its observations, findings, view, or directions. Quotations of *other* orders inside a
+  party's reply do not count. A single Y is a leak and must be reported.
+- **parties_text_lost**: Y if `first_300_chars_dropped` is still the parties' facts or reply (the
+  cut came too early). This loses input but leaks nothing.

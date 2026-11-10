@@ -46,6 +46,25 @@ PRECEDENTS (orders decided before {cutoff}):
 {precedents}
 """
 
+FACTS_BLOCK = """
+CASE FILE AS FILED BY THE PARTIES (unit details, the complainant's facts and relief sought, and the
+respondent's reply; the authority's findings and decision are NOT included):
+{facts}
+"""
+
+
+def order_text(s: Session, order_id: int) -> str:
+    from sqlalchemy import select
+
+    from app.db.models import OrderPage
+
+    return "\n".join(
+        t
+        for (t,) in s.execute(
+            select(OrderPage.text).where(OrderPage.order_id == order_id).order_by(OrderPage.page_no)
+        )
+    )
+
 
 def legacy_summary_text(ci) -> str:
     """The case summary exactly as used in the 9 Nov 2026 backtest (before the "none verified"
@@ -106,7 +125,13 @@ def run_backtest(
     methods: tuple[str, ...] = ("majority", "buckets", "single", "debate"),
     summary: str = "current",
     query: str = "current",
+    input_mode: str = "summary",
 ) -> list[CaseResult]:
+    """input_mode: "summary" = structured facts only; "facts" = also the parties' part of the order
+    (app/backtest/facts.py). Cases whose order has no safe facts part are recorded as errors for
+    the LLM methods, so every method is scored on the same, usable cases."""
+    from app.backtest.facts import split_facts, why_not
+
     summarise = legacy_summary_text if summary == "legacy" else summary_text
     majority, buckets = Majority(train), Buckets(train)
     results: list[CaseResult] = []
@@ -121,6 +146,17 @@ def run_backtest(
         if not (s.new or s.dirty or s.deleted):
             s.commit()  # no transaction open during model calls
         r.precedents = len(precedents)
+        facts_part = None
+        if input_mode == "facts":
+            text = order_text(s, e.order_id)
+            split = split_facts(text)
+            if split is None:
+                r.errors["single"] = r.errors["debate"] = f"no usable facts part: {why_not(text)}"
+                r.seconds = round(time.monotonic() - started, 1)
+                results.append(r)
+                progress(f"[{i}/{len(test)}] {e.complaint_no} skipped: {r.errors['single']}")
+                continue
+            facts_part = split.text
         if not precedents:
             r.errors["single"] = r.errors["debate"] = "no precedents before the cutoff"
         else:
@@ -130,6 +166,8 @@ def run_backtest(
                 precedents=precedent_block(precedents),
                 cutoff=cutoff.isoformat(),
             )
+            if facts_part is not None:
+                prompt += FACTS_BLOCK.format(facts=facts_part)
             if "single" in methods:
                 try:
                     r.predictions["single"] = llm.propose(prompt, SingleOut).outcome

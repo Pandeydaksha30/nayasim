@@ -14,6 +14,7 @@ Search (pooled, blind relevance judgements) and OCR (hand-typed pages):
   ... scripts.benchmark retrieval-score            # MRR, nDCG@10, P@5, recall in pool, per method
   ... scripts.benchmark ocr-export --n 30          # data/annotation/ocr/*.png + empty .txt
   ... scripts.benchmark ocr-score                  # CER / WER
+  ... scripts.benchmark facts-export --n 30        # hand check of the facts / findings split
 
 Results are printed and saved to data/benchmark/<name>_<time>.json.
 """
@@ -158,6 +159,59 @@ def cmd_ocr_score() -> int:
     return 0
 
 
+def cmd_facts_export(n: int, seed: int) -> int:
+    """Hand check of where the parties' part ends (app/backtest/facts.py), on validation + test."""
+    import csv
+    import random
+
+    from sqlalchemy import select
+
+    from app.backtest.facts import split_facts
+    from app.backtest.run import order_text
+    from app.db.models import CaseRecord, Order
+
+    manifest = split.load_manifest()
+    ids = set(split.order_ids(manifest, "validation")) | set(split.order_ids(manifest, "test"))
+    path = ann.DIR / "facts_split_check.csv"
+    if path.exists():
+        print(f"{path} exists; it may hold answers.")
+        return 1
+    rows = []
+    with Session(get_engine()) as s:
+        labelled = sorted(i for i in s.scalars(select(CaseRecord.order_id)) if i in ids)
+        random.Random(seed).shuffle(labelled)
+        for oid in labelled:
+            text = order_text(s, oid)
+            sp = split_facts(text)
+            if sp is None:
+                continue
+            o = s.get(Order, oid)
+            rows.append(
+                {
+                    "complaint_no": o.complaint_no,
+                    "pdf_file": str(ann.ORDERS_DIR / f"{o.pdf_sha256}.pdf"),
+                    "cut_marker": sp.boundary,
+                    "last_600_chars_kept": " ".join(
+                        text[max(0, sp.boundary_at - 600) : sp.boundary_at].split()
+                    ),
+                    "first_300_chars_dropped": " ".join(text[sp.boundary_at : sp.boundary_at + 300].split()),
+                    "authority_text_kept (Y/N)": "",
+                    "parties_text_lost (Y/N)": "",
+                    "notes": "",
+                }
+            )
+            if len(rows) == n:
+                break
+    ann.DIR.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="", encoding="utf-8-sig") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0]))
+        w.writeheader()
+        w.writerows(rows)
+    print(f"wrote {path} ({len(rows)} orders). Open each PDF: is any of the authority's own reasoning in the")
+    print("kept part (leak)? Was any of the parties' facts or reply dropped (lost input)?")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -185,9 +239,14 @@ def main() -> int:
         x.add_argument("--n", type=int, default=30)
         x.add_argument("--split", choices=["validation", "test"], default="test")
         x.add_argument("--seed", type=int, default=20261110)
+    fx = sub.add_parser("facts-export")
+    fx.add_argument("--n", type=int, default=30)
+    fx.add_argument("--seed", type=int, default=20261110)
     sub.add_parser("retrieval-score")
     sub.add_parser("ocr-score")
     args = ap.parse_args()
+    if args.cmd == "facts-export":
+        return cmd_facts_export(args.n, args.seed)
     if args.cmd == "retrieval-export":
         return cmd_retrieval_export(args.n, args.split, args.seed)
     if args.cmd == "retrieval-score":
