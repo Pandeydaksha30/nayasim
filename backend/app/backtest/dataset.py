@@ -38,8 +38,11 @@ class Example:
         return max(0, round(d / 30.44))
 
 
-def load(s: Session, cutoff: date, *, split: str, source: str = "hrera_gurugram") -> list[Example]:
-    """split='train' -> decided before cutoff; 'test' -> on/after cutoff. Merits outcomes only."""
+def load(
+    s: Session, cutoff: date, *, split: str, source: str = "hrera_gurugram", until: date | None = None
+) -> list[Example]:
+    """split='train' -> decided before cutoff; 'test' -> on/after cutoff (and before `until`, if
+    given: a validation year). Merits outcomes only."""
     q = (
         select(Order, CaseRecord)
         .join(CaseRecord, CaseRecord.order_id == Order.id)
@@ -47,6 +50,8 @@ def load(s: Session, cutoff: date, *, split: str, source: str = "hrera_gurugram"
         .where(Order.decided_on < cutoff if split == "train" else Order.decided_on >= cutoff)
         .order_by(Order.decided_on, Order.id)
     )
+    if until is not None and split == "test":
+        q = q.where(Order.decided_on < until)
     return [
         Example(o.id, o.complaint_no, o.decided_on, r.claim_type, r.possession_due, r.amount_paid, r.outcome)
         for o, r in s.execute(q)

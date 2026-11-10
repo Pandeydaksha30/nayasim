@@ -91,10 +91,32 @@ def summary_text(ci: CaseInput) -> str:
     return "\n".join(lines)
 
 
-def search_query(ci: CaseInput) -> str:
+def legacy_search_query(ci: CaseInput) -> str:
+    """The query used until 10 Nov 2026, kept as an experimental control (backtest --query legacy).
+    Three of its four phrases are about delay, so refund cases retrieved delay-interest orders:
+    only 17% of the excerpts shown for refund cases mentioned a refund."""
     parts = ["delay in handing over possession", "interest for every month of delay", "force majeure"]
     if ci.claim_type == "refund" or "refund" in ci.answers.get("relief", "").lower():
         parts.append("refund of the amount paid with interest withdraw from the project")
+    return _query_extras(ci, parts)
+
+
+def search_query(ci: CaseInput) -> str:
+    """The search follows the relief claimed: a refund case looks for refund / withdrawal orders,
+    a delayed-possession case for delay-interest orders."""
+    if ci.claim_type == "refund" or "refund" in ci.answers.get("relief", "").lower():
+        parts = [
+            "refund of the entire amount paid along with interest",
+            "allottee wishes to withdraw from the project",
+            "return of the amount received under section 18(1)",
+            "promoter failed to complete or give possession",
+        ]
+    else:
+        parts = ["delay in handing over possession", "interest for every month of delay", "force majeure"]
+    return _query_extras(ci, parts)
+
+
+def _query_extras(ci: CaseInput, parts: list[str]) -> str:
     if ci.first("escalation_demand"):
         parts.append("escalation charges demanded by the promoter")
     if ci.first("revised_completion_date"):
@@ -115,8 +137,10 @@ class Precedent:
     excerpts: list[tuple[int, str]]  # (page_no, text)
 
 
-def build_precedents(s: Session, ci: CaseInput, embedder: Embedder | None, k: int = 12) -> list[Precedent]:
-    result = search(s, search_query(ci), before=ci.cutoff, embedder=embedder, k=k)
+def build_precedents(
+    s: Session, ci: CaseInput, embedder: Embedder | None, k: int = 12, query: str | None = None
+) -> list[Precedent]:
+    result = search(s, query or search_query(ci), before=ci.cutoff, embedder=embedder, k=k)
     by_order: dict[int, Precedent] = {}
     for h in result.hits:
         p = by_order.get(h.order_id)

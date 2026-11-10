@@ -32,6 +32,19 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--cutoff", type=date.fromisoformat, default=date(2025, 1, 1))
     ap.add_argument("--limit", type=int, default=64)
+    ap.add_argument(
+        "--until",
+        type=date.fromisoformat,
+        default=None,
+        help="test only on cases decided before this date (e.g. --cutoff 2024-01-01 --until 2025-01-01 "
+        "= the validation year; develop there, keep the 2025+ test set for final numbers)",
+    )
+    ap.add_argument(
+        "--query",
+        choices=["current", "legacy"],
+        default="current",
+        help="precedent search query; legacy = before 10 Nov 2026 (control runs only)",
+    )
     ap.add_argument("--model", default="gemini-3.5-flash-lite")
     ap.add_argument("--thinking", default="", help="thinking level for models that support it")
     ap.add_argument(
@@ -67,7 +80,7 @@ def main() -> int:
     )
     with Session(get_engine()) as s:
         train = load(s, args.cutoff, split="train")
-        test = load(s, args.cutoff, split="test")[: args.limit]
+        test = load(s, args.cutoff, split="test", until=args.until)[: args.limit]
         s.commit()
         print(
             f"cutoff {args.cutoff}: {len(train)} training records, {len(test)} test cases; model {llm.name}"
@@ -89,7 +102,15 @@ def main() -> int:
         t = time.monotonic()
         rows = as_rows(
             run_backtest(
-                s, train, test, args.cutoff, llm, embedder=embedder, methods=methods, summary=args.summary
+                s,
+                train,
+                test,
+                args.cutoff,
+                llm,
+                embedder=embedder,
+                methods=methods,
+                summary=args.summary,
+                query=args.query,
             )
         )
     elapsed = time.monotonic() - t
@@ -100,6 +121,8 @@ def main() -> int:
         "train_records": len(train),
         "search": args.search,
         "summary": args.summary,
+        "query": args.query,
+        "until": args.until.isoformat() if args.until else None,
         "elapsed_min": round(elapsed / 60, 1),
         "scores": score(rows, methods),
         "cases": rows,

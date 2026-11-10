@@ -386,3 +386,16 @@ def test_no_transaction_stays_open_during_model_calls(world):
     with Session(engine) as s:
         run_case_hearing(s, ids["demo"], Watching(s), embedder=None, cutoff=CUTOFF)
     assert seen == [False, False, False]
+
+
+def test_search_query_follows_the_relief_claimed():
+    """Backtest 10 Nov 2026: refund cases searched mostly delay phrases and got delay-interest orders
+    (17% of excerpts mentioned a refund), so the model dismissed refunds it should have allowed."""
+    from app.hearing.inputs import legacy_search_query, search_query
+
+    refund = CaseInput(claim_type="refund", cutoff=date(2025, 1, 1), facts={})
+    delay = CaseInput(claim_type="delayed_possession", cutoff=date(2025, 1, 1), facts={})
+    assert "withdraw from the project" in search_query(refund)
+    assert "delay in handing over possession" not in search_query(refund)
+    assert search_query(delay).startswith("delay in handing over possession")
+    assert "delay in handing over possession" in legacy_search_query(refund)  # control unchanged

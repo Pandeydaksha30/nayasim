@@ -18,7 +18,15 @@ from app.backtest.baselines import Buckets, Majority
 from app.backtest.dataset import Example, case_input
 from app.hearing.agents import LLM, RULES
 from app.hearing.graph import run_graph
-from app.hearing.inputs import ANSWER_LABELS, LABELS, build_precedents, precedent_block, summary_text
+from app.hearing.inputs import (
+    ANSWER_LABELS,
+    LABELS,
+    build_precedents,
+    legacy_search_query,
+    precedent_block,
+    search_query,
+    summary_text,
+)
 from app.retrieval.embedder import Embedder
 
 
@@ -97,6 +105,7 @@ def run_backtest(
     progress=print,
     methods: tuple[str, ...] = ("majority", "buckets", "single", "debate"),
     summary: str = "current",
+    query: str = "current",
 ) -> list[CaseResult]:
     summarise = legacy_summary_text if summary == "legacy" else summary_text
     majority, buckets = Majority(train), Buckets(train)
@@ -107,7 +116,8 @@ def run_backtest(
         r.predictions["majority"] = majority.predict(e)
         r.predictions["buckets"] = buckets.predict(e)
         ci = case_input(e, cutoff)
-        precedents = build_precedents(s, ci, embedder)
+        q = legacy_search_query(ci) if query == "legacy" else search_query(ci)
+        precedents = build_precedents(s, ci, embedder, query=q)
         if not (s.new or s.dirty or s.deleted):
             s.commit()  # no transaction open during model calls
         r.precedents = len(precedents)

@@ -61,16 +61,58 @@ in the case summary.
 | 9 Nov (original) | "Payments: none verified" when unknown | 46 | 54.3% | 71.7% | 58.7% | 56.5% |
 | 10 Nov, fix A | payments "not stated (does not mean nothing paid)" + "not stated: possession date" | 64 | 54.7% | 71.9% | **46.9%** | not run |
 | 10 Nov, fix B (ablation) | payments wording only | 64 | 54.7% | 71.9% | **50.0%** | not run |
-| 10 Nov, control | original 9 Nov wording, rerun today (`--summary legacy`) | 64 | — | — | *running* | not run |
+| 10 Nov, control | original 9 Nov wording, rerun today (`--summary legacy`) | 64 | 54.7% | 71.9% | **56.2%** (macro-F1 0.400) | not run |
 
-On the 49 cases scored in both 9 Nov and fix A: single call 59.2% → 42.9%. Allowed cases called
-"dismissed" fell from 8 to 3, but partly-allowed cases called "dismissed" rose from 1 to 8: the
-"not stated: possession date" line reads to the model as a weak case. Fix B removes that line and
-scores 50.0%, still below the 9 Nov figure. The first control cases show the original wording
-also calling allowed refund cases "dismissed" today, so part of the difference may be the hosted
-model changing between runs rather than the wording. The control run (same wording as 9 Nov, today)
-decides this; until it finishes, the summary change is **not committed** and no improvement is
-claimed.
+Confusion tables on the same 64 cases (rows = truth: allowed / partly / dismissed; columns =
+predicted allowed / partly / dismissed):
+
+| Run | allowed (14) | partly allowed (35) | dismissed (15) | Correct |
+|---|---|---|---|---|
+| Control, original wording | 0 / 2 / 12 | 0 / 26 / 9 | 0 / 5 / 10 | 36 |
+| Fix A | 0 / 9 / 5 | 0 / 27 / 8 | 0 / 12 / 3 | 30 |
+| Fix B | 0 / 2 / 12 | 0 / 28 / 7 | 0 / 11 / 4 | 32 |
+
+**Conclusion: the "none verified" hypothesis was wrong.** With the wording fixed (fix B), allowed
+cases are still called "dismissed" exactly as often (12 of 14); control vs fix B is within chance
+(10 vs 6 discordant cases, McNemar p = 0.45). Neither wording change is kept: both were reverted.
+In every run the model **never predicted "allowed"**.
+
+**Actual root cause (measured):** the error follows the claim type. 13 of the 16 refund test cases
+were allowed, and the model called almost all of them "dismissed", whatever facts were given. The
+precedent search query was mostly about delay ("delay in handing over possession; interest for
+every month of delay; force majeure; refund ..."), so a refund case was shown delay-interest orders:
+only **17%** of the excerpts shown for refund cases (32 of 192) mentioned a refund. The model was
+asked to decide a refund claim from precedents that were not about refunds.
+
+**Claim-matched search (tested on validation, not on test):** the query now follows the relief
+claimed (refund cases search for refund / withdrawal / section 18(1) orders). On the **validation
+year** (cutoff 2024-01-01, test = 2024, 68 training / 29 test cases):
+
+| Validation, 29 cases (12 allowed, 12 partly, 5 dismissed) | Correct | Accuracy | macro-F1 |
+|---|---|---|---|
+| Always "partly allowed" | 12 | 41.4% | 0.195 |
+| Claim × delay rule | 18 | 62.1% | 0.569 |
+| Single LLM call, old query | 5 | 17.2% | 0.146 |
+| Single LLM call, claim-matched query | 3 | 10.3% | 0.091 |
+
+Refund-relevant excerpts for refund cases rose from 20/120 to 80/120, but predictions did not
+improve (2 vs 0 discordant cases, McNemar p = 0.5). The 2025+ test set was **not** run, because
+validation showed no gain. The query change is kept for live hearings because it puts refund
+orders in front of the advocates for refund claims; whether it improves search relevance will be
+decided by the human relevance judgements (section 3), not assumed.
+
+**What this establishes.** Across 5 runs and 2 time periods, the single-call LLM predictor never
+predicts "allowed", mostly answers "dismissed" when facts are thin, and is at or below the
+always-"partly allowed" baseline on validation. Neither the summary wording nor precedent
+relevance fixes it. The input is the limiting factor: claim type, sometimes a date and an amount.
+Tuning prompts further against 29–64 noisy, machine-extracted labels would be fitting noise.
+
+**Next step for this component (not started):** a fairer, leakage-free input. Orders state the
+complaint's facts (dates, payments, reliefs sought, the builder's reply) before the authority's
+findings. Extracting only that part as the case input gives the model what a real buyer's documents
+would, without the decision. It needs (1) a reliable split point between "facts and submissions"
+and "findings", checked by hand on a sample, and (2) the gold labels from the two-annotator
+process, so the result is measured against checked truth.
 
 **Why outcome prediction is hard here:** a test case gives the model only claim type, sometimes a
 possession date and an amount, and the hearing date: the order's own text cannot be used (it
