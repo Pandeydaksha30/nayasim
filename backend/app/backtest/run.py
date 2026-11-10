@@ -18,7 +18,7 @@ from app.backtest.baselines import Buckets, Majority
 from app.backtest.dataset import Example, case_input
 from app.hearing.agents import LLM, RULES
 from app.hearing.graph import run_graph
-from app.hearing.inputs import build_precedents, precedent_block, summary_text
+from app.hearing.inputs import ANSWER_LABELS, LABELS, build_precedents, precedent_block, summary_text
 from app.retrieval.embedder import Embedder
 
 
@@ -37,6 +37,29 @@ CASE SUMMARY:
 PRECEDENTS (orders decided before {cutoff}):
 {precedents}
 """
+
+
+def legacy_summary_text(ci) -> str:
+    """The case summary exactly as used in the 9 Nov 2026 backtest (before the "none verified"
+    fix). Kept only as an experimental control: it lets a rerun show whether a change in results
+    comes from the new wording or from the hosted model changing between runs."""
+    from decimal import Decimal
+
+    lines = [f"Claim: {ci.claim_type.replace('_', ' ')}. Hearing as of {ci.cutoff.isoformat()}."]
+    for key, label in LABELS.items():
+        if (v := ci.first(key)) is not None:
+            lines.append(f"- {label}: {v}")
+    pays = ci.payments
+    if pays:
+        total = sum((a for _, a in pays), Decimal(0))
+        lines.append(f"- Payments by the buyer: {len(pays)}, total Rs {total}")
+        lines += [f"    {d.isoformat()}: Rs {a}" for d, a in pays]
+    else:
+        lines.append("- Payments by the buyer: none verified")
+    for qid, label in ANSWER_LABELS.items():
+        if qid in ci.answers:
+            lines.append(f"- {label} {ci.answers[qid]}")
+    return "\n".join(lines)
 
 
 @dataclass
@@ -72,7 +95,10 @@ def run_backtest(
     llm: LLM,
     embedder: Embedder | None,
     progress=print,
+    methods: tuple[str, ...] = ("majority", "buckets", "single", "debate"),
+    summary: str = "current",
 ) -> list[CaseResult]:
+    summarise = legacy_summary_text if summary == "legacy" else summary_text
     majority, buckets = Majority(train), Buckets(train)
     results: list[CaseResult] = []
     for i, e in enumerate(test, 1):
@@ -90,20 +116,22 @@ def run_backtest(
         else:
             prompt = SINGLE.format(
                 rules=RULES,
-                summary=summary_text(ci),
+                summary=summarise(ci),
                 precedents=precedent_block(precedents),
                 cutoff=cutoff.isoformat(),
             )
-            try:
-                r.predictions["single"] = llm.propose(prompt, SingleOut).outcome
-            except Exception as ex:  # recorded per case, never dropped
-                r.errors["single"] = f"{type(ex).__name__}: {ex}"[:300]
-            try:
-                report = run_graph(s, llm, ci, precedents, as_of=cutoff)
-                r.predictions["debate"] = report["judge"]["outcome"]
-                r.gate = _gate_counts(report)
-            except Exception as ex:
-                r.errors["debate"] = f"{type(ex).__name__}: {ex}"[:300]
+            if "single" in methods:
+                try:
+                    r.predictions["single"] = llm.propose(prompt, SingleOut).outcome
+                except Exception as ex:  # recorded per case, never dropped
+                    r.errors["single"] = f"{type(ex).__name__}: {ex}"[:300]
+            if "debate" in methods:
+                try:
+                    report = run_graph(s, llm, ci, precedents, as_of=cutoff)
+                    r.predictions["debate"] = report["judge"]["outcome"]
+                    r.gate = _gate_counts(report)
+                except Exception as ex:
+                    r.errors["debate"] = f"{type(ex).__name__}: {ex}"[:300]
         r.seconds = round(time.monotonic() - started, 1)
         results.append(r)
         preds = " ".join(f"{k}={v}" for k, v in r.predictions.items())

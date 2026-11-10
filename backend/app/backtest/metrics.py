@@ -47,17 +47,19 @@ def mcnemar_exact(only_a: int, only_b: int) -> float:
     return min(1.0, 2 * p)
 
 
-def score(rows: list[dict]) -> dict:
-    complete = [r for r in rows if all(r["predictions"].get(m) for m in METHODS)]
+def score(rows: list[dict], methods: tuple[str, ...] = METHODS) -> dict:
+    """`methods`: the methods that were run (a run may skip the LLM debate to save quota)."""
+    complete = [r for r in rows if all(r["predictions"].get(m) for m in methods)]
     truth = [r["truth"] for r in complete]
     out: dict = {
         "cases": len(rows),
         "scored": len(complete),
-        "errors": {m: sum(m in r["errors"] for r in rows) for m in METHODS},
+        "methods_run": list(methods),
+        "errors": {m: sum(m in r["errors"] for r in rows) for m in methods},
         "truth_counts": {c: truth.count(c) for c in CLASSES},
         "methods": {},
     }
-    for m in METHODS:
+    for m in methods:
         pred = [r["predictions"][m] for r in complete]
         acc = accuracy(truth, pred)
         lo, hi = wilson(round(acc * len(truth)), len(truth))
@@ -67,6 +69,10 @@ def score(rows: list[dict]) -> dict:
             "macro_f1": round(macro_f1(truth, pred), 3),
             "confusion": confusion(truth, pred),
         }
+    if not {"single", "debate"} <= set(methods):
+        out["debate_vs_single"] = None
+        out["citations"] = None
+        return out
     s_ok = [r["predictions"]["single"] == r["truth"] for r in complete]
     d_ok = [r["predictions"]["debate"] == r["truth"] for r in complete]
     only_single = sum(a and not b for a, b in zip(s_ok, d_ok, strict=True))

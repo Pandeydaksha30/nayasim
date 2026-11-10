@@ -36,6 +36,23 @@ def _numbers(s: str) -> list[str]:
     return re.findall(r"\d+", re.sub(r"(?<=\d),(?=\d)", "", s))
 
 
+# Words that decide what a legal sentence means. A quote may differ from the stored text by a few
+# OCR letters, but never in these: "is liable" vs "is not liable" is 4 characters apart yet says
+# the opposite (benchmark of 10 Nov 2026: 45 of 47 such flips passed the similarity check alone).
+MEANING_WORDS = frozenset(
+    {
+        "not", "no", "nor", "never", "neither", "without", "cannot", "unless", "except",
+        "allowed", "dismissed", "rejected", "granted", "denied", "disallowed", "withdrawn",
+        "entitled", "liable", "shall", "may", "must", "valid", "invalid", "void",
+    }
+)  # fmt: skip
+
+
+def _meaning_words(s: str) -> list[str]:
+    words = re.findall(r"[a-z]+", s.lower().replace("n't", " not"))
+    return [w for w in words if w in MEANING_WORDS]
+
+
 @dataclass(frozen=True)
 class Citation:
     page_no: int
@@ -139,6 +156,18 @@ def verify_citation(
                 v.reasons.append(
                     f"numbers in the quote ({', '.join(quoted) or 'none'}) differ from the stored text "
                     f"({', '.join(stored) or 'none'})"
+                )
+            # The aligner may cut the stored span mid-word ("is allowe"); compare whole words.
+            lo, hi = span.char_start, span.char_end
+            while lo > 0 and page.text[lo - 1].isalpha():
+                lo -= 1
+            while hi < len(page.text) and page.text[hi].isalpha():
+                hi += 1
+            q_words, s_words = _meaning_words(quote), _meaning_words(page.text[lo:hi])
+            if q_words != s_words:
+                v.reasons.append(
+                    f"wording that decides the meaning ({' '.join(q_words) or 'none'}) differs from "
+                    f"the stored text ({' '.join(s_words) or 'none'})"
                 )
 
     if c.claimed_outcome:

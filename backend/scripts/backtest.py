@@ -20,7 +20,7 @@ from pathlib import Path
 from sqlalchemy.orm import Session
 
 from app.backtest.dataset import load
-from app.backtest.metrics import METHODS, score
+from app.backtest.metrics import score
 from app.backtest.run import as_rows, run_backtest
 from app.config import settings
 from app.db.session import get_engine
@@ -34,6 +34,23 @@ def main() -> int:
     ap.add_argument("--limit", type=int, default=64)
     ap.add_argument("--model", default="gemini-3.5-flash-lite")
     ap.add_argument("--thinking", default="", help="thinking level for models that support it")
+    ap.add_argument(
+        "--methods",
+        default="single,debate",
+        help="LLM methods to run, comma-separated (single, debate); the baselines always run",
+    )
+    ap.add_argument(
+        "--summary",
+        choices=["current", "legacy"],
+        default="current",
+        help="case summary wording for the single-call method; legacy = 9 Nov 2026 (control runs only)",
+    )
+    ap.add_argument(
+        "--search",
+        choices=["keyword", "hybrid"],
+        default="keyword",
+        help="precedent search: keyword only (as the 9 Nov run) or hybrid keyword + embeddings",
+    )
     args = ap.parse_args()
     faulthandler.dump_traceback_later(900, repeat=True)
 
@@ -55,19 +72,36 @@ def main() -> int:
         print(
             f"cutoff {args.cutoff}: {len(train)} training records, {len(test)} test cases; model {llm.name}"
         )
-        print(
-            "search: keyword only (embeddings are not complete yet), same precedents for single and debate\n"
-        )
+        llm_methods = tuple(m for m in args.methods.split(",") if m)
+        bad = set(llm_methods) - {"single", "debate"}
+        if bad:
+            print(f"unknown method(s): {sorted(bad)}")
+            return 2
+        methods = ("majority", "buckets", *llm_methods)
+        embedder = None
+        if args.search == "hybrid":
+            from app.retrieval.embedder import LocalEmbedder
+
+            embedder = LocalEmbedder(
+                settings.embedding_model, settings.embedding_query_prefix, settings.embedding_doc_prefix
+            )
+        print(f"methods: {', '.join(methods)}; search: {args.search}; same precedents for every LLM method\n")
         t = time.monotonic()
-        rows = as_rows(run_backtest(s, train, test, args.cutoff, llm, embedder=None))
+        rows = as_rows(
+            run_backtest(
+                s, train, test, args.cutoff, llm, embedder=embedder, methods=methods, summary=args.summary
+            )
+        )
     elapsed = time.monotonic() - t
     result = {
         "run_at": datetime.now().isoformat(timespec="seconds"),
         "cutoff": args.cutoff.isoformat(),
         "model": llm.name,
         "train_records": len(train),
+        "search": args.search,
+        "summary": args.summary,
         "elapsed_min": round(elapsed / 60, 1),
-        "scores": score(rows),
+        "scores": score(rows, methods),
         "cases": rows,
     }
     OUT.mkdir(parents=True, exist_ok=True)
@@ -79,12 +113,13 @@ def main() -> int:
         f"\n{sc['scored']} of {sc['cases']} cases scored (errors: {sc['errors']}); truth {sc['truth_counts']}"
     )
     print(f"{'method':10} accuracy (90% range)    macro-F1")
-    for m in METHODS:
+    for m in methods:
         x = sc["methods"][m]
         lo, hi = x["accuracy_90"]
         print(f"{m:10} {x['accuracy']:.3f} ({lo:.2f}-{hi:.2f})    {x['macro_f1']:.3f}")
-    print(f"debate vs single: {sc['debate_vs_single']}")
-    print(f"citations: {sc['citations']}")
+    if sc["debate_vs_single"] is not None:
+        print(f"debate vs single: {sc['debate_vs_single']}")
+        print(f"citations: {sc['citations']}")
     print(f"elapsed {elapsed / 60:.1f} min -> {path}")
     return 0
 

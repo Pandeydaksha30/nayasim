@@ -206,3 +206,34 @@ def test_thousands_separators_do_not_count_as_different_numbers():
     from app.verifier.citations import _numbers
 
     assert _numbers("Rs. 72,00,000/- paid on 12.03.2018") == ["7200000", "12", "03", "2018"]
+
+
+def test_rule6_a_flipped_meaning_is_a_misquote_even_in_a_near_match(store):
+    """Benchmark of 10 Nov 2026: "is" -> "is not" and allowed <-> dismissed passed the 90% similarity
+    check. Meaning words (not, allowed, dismissed, liable, ...) must match the stored text exactly."""
+    engine, ids = store
+    for fake in (
+        "The plea of force majeure is not rejected. The complaint is allowed",
+        "The plea of force majeure is rejected. The complaint is dismissed",
+    ):
+        v = check(engine, Citation(page_no=2, quote=fake, order_id=ids["a"]))
+        assert not v.verified, fake  # rejected as a meaning change, or as not found at all
+    assert check(engine, Citation(page_no=2, quote=GOOD_QUOTE, order_id=ids["a"])).verified
+    # The case the 90% similarity rule alone let through: one word, inside a long quote.
+    long_fake = (
+        "The plea of force majeure is rejected. The complaint is allowed and the respondent "
+        "shall not pay interest at the prescribed rate for every month of delay."
+    )
+    v = check(engine, Citation(page_no=2, quote=long_fake, order_id=ids["a"]))
+    assert not v.verified
+    assert any(
+        "decides the meaning (rejected allowed shall not) differs from the stored text "
+        "(rejected allowed shall)" in r
+        for r in v.reasons
+    ), v.reasons
+
+
+def test_meaning_words_read_contractions():
+    from app.verifier.citations import _meaning_words
+
+    assert _meaning_words("The promoter isn't liable and shall pay") == ["not", "liable", "shall"]
