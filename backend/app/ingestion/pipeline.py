@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 from sqlalchemy import func, select
@@ -76,14 +76,22 @@ def register_listing(engine: Engine, source: str, rows: list[ListedOrder]) -> Re
 
 
 def pending_orders(
-    engine: Engine, source: str, limit: int, case_type: str | None = None, years: list[int] | None = None
+    engine: Engine,
+    source: str,
+    limit: int,
+    case_type: str | None = None,
+    years: list[int] | None = None,
+    after: date | None = None,
 ) -> list[int]:
-    """Unfetched order ids, spread across the table deterministically (md5 order)."""
+    """Unfetched order ids, spread across the table deterministically (md5 order).
+    `after`: only orders decided after this date (e.g. a new, unseen test period)."""
     q = select(Order.id).where(Order.source == source, Order.fetched_at.is_(None))
     if case_type:
         q = q.where(Order.case_type == case_type)
     if years:
         q = q.where(func.extract("year", Order.decided_on).in_(years))
+    if after:
+        q = q.where(Order.decided_on > after)
     q = q.order_by(func.md5(Order.complaint_no)).limit(limit)
     with Session(engine) as s:
         return list(s.scalars(q))

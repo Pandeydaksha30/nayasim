@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import sys
 import time
+from datetime import date
 from pathlib import Path
 
 from sqlalchemy import create_engine
@@ -49,6 +50,9 @@ def main() -> int:
     ap.add_argument("--register", action="store_true", help="fetch the public listing and add new orders")
     ap.add_argument("--fetch", type=int, default=0, metavar="N", help="download and extract N pending orders")
     ap.add_argument("--years", type=int, nargs="*", help="only orders decided in these years")
+    ap.add_argument(
+        "--after", type=date.fromisoformat, help="only orders decided after this date (YYYY-MM-DD)"
+    )
     ap.add_argument("--all-types", action="store_true", help="include execution/adjudication orders")
     ap.add_argument("--delay", type=float, default=2.5, help="seconds between requests (minimum 2.5)")
     args = ap.parse_args()
@@ -72,7 +76,7 @@ def main() -> int:
         missing = "NOT AVAILABLE - scanned orders will be reported as failures"
         print(f"OCR: {ocr.engine_name if ocr else missing}")
         ids = pending_orders(
-            engine, SOURCE, args.fetch, None if args.all_types else "HRERA Complaints", args.years
+            engine, SOURCE, args.fetch, None if args.all_types else "HRERA Complaints", args.years, args.after
         )
         print(f"pending selected: {len(ids)}")
         started = time.monotonic()
