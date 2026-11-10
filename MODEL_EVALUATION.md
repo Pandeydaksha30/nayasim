@@ -107,19 +107,50 @@ always-"partly allowed" baseline on validation. Neither the summary wording nor 
 relevance fixes it. The input is the limiting factor: claim type, sometimes a date and an amount.
 Tuning prompts further against 29–64 noisy, machine-extracted labels would be fitting noise.
 
-**Next step for this component (not started):** a fairer, leakage-free input. Orders state the
-complaint's facts (dates, payments, reliefs sought, the builder's reply) before the authority's
-findings. Extracting only that part as the case input gives the model what a real buyer's documents
-would, without the decision. It needs (1) a reliable split point between "facts and submissions"
-and "findings", checked by hand on a sample, and (2) the gold labels from the two-annotator
-process, so the result is measured against checked truth.
+### Facts-before-findings input (`--input facts`, 10 Nov 2026)
 
-**Why outcome prediction is hard here:** a test case gives the model only claim type, sometimes a
-possession date and an amount, and the hearing date: the order's own text cannot be used (it
-contains the answer). With that little information, the claim type alone decides most outcomes
-(refund claims are mostly allowed), which is why the simple claim × delay rule wins. The model has
-far more to work with in real use (a buyer's full documents), but that cannot be backtested until
-there are labelled buyer cases.
+The model also gets the parties' part of the order: unit details, the complainant's facts and
+relief sought, the builder's reply, cut before the authority's own reasoning
+(`app/backtest/facts.py`). Orders without a safe cut are skipped (5 of 29 validation, 5 of 64 test).
+
+**Leakage check.** A first heading-only cut leaked the authority's reasoning in 42 of 135 orders
+(OCR-damaged headings), including decisions ("the authority is of the view that complainant cannot
+be refunded"). The final cut stops at the earliest heading or authority phrase; an independent
+phrase audit then finds only the parties' own words (10 hits, e.g. a reply asking "the Authority
+is requested to consider ..."). A 30-order hand check (`data/annotation/facts_split_check.csv`)
+is **pending**; until it is done, a residual leak cannot be ruled out.
+
+| Validation 2024, 24 usable cases (10 allowed, 11 partly, 5→3 dismissed) | Correct | Accuracy | macro-F1 |
+|---|---|---|---|
+| Always "partly allowed" | 11 | 45.8% | 0.210 |
+| Single LLM, summary only | 3 | 12.5% | 0.105 |
+| Claim × delay rule | 15 | 62.5% | 0.557 |
+| **Single LLM, facts input** | **16** | **66.7%** | **0.613** |
+
+Facts vs summary: 13 vs 0 discordant cases, McNemar p = 0.0002. Facts vs rule: 5 vs 4, p = 1.
+
+**Test 2025+ (run once, after validation; 59 usable cases: 13 allowed, 34 partly, 12 dismissed):**
+
+| Method | Correct | Accuracy (90% Wilson) | macro-F1 | Confusion (rows allowed / partly / dismissed → predicted allowed, partly, dismissed) |
+|---|---|---|---|---|
+| Always "partly allowed" | 34 | 57.6% | 0.244 | 0/13/0, 0/34/0, 0/12/0 |
+| Single LLM, summary only (original wording) | 32 | 54.2% | 0.372 | 0/2/11, 0/25/9, 0/5/7 |
+| **Single LLM, facts input** | **40** | **67.8% (57.2–76.8)** | **0.653** | 6/3/4, 0/25/8, 0/2/9 |
+| **Claim × delay rule** | **43** | **72.9%** | 0.581 | 11/2/0, 2/31/1, 2/9/1 |
+
+Facts vs summary: 12 vs 4 discordant cases, p = 0.077. Facts vs rule: 8 vs 11, p = 0.65.
+
+**What this establishes.**
+- Giving the model the parties' filings is the first change that clearly helps (decisive on
+  validation, same direction but not significant on test).
+- It does **not** beat the simple rule on accuracy. It has the best macro-F1, because the two make
+  different errors: the model finds dismissals (9/12 vs the rule's 1/12) and the rule finds
+  allowed cases (11/13 vs the model's 6/13).
+- 95% accuracy is not in sight for outcome prediction: the best method is 73% with a 90% range of
+  roughly 62–81% on 59 cases, against labels that are still machine-extracted.
+- The test set has now been used for this configuration. A combination of the rule and the model
+  (an obvious next idea) must be developed on validation and confirmed on a **new** test period
+  (orders decided after 13 Oct 2026 once fetched), not tuned on this test set.
 
 ## 3. Not measured yet (tools ready, waiting on human labels)
 
