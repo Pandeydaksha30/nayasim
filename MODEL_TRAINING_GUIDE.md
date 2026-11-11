@@ -113,7 +113,7 @@ is never predicted. The rule is a script experiment, not yet part of `app/ml`; i
 scored on test. Note: the LLM "facts input" results in MODEL_EVALUATION.md were measured with the
 earlier cut (before the relief section was rescued).
 
-### Relief-section rule built into the claim-type classifier (11 Nov 2026, test not yet scored)
+### Relief-section rule built into the claim-type classifier (11 Nov 2026)
 
 `app/ml/claim_rule.py` (unit-tested) reads the relief section; the TF-IDF model decides only where
 the rule finds no clear wording. `scripts.train_classifier` now reports this hybrid for claim type.
@@ -133,6 +133,24 @@ entire amount" and are labelled delayed possession; order 13236 asks for a refun
 labels. A method cannot score 95% against labels that disagree with themselves on identical text;
 a number that high on these labels would mean the method had learned the label noise. The way to
 95% for claim type is checked labels (two annotators, `docs/annotation-guide.md`), then re-scoring.
+
+**Test, scored once for this configuration (74 orders, 11 Nov 2026):**
+
+| Method | Test accuracy | Test macro-F1 |
+|---|---|---|
+| Always "delayed possession" | 73.0% | 0.281 |
+| TF-IDF model alone (new input) | 62.2% | 0.369 |
+| **Relief-section rule, else TF-IDF model** | **74.3%** (55 of 74) | **0.455** |
+
+Confusion (rows = truth delay / refund / other; columns = predicted): 46/8/0, 6/9/0, 2/3/0. The
+rule spoke on 50 of 74 orders.
+
+**Reading.** The hybrid is the first trained claim-type method to beat the majority baseline, by
+one order on accuracy (not a meaningful margin on 74 cases) and clearly on macro-F1 (0.455 against
+0.281; refund recall 9 of 15, up from 6). It scored 9 points lower on test than on validation
+(83.3% on 30 orders): validation was small and was used to develop the rule, so it was optimistic.
+The test misses have not been read, to keep the test set unused for development. This is the
+final test number for this configuration; any further change needs a new test period.
 
 ## On the 95% target
 
