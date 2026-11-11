@@ -47,6 +47,12 @@ def main() -> int:
         )
         print(f"   test majority baseline: accuracy {b['accuracy']:.3f}  macro-F1 {b['macro_f1']:.3f}")
         print(f"   confusion {t['confusion']['labels']}: {t['confusion']['rows_truth']}")
+        if "test_model_alone" in rep:
+            a = rep["test_model_alone"]
+            print(
+                f"   rule spoke on {rep['test_rule_coverage']} of {t['n']} test orders; model alone: "
+                f"accuracy {a['accuracy']:.3f}  macro-F1 {a['macro_f1']:.3f}"
+            )
         (ROOT / "data" / "models").mkdir(parents=True, exist_ok=True)
         joblib.dump(model, ROOT / "data" / "models" / f"{task}_tfidf_lr.joblib")
         out = ROOT / "data" / "benchmark" / f"train_{task}_{datetime.now():%Y%m%d_%H%M%S}.json"

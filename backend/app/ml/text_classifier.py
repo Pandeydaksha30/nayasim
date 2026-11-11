@@ -11,7 +11,8 @@ yet hand-checked (MODEL_EVALUATION.md), so scores are against noisy truth.
 
 Model: TF-IDF (word 1-2 grams, sublinear tf) + logistic regression with balanced class weights —
 a strong, transparent baseline for small labelled sets; structured features (claim type, delay
-band) are appended as tokens for the outcome task.
+band) are appended as tokens for the outcome task. For claim type, the relief-section rule
+(app/ml/claim_rule.py) decides where it finds clear wording and the model decides the rest.
 """
 
 from __future__ import annotations
@@ -30,6 +31,7 @@ from app.backtest.facts import split_facts
 from app.backtest.run import order_text
 from app.benchmark.split import split_of
 from app.db.models import CaseRecord, Order
+from app.ml.claim_rule import relief_claim
 
 OUTCOMES = ["allowed", "partly_allowed", "dismissed"]
 CLAIMS = ["delayed_possession", "refund", "other"]
@@ -96,6 +98,13 @@ def train_and_evaluate(items: list[Item], task: str) -> dict:
         # The claim-type task must not be given its own answer as a feature token.
         return it.text if task == "outcome" else it.text.split(" __claim_")[0]
 
+    def predict(model: Pipeline, its: list[Item]) -> list[str]:
+        """Model prediction; for claim type the relief-section rule decides where it speaks."""
+        pred = list(model.predict([text(i) for i in its]))
+        if task == "claim_type":
+            pred = [relief_claim(text(i)) or p for i, p in zip(its, pred, strict=True)]
+        return pred
+
     usable = [it for it in items if target(it) in labels]
     by = {sp: [it for it in usable if it.split == sp] for sp in ("train", "validation", "test")}
     out: dict = {"task": task, "counts": {sp: len(v) for sp, v in by.items()}}
@@ -106,7 +115,7 @@ def train_and_evaluate(items: list[Item], task: str) -> dict:
     grid = []
     for c in (0.1, 0.3, 1.0, 3.0, 10.0, 30.0):
         m = _pipeline(c).fit([text(i) for i in by["train"]], [target(i) for i in by["train"]])
-        pred = list(m.predict([text(i) for i in by["validation"]]))
+        pred = predict(m, by["validation"])
         grid.append({"C": c, **_scores([target(i) for i in by["validation"]], pred, labels)})
     best = max(grid, key=lambda g: (g["macro_f1"], g["accuracy"]))
     out["validation_grid"] = [{k: g[k] for k in ("C", "accuracy", "macro_f1")} for g in grid]
@@ -115,8 +124,12 @@ def train_and_evaluate(items: list[Item], task: str) -> dict:
     fit = by["train"] + by["validation"]
     model = _pipeline(best["C"]).fit([text(i) for i in fit], [target(i) for i in fit])
     truth = [target(i) for i in by["test"]]
-    pred = list(model.predict([text(i) for i in by["test"]]))
+    pred = predict(model, by["test"])
     out["test"] = _scores(truth, pred, labels)
+    if task == "claim_type":
+        out["method"] = "relief-section rule, else TF-IDF model"
+        out["test_rule_coverage"] = sum(relief_claim(text(i)) is not None for i in by["test"])
+        out["test_model_alone"] = _scores(truth, list(model.predict([text(i) for i in by["test"]])), labels)
     majority = max(set(target(i) for i in fit), key=[target(i) for i in fit].count)
     out["test_majority_baseline"] = _scores(truth, [majority] * len(truth), labels)
     out["test_predictions"] = {i.order_id: p for i, p in zip(by["test"], pred, strict=True)}

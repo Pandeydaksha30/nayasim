@@ -113,6 +113,27 @@ is never predicted. The rule is a script experiment, not yet part of `app/ml`; i
 scored on test. Note: the LLM "facts input" results in MODEL_EVALUATION.md were measured with the
 earlier cut (before the relief section was rescued).
 
+### Relief-section rule built into the claim-type classifier (11 Nov 2026, test not yet scored)
+
+`app/ml/claim_rule.py` (unit-tested) reads the relief section; the TF-IDF model decides only where
+the rule finds no clear wording. `scripts.train_classifier` now reports this hybrid for claim type.
+
+| Where the rule speaks | Orders | Agrees with the label |
+|---|---|---|
+| Validation | 18 of 30 | 18 (100%) |
+| Train | 141 of 254 | 122 (86.5%) |
+
+Validation, hybrid: 83.3% accuracy, macro-F1 0.565 (the misses are all orders where the rule is
+silent and the model decides).
+
+**Why 95% cannot be shown against the current labels.** Reading the 19 training disagreements:
+about half are label problems, not rule errors. Examples: orders 9427 and 12984 ask to "refund the
+entire amount" and are labelled delayed possession; order 13236 asks for a refund and is labelled
+"other"; orders 13845, 13847, 13848 and 13851 have the same relief text and carry two different
+labels. A method cannot score 95% against labels that disagree with themselves on identical text;
+a number that high on these labels would mean the method had learned the label noise. The way to
+95% for claim type is checked labels (two annotators, `docs/annotation-guide.md`), then re-scoring.
+
 ## On the 95% target
 
 - **Reachable, and measured:** citation verification (precision 100%, recall 98.3% on held-out
