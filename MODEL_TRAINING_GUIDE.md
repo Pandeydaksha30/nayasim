@@ -47,17 +47,42 @@ First training run: 180 labelled orders with a safe facts part (68 skipped).
 | Outcome (allowed / partly / dismissed) | 58 / 24 / 59 | 0.259 | 55.9% | 0.377 | majority 57.6% / 0.244; claim × delay rule 72.9% / 0.581; LLM with facts 67.8% / 0.653 |
 | Claim type (refund / delay / other) | 76 / 30 / 74 | 0.423 | 55.4% | 0.316 | majority 73.0% / 0.281 |
 
-**Reading:** with 58–76 training examples the trained models do not beat simple baselines on
-accuracy. Claim type should be easy (the relief sought says "refund" or not), so this also hints at
-label noise. More labels are being produced (extraction of fetched, unlabelled orders) and 1,000
-unseen 2025–2026 orders are being downloaded; the models will be retrained and re-reported then.
+**Reading:** with 58-76 training examples the trained models do not beat simple baselines on
+accuracy.
+
+### Second run (11 Nov 2026, after labelling 500 more fetched orders)
+
+358 labelled orders with a safe facts part (144 skipped). All the new labels fell in the training
+period (orders decided before 2024); validation and test are the same cases as in the first run.
+
+| Task | Train / val / test | Validation macro-F1 (chosen) | **Test accuracy** | **Test macro-F1** | First run | Test baseline |
+|---|---|---|---|---|---|---|
+| Outcome | 179 / 24 / 59 | 0.293 | 50.8% | 0.340 | 55.9% / 0.377 | majority 57.6% / 0.244; claim x delay rule 72.9% / 0.581; LLM with facts 67.8% / 0.653 |
+| Claim type | 254 / 30 / 74 | 0.443 | 62.2% | 0.359 | 55.4% / 0.316 | majority 73.0% / 0.281 |
+
+Confusion (rows = truth, columns = predicted, same label order):
+- Outcome (allowed / partly / dismissed): 6/7/0, 10/24/0, 6/6/0. **"Dismissed" is never predicted.**
+- Claim type (delay / refund / other): 40/14/0, 9/6/0, 2/3/0.
+
+**Reading.**
+- Three times the training data did **not** help the outcome model: 30 of 59 correct against 33
+  before, a difference well inside chance on 59 cases. It is still below "always partly allowed"
+  (57.6%), the rule (72.9%) and the LLM with facts (67.8%).
+- Claim type improved (46 of 74 against 41) but is still below the majority baseline on accuracy.
+  Only 6 of 15 refund cases are recognised from a text whose relief section normally says "refund".
+  That points at the labels or at the facts cut dropping the relief section, not at too little data.
+- So more machine-made labels of the same kind are not the way forward. The next useful steps are
+  the human label check (`docs/annotation-guide.md`) and an error review of the claim-type misses
+  on **validation** orders.
+- Disclosure: the same 59 / 74 test cases have now been scored twice by this model family. Any
+  further change must be chosen on validation and confirmed on a new test period.
 
 ## On the 95% target
 
 - **Reachable, and measured:** citation verification (precision 100%, recall 98.3% on held-out
   orders).
 - **Plausible with enough checked labels:** claim type, dates and amounts.
-- **Not supported by any evidence so far:** 95% on allowed / partly allowed / dismissed. The best
+- **Not supported by any evidence so far (two training runs):** 95% on allowed / partly allowed / dismissed. The best
   method is 72.9% (90% range about 62–81%) on 59 cases; the labels are unchecked; and "allowed" vs
   "partly allowed" is a judgement call whose human agreement rate (to be measured with two
   annotators) caps any model. A number above that cap would mean leakage or overfitting, not skill.
