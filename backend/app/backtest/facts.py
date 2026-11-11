@@ -80,11 +80,18 @@ MIN_CHARS = 1500
 # middle of the narrative is dropped.
 HEAD_CHARS, TAIL_CHARS = 5000, 13000
 MAX_CHARS = HEAD_CHARS + TAIL_CHARS
+# The "relief sought" section says what the buyer claims. In long orders it can fall in the dropped
+# middle (46 of 284 train/validation orders, 11 Nov 2026), so it is kept explicitly.
+RELIEF_HEAD = re.compile(
+    r"(?i)reli[ec]f[s]?\s*(?:\(s\)|\[s\w?)?\s*sought|sought\s+(?:the\s+)?following\s+reli[ec]f"
+    r"|following\s+reli[ec]f"
+)
+RELIEF_CHARS = 1500
 
 
 @dataclass(frozen=True)
 class FactsSplit:
-    text: str  # the parties' part, up to MAX_CHARS
+    text: str  # the parties' part, up to MAX_CHARS (+ RELIEF_CHARS when the relief section is rescued)
     boundary: str  # what marked the start of the authority's part
     boundary_at: int  # character offset in the full order text
     truncated: bool
@@ -110,7 +117,13 @@ def split_facts(order_text: str) -> FactsSplit | None:
         return None
     truncated = len(prefix) > MAX_CHARS
     gap = "\n[... part of the complainant's narrative omitted for length ...]\n"
-    text = prefix[:HEAD_CHARS] + gap + prefix[-TAIL_CHARS:] if truncated else prefix
+    if truncated:
+        middle_end = len(prefix) - TAIL_CHARS
+        m = RELIEF_HEAD.search(prefix, HEAD_CHARS, middle_end)
+        relief = prefix[m.start() : min(m.start() + RELIEF_CHARS, middle_end)] + gap if m else ""
+        text = prefix[:HEAD_CHARS] + gap + relief + prefix[-TAIL_CHARS:]
+    else:
+        text = prefix
     return FactsSplit(text=text, boundary=marker, boundary_at=at, truncated=truncated)
 
 

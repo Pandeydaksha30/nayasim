@@ -77,6 +77,42 @@ Confusion (rows = truth, columns = predicted, same label order):
 - Disclosure: the same 59 / 74 test cases have now been scored twice by this model family. Any
   further change must be chosen on validation and confirmed on a new test period.
 
+### Why claim type is missed (review on train and validation orders only, 11 Nov 2026)
+
+The 10 validation misses (of 30) and the 284 train + validation orders were read. Test orders were
+not looked at. Three causes, in order of size:
+
+1. **The input often lacked the "relief sought" section**, the part that states the claim. Of 284
+   orders: kept in 185; dropped with the middle of a long narrative in 46; lost because the cut
+   was placed too early in 37 (an authority phrase inside the parties' part, e.g. "the authority
+   has decided the date of construction" in the unit table, or the respondent objecting to the
+   "jurisdiction of the authority"); no such heading at all in 16.
+2. **Whole-text word counts cannot tell the claim.** 85 of 178 delay orders in training also say
+   "refund" (boilerplate: "the promoter is liable to refund the amount or pay interest ..."), so
+   the word is weak evidence unless it is read inside the relief section.
+3. **Some labels are wrong or debatable.** Example: order 6900 is labelled "refund", but the relief
+   sought is to set aside a cancellation. Only the human label check can size this.
+
+**Fix made:** `split_facts` now keeps the relief section (up to 1,500 characters) when it falls in
+the dropped middle (`RELIEF_HEAD` in `app/backtest/facts.py`, unit-tested). It only ever takes text
+from before the cut, so it cannot add the authority's reasoning. Relief section present on
+validation: 27 of 30 (was 22). The too-early cut (cause 1, 37 orders) is **not** fixed yet.
+
+**Measured on validation (30 orders; not on test):**
+
+| Method | Accuracy | macro-F1 |
+|---|---|---|
+| Always "delayed possession" | 60.0% | 0.250 |
+| TF-IDF model, new input (C = 3) | 70.0% | 0.463 |
+| Rule on the relief section (refund / delay wording), else "delayed possession" | 80.0% | 0.536 |
+| **Rule on the relief section, else the TF-IDF model** | **83.3%** | **0.565** |
+
+The rule alone scores 81.9% on the 254 training orders, so about 80-83% is what this approach
+gives against the current labels: better than everything before, still far from 95%, and "other"
+is never predicted. The rule is a script experiment, not yet part of `app/ml`; it has not been
+scored on test. Note: the LLM "facts input" results in MODEL_EVALUATION.md were measured with the
+earlier cut (before the relief section was rescued).
+
 ## On the 95% target
 
 - **Reachable, and measured:** citation verification (precision 100%, recall 98.3% on held-out

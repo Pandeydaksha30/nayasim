@@ -52,3 +52,19 @@ def test_long_parties_part_keeps_start_and_end():
     assert sp is not None and sp.truncated
     assert sp.text.startswith("A. Unit details") and sp.text.endswith("force majeure.")
     assert "omitted for length" in sp.text
+
+
+def test_relief_section_in_the_dropped_middle_is_kept():
+    relief = "C. Relief sought by the complainant:\nDirect the respondent to refund the entire amount.\n"
+    text = (
+        "A. Unit details\n"
+        + ("x " * 4000)
+        + relief
+        + ("y " * 9000)
+        + REPLY
+        + "E. Jurisdiction of the authority\n"
+    )
+    sp = split_facts(text)
+    assert sp is not None and sp.truncated
+    assert "refund the entire amount" in sp.text
+    assert sp.text.endswith("force majeure.")
