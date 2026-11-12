@@ -5,7 +5,7 @@ out what they are owed, and simulates a hearing argued from real orders of the H
 Regulatory Authority (Gurugram). Every fact is tied to a page, every citation is checked against
 the stored order, and all money is calculated by ordinary code.
 
-**Status (12 Nov 2026):** runs locally end to end; 49 of 49 end-to-end checks and  unit tests
+**Status (12 Nov 2026):** runs locally end to end; 49 of 49 end-to-end checks and all 224 unit tests
 pass (END_TO_END_TEST_REPORT.md). **Not deployed to a public address.** Accuracy figures are
 reported as measured and are modest; labels have not yet been checked by people.
 
