@@ -1,5 +1,8 @@
 # Deployment checklist (draft from the audit, 12 Nov 2026)
 
+**Decision (12 Nov 2026): local demonstration only. No public deployment will be attempted before
+the demo; nothing below has been done.**
+
 Nothing is deployed. This lists what the code needs, which hosting fits, and what must be decided
 or supplied. It will be completed in Phase 6.
 
