@@ -3,7 +3,8 @@
 Classes: **Working and verified** (run and checked, date given), **Implemented but untested**
 (code exists, not exercised in a recorded check), **Partially implemented**, **Broken**,
 **Missing**. Nothing is running at the moment of this audit, so "verified" refers to the dated
-check; everything will be re-verified in the end-to-end test (Phase 4).
+check. Update 12 Nov: the journey was re-run end to end and 49 of 49 checks passed
+(END_TO_END_TEST_REPORT.md).
 
 ## The requested demo journey
 
@@ -40,7 +41,8 @@ check; everything will be re-verified in the end-to-end test (Phase 4).
 | Fact extraction from uploaded documents | Working and verified (10 Nov, demo case) | Demo cases only; blocked for real cases by the privacy rule |
 | Fact confirmation, follow-up questions | Working and verified (10 Nov) | |
 | Interest calculator (page and API) | Working and verified (tests) | Deterministic Python |
-| Money, report and draft pages of a case | Implemented but untested | Pages exist; not re-checked since the accounts work |
+| Money and report pages of a case | Working and verified (12 Nov) | END_TO_END_TEST_REPORT.md |
+| Complaint draft page | **Missing** | The page is a "Not built yet" placeholder |
 | Citation verifier | Working and verified (benchmark) | Precision 100%, recall 98.3% on held-out orders |
 | Order ingestion and OCR | Working and verified | 2,209 orders with text; latest download stopped at about 190 of 1,000 |
 | Embedding of order chunks | Partially implemented | 65,974 of 72,970 chunks embedded |
