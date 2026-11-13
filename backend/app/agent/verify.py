@@ -53,6 +53,29 @@ def verify_cites(ctx: ToolContext, cites: list[dict]) -> tuple[list[dict], list[
                 )
             else:
                 bad.append({"ref": ref, "quote": quote, "reason": "; ".join(v.reasons)})
+        elif ref in ctx.hearing_evidence:
+            e = ctx.hearing_evidence[ref]
+            v = verify_citation(
+                ctx.s,
+                Citation(page_no=e["page_no"], quote=quote, order_id=e["order_id"]),
+                before=ctx.cutoff,
+                allowed_orders={x["order_id"] for x in ctx.hearing_evidence.values()},
+            )
+            if v.verified:
+                good.append(
+                    {
+                        "ref": ref,
+                        "source": "order",
+                        "order_id": e["order_id"],
+                        "complaint_no": e["complaint_no"],
+                        "decided_on": e["decided_on"],
+                        "page_no": e["page_no"],
+                        "quote": v.stored_quote or quote,
+                        "status": "verified",
+                    }
+                )
+            else:
+                bad.append({"ref": ref, "quote": quote, "reason": "; ".join(v.reasons)})
         else:
             bad.append(
                 {"ref": ref, "quote": quote, "reason": "names evidence that no tool returned in this run"}

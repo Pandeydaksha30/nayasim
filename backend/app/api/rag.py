@@ -110,7 +110,7 @@ def ask(
     }
     row = CaseQuestion(case_id=case_id, question=body.question, result=stored)
     s.add(row)
-    s.flush()
+    s.commit()  # before the response, so the history shows it at once
     return {"id": row.id, **result}
 
 

@@ -20,8 +20,10 @@ export default function StepNav({ caseId, counts }: { caseId: string; counts: St
   const steps = [
     { slug: "documents", label: "Documents", sub: `${counts.documents} files, ${counts.pages} pages` },
     { slug: "facts", label: "Facts", sub: counts.reviewFacts ? `${counts.reviewFacts} to check` : "All checked" },
+    { slug: "ask", label: "Ask your documents", sub: "Cited answers" },
     { slug: "questions", label: "Questions", sub: counts.openQuestions ? `${counts.openQuestions} unanswered` : "Done" },
     { slug: "money", label: "Money owed", sub: "Interest and refund" },
+    { slug: "agent", label: "Agent analysis", sub: "Tools chosen step by step" },
     { slug: "hearing", label: "Simulated hearing", sub: counts.analysisBuilt ? "Arguments and bench" : later },
     { slug: "report", label: "Report", sub: counts.analysisBuilt ? "Outcome and weak points" : later },
     { slug: "draft", label: "Complaint draft", sub: counts.draftBuilt ? "Complaint format" : later },

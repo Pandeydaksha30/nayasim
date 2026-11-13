@@ -47,6 +47,7 @@ class ToolContext:
     order_evidence: dict[str, Hit] = field(default_factory=dict)
     hearing: dict | None = None
     hearing_run_id: int | None = None
+    hearing_evidence: dict[str, dict] = field(default_factory=dict)  # H1, H2...: verified hearing citations
 
     def add_doc(self, p: Passage) -> str:
         for ref, q in self.doc_evidence.items():
@@ -221,7 +222,40 @@ def run_hearing(ctx: ToolContext, args: dict) -> dict:
         "builder_arguments_kept": len(args_["builder"]),
         "arguments_removed_by_citation_check": len(args_["removed"]),
         "precedent_outcome_shares": report["outcome_shares"],
+        "verified_citations": _register_hearing_cites(ctx, report),
     }
+
+
+def _register_hearing_cites(ctx: ToolContext, report: dict) -> list[dict]:
+    """The citations that passed the hearing's code check become evidence H1, H2... the answer may cite."""
+    cites = [c for a in report["arguments"]["buyer"] + report["arguments"]["builder"] for c in a["citations"]]
+    cites += report["judge"]["citations"]
+    out = []
+    for c in cites:
+        if c.get("status") != "verified" or not c.get("stored_quote"):
+            continue
+        if any(
+            e["order_id"] == c["order_id"] and e["quote"] == c["stored_quote"]
+            for e in ctx.hearing_evidence.values()
+        ):
+            continue
+        ref = f"H{len(ctx.hearing_evidence) + 1}"
+        ctx.hearing_evidence[ref] = {
+            "order_id": c["order_id"],
+            "complaint_no": c["complaint_no"],
+            "decided_on": c["decided_on"],
+            "page_no": c["page_no"],
+            "quote": c["stored_quote"],
+        }
+        out.append(
+            {
+                "ref": ref,
+                "complaint_no": c["complaint_no"],
+                "page": c["page_no"],
+                "quote": c["stored_quote"][:300],
+            }
+        )
+    return out[:12]
 
 
 @dataclass(frozen=True)

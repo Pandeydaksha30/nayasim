@@ -408,9 +408,96 @@ def insights() -> None:
     check("search page without login redirects to /login", r.status_code == 307)
 
 
+def rag() -> None:
+    """Questions over the case's own uploaded documents (chunks, embeddings, cited answers)."""
+    c = client()
+    check("login", login(c).status_code == 200)
+    st = load_state()
+    case_id, private_id = st["case_id"], st["private_case_id"]
+    r = c.get(f"{API}/cases/{case_id}/passages", params={"q": "date of possession of the apartment"})
+    hits = r.json().get("hits", []) if r.status_code == 200 else []
+    check("document passages retrieved (no model)", r.status_code == 200 and len(hits) > 0, f"HTTP {r.status_code}, {len(hits)} hits, mode {r.json().get('mode') if r.status_code == 200 else '-'}")
+    check("every passage names its file and page", all(h["filename"] and h["page_no"] for h in hits))
+    t = time.monotonic()
+    r = c.post(f"{API}/cases/{case_id}/ask", json={"question": "By what date did the builder promise possession?"}, timeout=600)
+    body = r.json() if r.status_code == 200 else {}
+    check("answer returned (Gemini)", r.status_code == 200, f"HTTP {r.status_code}, {time.monotonic() - t:.0f} s: {r.text[:200] if r.status_code != 200 else ''}")
+    if body:
+        info("answer", body["answer"][:300])
+        check("answer has verified citations with file and page", body["insufficient"] or all(x["status"] == "verified" and x["page_no"] for x in body["citations"]), f"{len(body['citations'])} verified, {len(body['rejected_citations'])} removed")
+        check("answer is grounded (not 'insufficient')", not body["insufficient"], str(body.get("reason")))
+    r = c.post(f"{API}/cases/{case_id}/ask", json={"question": "What is the name of the architect's pet dog?"}, timeout=600)
+    if r.status_code == 200:
+        check("unanswerable question gets 'not enough in the documents'", r.json()["insufficient"] is True, r.json()["answer"][:120])
+    else:
+        info("unanswerable question", f"HTTP {r.status_code}: {r.text[:150]}")
+    hist = c.get(f"{API}/cases/{case_id}/questions")
+    check("questions saved and listed again", hist.status_code == 200 and len(hist.json()) >= 1, f"{len(hist.json())} saved")
+    r = c.post(f"{API}/cases/{private_id}/ask", json={"question": "What is the total price?"})
+    check("private case: answering by the external model is blocked", r.status_code == 403, f"HTTP {r.status_code}")
+
+
+def agent() -> None:
+    """Agentic analysis: a background run in which the model chooses the tools."""
+    c = client()
+    check("login", login(c).status_code == 200)
+    case_id = load_state()["case_id"]
+    objective = sys.argv[2] if len(sys.argv) > 2 else (
+        "When was possession promised and how late is it? Find similar past orders and say how they ended, "
+        "and estimate the likely outcome."
+    )
+    r = c.post(f"{API}/cases/{case_id}/agent", json={"objective": objective})
+    if not check("agent run accepted", r.status_code == 202, f"HTTP {r.status_code}: {r.text[:200]}"):
+        return
+    run = r.json()
+    t = time.monotonic()
+    while run["status"] == "running" and time.monotonic() - t < 1200:
+        time.sleep(10)
+        run = c.get(f"{API}/cases/{case_id}/agent/runs/{run['id']}").json()
+    (ROOT / "data" / "e2e_agent_run.json").write_text(json.dumps(run, indent=1), encoding="utf-8")
+    check("agent run finished", run["status"] in ("completed", "incomplete"), f"status {run['status']} after {time.monotonic() - t:.0f} s; {str(run.get('error'))[:200]}")
+    for stp in run["steps"]:
+        info("step", f"{stp['n']}. [{stp['agent']}] {stp['action']} {json.dumps(stp['args'])[:80]} ok={stp['ok']} {stp['ms']} ms")
+    res = run.get("result") or {}
+    check("agent used at least two different tools", len({s['action'] for s in run["steps"] if s["ok"]}) >= 2)
+    check("final citations verified by code", all(x.get("status") == "verified" for x in res.get("citations", [])), f"{len(res.get('citations', []))} verified, {len(res.get('rejected_citations', []))} removed; stop: {res.get('stop_reason')}")
+    info("answer", (res.get("answer") or "")[:400])
+    again = c.get(f"{API}/cases/{case_id}/agent/runs")
+    check("run saved and returned again", again.status_code == 200 and again.json()[0]["id"] == run["id"])
+
+
+def isolation() -> None:
+    """A second user cannot read the demo user's case, chunks, answers or agent runs."""
+    st = load_state()
+    case_id = st["case_id"]
+    other_email = "demo.other@example.com"
+    pw = password()
+    c = client()
+    r = c.post(f"{API}/auth/login", json={"email": other_email, "password": pw})
+    if r.status_code != 200:
+        c.post(f"{API}/auth/signup", json={"name": "Other User", "email": other_email, "password": pw, "accept_terms": True})
+        outbox = ROOT / "data" / "outbox"
+        token = None
+        for f in sorted(outbox.glob("*.txt"), reverse=True):
+            text = quopri.decodestring(f.read_bytes()).decode("utf-8", "replace")
+            if other_email in text and "verify-email?token=" in text:
+                token = re.search(r"verify-email\?token=([A-Za-z0-9_\-=]+)", text).group(1)
+                break
+        c.post(f"{API}/auth/verify-email", json={"token": token})
+        r = c.post(f"{API}/auth/login", json={"email": other_email, "password": pw})
+    check("second user logged in", r.status_code == 200, f"HTTP {r.status_code}")
+    for path in ("", "/passages?q=possession", "/questions", "/agent/runs", "/hearing", "/estimate"):
+        code = c.get(f"{API}/cases/{case_id}{path}").status_code
+        check(f"other user: GET /cases/{{id}}{path.split('?')[0]} refused", code == 404, f"HTTP {code}")
+    code = c.post(f"{API}/cases/{case_id}/ask", json={"question": "When is possession due?"}).status_code
+    check("other user: ask refused", code == 404, f"HTTP {code}")
+    check("other user's case list does not include it", all(x["id"] != case_id for x in c.get(f"{API}/cases").json()))
+
+
 if __name__ == "__main__":
     stage = sys.argv[1] if len(sys.argv) > 1 else "setup"
-    {"setup": setup, "facts": facts, "hearing": hearing, "insights": insights, "session": session}[stage]()
+    {"setup": setup, "facts": facts, "hearing": hearing, "insights": insights, "session": session,
+     "rag": rag, "agent": agent, "isolation": isolation}[stage]()
     failed = [r for r in results if r[0] == "FAIL"]
     print(f"\n{len(results) - len(failed)} passed, {len(failed)} failed")
     sys.exit(1 if failed else 0)

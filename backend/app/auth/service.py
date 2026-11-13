@@ -64,6 +64,9 @@ def start_session(s: Session, request: Request, response: Response, user: User) 
     user.last_login_at = now()
     user.failed_logins = 0
     user.locked_until = None
+    # Commit now: the request's own commit runs only after the response has been sent, so the
+    # browser's very next request could otherwise arrive before the session exists (seen: 401).
+    s.commit()
     response.set_cookie(
         SESSION_COOKIE,
         token,

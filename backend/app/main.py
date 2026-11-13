@@ -10,12 +10,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.agent import router as agent_router
 from app.api.auth import router as auth_router
 from app.api.calculations import router as calculations_router
 from app.api.cases import router as cases_router
 from app.api.hearing import router as hearing_router
 from app.api.insights import router as insights_router
-from app.api.agent import router as agent_router
 from app.api.rag import router as rag_router
 from app.config import settings
 from app.middleware import SecurityMiddleware

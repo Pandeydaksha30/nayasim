@@ -106,7 +106,7 @@ class Step(BaseModel):
 
 
 class FinalCite(BaseModel):
-    ref: str = Field(description="Evidence label, e.g. D2 or O3")
+    ref: str = Field(description="Evidence label, e.g. D2, O3 or H1")
     quote: str = Field(description="Words copied exactly from that passage or excerpt")
 
 
@@ -144,7 +144,8 @@ ANSWER = """{role}
 OBJECTIVE:
 {objective}
 
-Answer from the observations below ONLY. Cite evidence by its label (D1, O2, ...) with words copied
+Answer from the observations below ONLY. Cite evidence by its label
+(D1 documents, O2 orders, H3 hearing citations) with words copied
 exactly from that passage or excerpt; citations are checked by code and false ones are removed.
 Money figures must come from calculate_interest observations. Say plainly what is uncertain. Not legal
 advice. If the observations are not enough, set insufficient to true.
@@ -326,7 +327,7 @@ def build_agent(
         except Exception as e:  # noqa: BLE001
             return {
                 "final": {
-                    "answer": "The model could not write the final answer; the steps above are what was found.",
+                    "answer": "The model could not write the final answer; the steps show what was found.",
                     "insufficient": True,
                     "citations": [],
                     "error": f"{type(e).__name__}: {str(e)[:300]}",
