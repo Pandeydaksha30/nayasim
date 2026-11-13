@@ -1,101 +1,81 @@
 # NyayaSim
 
-Before a home buyer files a RERA complaint against a builder, NyayaSim reads their papers,
-works out what they are owed, and shows how the authority decided similar cases, with every
-fact tied to a page and every citation checked against the stored order.
+Before a home buyer files a RERA complaint against a builder, NyayaSim reads their papers, works
+out what they are owed, and simulates a hearing argued from real orders of the Haryana Real Estate
+Regulatory Authority (Gurugram). Every fact is tied to a page, every citation is checked against
+the stored order, and all money is calculated by ordinary code.
 
-**Status (9 Nov 2026):** working end to end for one region (HRERA Gurugram: 13,992 orders
-listed, 2,019 downloaded and searchable with hybrid keyword + semantic search, 248 with extracted
-outcomes). See `AGENT_STATUS.md` for what is measured and what is not. User accounts with email/password and
-Google sign-in, per-user case isolation, and a tested one-command server deploy. Accuracy is
-**not** claimed yet: the 200-record hand check and a clean backtest rerun are pending
-(see `HANDOFF.md`).
+**Status (12 Nov 2026):** runs locally end to end; 49 of 49 end-to-end checks and all 224 unit tests
+pass (END_TO_END_TEST_REPORT.md). **Not deployed to a public address.** Accuracy figures are
+reported as measured and are modest; labels have not yet been checked by people.
 
-| Feature | Where |
+## What it does
+
+| Feature | State | Where |
+|---|---|---|
+| Accounts: sign-up, email confirmation, login, password reset, account deletion | Working | `backend/app/auth/`, `docs/accounts.md` |
+| Upload of PDFs and images, text read locally (OCR for scans) | Working | `backend/app/buyer/documents.py` |
+| Facts read from the documents, each with page and quote, confirmed by the buyer | Working (fictional demo cases only, see Privacy) | `docs/buyer-documents.md` |
+| Delay interest and refund calculator | Working | `backend/app/calculator/` |
+| Search over 2,209 public orders: keyword + vector, with a decision-date cutoff | Working, used inside the hearing | `docs/search.md` |
+| Citation checker | Working; precision 100%, recall 98.3% on held-out orders | `docs/citations.md` |
+| Simulated hearing (buyer advocate, builder advocate, citation gate, judge) and report | Working (demo cases only) | `docs/hearing.md` |
+| Trained classifiers for outcome and claim type | Offline scripts only | `MODEL_TRAINING_GUIDE.md` |
+| Google sign-in | Coded, not configured, untested against Google | `docs/accounts.md` |
+| Complaint draft | Placeholder page | |
+| Production stack (Docker Compose + Caddy) | Written, never run on a public server | `docs/deploy.md`, `DEPLOYMENT_CHECKLIST.md` |
+
+Not part of the system: question-answering over an uploaded document, embeddings of uploaded
+documents, API endpoints for the trained classifiers, a standalone precedent search page.
+
+## Technology
+
+Next.js 15 / React 19 / TypeScript; FastAPI on Python 3.12; PostgreSQL 17 with pgvector; local
+`bge-small` embeddings (fastembed); Tesseract OCR; LangGraph; Google Gemini (free tier);
+scikit-learn. Sessions are server-side with an HttpOnly cookie (not JWT).
+
+## Run it
+
+Exact commands, addresses and troubleshooting: **RUN_LOCAL.md**.
+Website http://localhost:3100, API documentation http://localhost:8000/docs.
+
+## Demonstrate it
+
+**DEMO_GUIDE.md**: a 5 to 7 minute sequence, sample fictional documents in
+`demo/sample-documents/`, and what to do if the model is unavailable.
+
+## Measured results (held-out test orders)
+
+| Component | Result |
 |---|---|
-| Accounts: sign-up, email confirmation, sign-in, Google sign-in, password reset, account deletion | `backend/app/auth/`, `backend/app/api/auth.py`, `frontend/app/{login,signup,account,...}`; see [docs/accounts.md](docs/accounts.md) |
-| Buyer documents → verified facts (each with page + quote) | [docs/buyer-documents.md](docs/buyer-documents.md) |
-| Delay interest / refund calculator (deterministic Python) | `backend/app/calculator/` |
-| Order ingestion + OCR (English, Hindi) | [docs/ingestion.md](docs/ingestion.md) |
-| Precedent search with a decision-date cutoff | [docs/search.md](docs/search.md) |
-| Citation checker | [docs/citations.md](docs/citations.md) |
-| Simulated hearing + decision report | [docs/hearing.md](docs/hearing.md) |
-| Time-split backtest | [docs/backtest.md](docs/backtest.md) |
-| Production deploy (Docker, HTTPS, data import) | [docs/deploy.md](docs/deploy.md) |
+| Citation checker | Precision 100%, recall 98.3% |
+| Outcome prediction, best method (claim x delay rule) | 72.9% |
+| Outcome prediction, language model with the parties' filings | 67.8%, macro-F1 0.653 |
+| Outcome prediction, trained classifier | 50.8% |
+| Claim type, relief-section rule plus trained model | 74.3%, macro-F1 0.455 |
 
-## Run it locally (Windows)
+Details and method: `MODEL_EVALUATION.md`, `MODEL_TRAINING_GUIDE.md`, `AGENT_STATUS.md`.
 
-Needs: Docker Desktop, Python 3.12 with [uv](https://docs.astral.sh/uv/) (`pip install uv`), Node 20+.
+## Privacy
 
-**First time only**
+Uploaded documents stay on the machine. Text is sent to the language model only for cases marked
+as fictional demos, because the free model tier may retain data; the API refuses real cases
+(HTTP 403) until a zero-retention model is configured. `backend/.env` and `data/` are never
+committed.
 
-```powershell
-docker compose -f infra/docker-compose.yml up -d
-cd backend; uv sync; copy .env.example .env; cd ..
-cd frontend; npm ci; cd ..
-```
+## Documents
 
-Put `GEMINI_API_KEY=...` in `backend\.env` if you want AI fact extraction and hearings on demo cases.
-
-**Every time**, in two terminal windows from the repo folder:
-
-```powershell
-.\scripts\dev-api.ps1        # API on http://127.0.0.1:8000 (applies migrations first)
-```
-
-```powershell
-.\scripts\dev-web.ps1        # website on http://localhost:3100
-```
-
-Open http://localhost:3100 and click **Create account**. Without an email server configured,
-the confirmation email is saved to `data\outbox\` and its link is printed in the API window;
-open that link to confirm. Set `NYAYASIM_SMTP_*` in `backend\.env` to send real email, and
-`NYAYASIM_GOOGLE_CLIENT_ID` / `_SECRET` to show "Continue with Google" (docs/accounts.md).
-
-Ports taken? `.\scripts\dev-api.ps1 -Port 8010 -WebPort 3110` and
-`.\scripts\dev-web.ps1 -Port 3110 -ApiPort 8010`.
-
-Search data: a fresh database has no orders, so search and hearings find nothing until orders
-are loaded, by running ingestion (docs/ingestion.md) or importing the data file (docs/deploy.md).
-
-## Deploy
-
-```bash
-DOMAIN=your.domain DATA=nyayasim-data.dump bash infra/deploy.sh
-```
-
-Full guide, including free hosting, Google sign-in and email: [docs/deploy.md](docs/deploy.md).
-
-## Test
-
-```powershell
-cd backend; uv run pytest; uv run ruff check .      # database tests need Docker running
-cd frontend; npx tsc --noEmit; npm run build:check
-```
-
-## Layout
-
-| Path | What it is |
+| File | Content |
 |---|---|
-| `backend/app/api/` | HTTP routes: auth, cases, hearing, calculations. |
-| `backend/app/auth/` | Password hashing, sessions, Google sign-in, email, rate limits. |
-| `backend/app/middleware.py` | CSRF origin check and security headers. |
-| `backend/app/buyer/`, `extraction/`, `ingestion/`, `retrieval/`, `verifier/`, `hearing/`, `backtest/` | The pipeline stages. |
-| `backend/migrations/` | Alembic migrations (schema as plain SQL). |
-| `backend/tests/` | Unit, API and database tests. |
-| `frontend/app/` | Next.js pages: landing, sign-in, dashboard, case workspace, account, legal. |
-| `frontend/middleware.ts` | Sends signed-out visitors from private pages to sign-in. |
-| `frontend/next.config.ts` | `/api` forwarding to the backend, Content Security Policy. |
-| `infra/` | Dev database compose, production compose, Caddy, deploy/export/import scripts. |
-| `scripts/dev-*.ps1` | Start the API / website locally on Windows. |
-| `docs/` | One document per feature, with decisions and measured results. |
-| `legacy/contractiq/` | Original ContractIQ code, kept for reference. |
+| `PROJECT_AUDIT.md` | Components, routes, configuration, current state |
+| `FEATURE_STATUS.md` | Each feature: verified, untested, partial, missing |
+| `RUN_LOCAL.md` | Start-up commands |
+| `END_TO_END_TEST_REPORT.md` | Test results of 12 Nov 2026 |
+| `DEMO_GUIDE.md` | Demonstration script |
+| `DEPLOYMENT_CHECKLIST.md` | What a public deployment needs |
+| `HANDOFF.md` | Project rules and history |
 
-## Ground rules
+## Limits
 
-1. No fabricated orders, citations, facts or outcomes.
-2. Money is computed by deterministic Python, never by an LLM.
-3. Every extracted fact keeps its document and page.
-4. Every citation must be verifiable against a stored order.
-5. Errors are shown, not hidden.
-6. Real buyers' documents never go to an AI service that keeps data.
+This is a preparation aid, not legal advice. Outcome prediction is not reliable enough to act on.
+Data covers one authority (HRERA Gurugram).
