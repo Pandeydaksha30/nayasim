@@ -5,8 +5,9 @@ out what they are owed, and simulates a hearing argued from real orders of the H
 Regulatory Authority (Gurugram). Every fact is tied to a page, every citation is checked against
 the stored order, and all money is calculated by ordinary code.
 
-**Status (13 Nov 2026):** runs locally end to end; all end-to-end checks and all 228 unit tests
-pass (END_TO_END_TEST_REPORT.md). **Not deployed to a public address.** Accuracy figures are
+**Status (13 Nov 2026):** runs locally end to end, including question answering over uploaded
+documents and an agent that chooses its own tools; all unit tests and live end-to-end checks pass
+(TEST_REPORT.md). **Not deployed to a public address.** Accuracy figures are
 reported as measured and are modest; labels have not yet been checked by people.
 
 ## What it does
@@ -25,8 +26,8 @@ reported as measured and are modest; labels have not yet been checked by people.
 | Complaint draft, built by code from verified facts and verified citations | Working | `backend/app/insights/draft.py` |
 | Production stack (Docker Compose + Caddy) | Written, never run on a public server | `docs/deploy.md`, `DEPLOYMENT_CHECKLIST.md` |
 
-Not part of the system: question-answering over an uploaded document, and embeddings of uploaded
-documents.
+| Ask your documents: per-case chunks and local embeddings in pgvector, cited answers checked by code | Working (answers for demo cases; passage search for all) | `backend/app/rag/`, `ARCHITECTURE.md` |
+| Agent analysis: LangGraph loop, model chooses tools, bounded, every step shown, citations checked | Working (demo cases) | `backend/app/agent/`, `ARCHITECTURE.md` |
 
 ## Technology
 
@@ -70,7 +71,8 @@ committed.
 | `PROJECT_AUDIT.md` | Components, routes, configuration, current state |
 | `FEATURE_STATUS.md` | Each feature: verified, untested, partial, missing |
 | `RUN_LOCAL.md` | Start-up commands |
-| `END_TO_END_TEST_REPORT.md` | Test results of 12 Nov 2026 |
+| `TEST_REPORT.md` | Test results of 13 Nov 2026 |
+| `ARCHITECTURE.md`, `API_DOCUMENTATION.md`, `SECURITY.md`, `DEPLOYMENT_GUIDE.md` | Design, endpoints, security controls, deployment |
 | `DEMO_GUIDE.md` | Demonstration script |
 | `DEPLOYMENT_CHECKLIST.md` | What a public deployment needs |
 | `HANDOFF.md` | Project rules and history |

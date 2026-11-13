@@ -1,0 +1,720 @@
+{
+ "summary": {
+  "split": "heldout",
+  "questions": 20,
+  "answerable": 15,
+  "unanswerable": 5,
+  "embedding_model": "BAAI/bge-small-en-v1.5",
+  "retrieval_hit_at_1": 1.0,
+  "retrieval_recall_at_5": 1.0,
+  "retrieval_mrr": 1.0,
+  "model": "gemini:gemini-3.5-flash-lite",
+  "answer_accuracy": 1.0,
+  "citation_accuracy": 1.0,
+  "abstention_accuracy": 1.0,
+  "citations_removed_by_check": 0,
+  "errors": 0
+ },
+ "results": [
+  {
+   "id": "A02",
+   "answerable": true,
+   "rank": 1,
+   "retrieved": [
+    [
+     "agreement.pdf",
+     1
+    ],
+    [
+     "builder_letter.pdf",
+     1
+    ],
+    [
+     "receipts.pdf",
+     2
+    ],
+    [
+     "receipts.pdf",
+     1
+    ],
+    [
+     "agreement.pdf",
+     2
+    ]
+   ],
+   "mode": "hybrid",
+   "answer": "The agreement for sale was made on 2nd May 2018.",
+   "insufficient": false,
+   "correct": true,
+   "citation_ok": true,
+   "removed_citations": 0,
+   "seconds": 2.5,
+   "error": null
+  },
+  {
+   "id": "A04",
+   "answerable": true,
+   "rank": 1,
+   "retrieved": [
+    [
+     "agreement.pdf",
+     1
+    ],
+    [
+     "agreement.pdf",
+     2
+    ],
+    [
+     "builder_letter.pdf",
+     1
+    ],
+    [
+     "receipts.pdf",
+     2
+    ],
+    [
+     "receipts.pdf",
+     1
+    ]
+   ],
+   "mode": "hybrid",
+   "answer": "The allottee in the agreement is Ms. Ananya Mehra.",
+   "insufficient": false,
+   "correct": true,
+   "citation_ok": true,
+   "removed_citations": 0,
+   "seconds": 2.4,
+   "error": null
+  },
+  {
+   "id": "A06",
+   "answerable": true,
+   "rank": 1,
+   "retrieved": [
+    [
+     "agreement.pdf",
+     1
+    ],
+    [
+     "receipts.pdf",
+     1
+    ],
+    [
+     "receipts.pdf",
+     2
+    ],
+    [
+     "builder_letter.pdf",
+     1
+    ],
+    [
+     "agreement.pdf",
+     2
+    ]
+   ],
+   "mode": "hybrid",
+   "answer": "The project's RERA registration number is UPRERAPRJ-DEMO-0417.",
+   "insufficient": false,
+   "correct": true,
+   "citation_ok": true,
+   "removed_citations": 0,
+   "seconds": 1.6,
+   "error": null
+  },
+  {
+   "id": "A08",
+   "answerable": true,
+   "rank": 1,
+   "retrieved": [
+    [
+     "agreement.pdf",
+     1
+    ],
+    [
+     "agreement.pdf",
+     2
+    ],
+    [
+     "receipts.pdf",
+     1
+    ],
+    [
+     "receipts.pdf",
+     2
+    ],
+    [
+     "builder_letter.pdf",
+     1
+    ]
+   ],
+   "mode": "hybrid",
+   "answer": "The apartment is located on the twelfth floor of Tower C.",
+   "insufficient": false,
+   "correct": true,
+   "citation_ok": true,
+   "removed_citations": 0,
+   "seconds": 1.7,
+   "error": null
+  },
+  {
+   "id": "A10",
+   "answerable": true,
+   "rank": 1,
+   "retrieved": [
+    [
+     "agreement.pdf",
+     1
+    ],
+    [
+     "agreement.pdf",
+     2
+    ],
+    [
+     "receipts.pdf",
+     1
+    ],
+    [
+     "receipts.pdf",
+     2
+    ],
+    [
+     "builder_letter.pdf",
+     1
+    ]
+   ],
+   "mode": "hybrid",
+   "answer": "The carpet area of the apartment is 1,450 square feet.",
+   "insufficient": false,
+   "correct": true,
+   "citation_ok": true,
+   "removed_citations": 0,
+   "seconds": 1.2,
+   "error": null
+  },
+  {
+   "id": "A12",
+   "answerable": true,
+   "rank": 1,
+   "retrieved": [
+    [
+     "agreement.pdf",
+     1
+    ],
+    [
+     "receipts.pdf",
+     2
+    ],
+    [
+     "receipts.pdf",
+     1
+    ],
+    [
+     "agreement.pdf",
+     2
+    ],
+    [
+     "builder_letter.pdf",
+     1
+    ]
+   ],
+   "mode": "hybrid",
+   "answer": "The total price of the apartment is payable according to the construction-linked plan specified in Schedule C.",
+   "insufficient": false,
+   "correct": true,
+   "citation_ok": true,
+   "removed_citations": 0,
+   "seconds": 1.7,
+   "error": null
+  },
+  {
+   "id": "A14",
+   "answerable": true,
+   "rank": 1,
+   "retrieved": [
+    [
+     "agreement.pdf",
+     2
+    ],
+    [
+     "builder_letter.pdf",
+     1
+    ],
+    [
+     "receipts.pdf",
+     1
+    ],
+    [
+     "agreement.pdf",
+     1
+    ],
+    [
+     "receipts.pdf",
+     2
+    ]
+   ],
+   "mode": "hybrid",
+   "answer": "The promoter is required to hand over possession of the apartment on or before 30th June 2021, unless there is a delay due to force majeure. A later letter also states a revised completion date for Tower C of 31 December 2025 due to circumstances beyond control.",
+   "insufficient": false,
+   "correct": true,
+   "citation_ok": true,
+   "removed_citations": 0,
+   "seconds": 1.7,
+   "error": null
+  },
+  {
+   "id": "A16",
+   "answerable": true,
+   "rank": 1,
+   "retrieved": [
+    [
+     "agreement.pdf",
+     2
+    ],
+    [
+     "agreement.pdf",
+     1
+    ],
+    [
+     "receipts.pdf",
+     2
+    ],
+    [
+     "builder_letter.pdf",
+     1
+    ],
+    [
+     "receipts.pdf",
+     1
+    ]
+   ],
+   "mode": "hybrid",
+   "answer": "Force majeure is defined in clause 9 of the agreement.",
+   "insufficient": false,
+   "correct": true,
+   "citation_ok": true,
+   "removed_citations": 0,
+   "seconds": 1.4,
+   "error": null
+  },
+  {
+   "id": "A18",
+   "answerable": true,
+   "rank": 1,
+   "retrieved": [
+    [
+     "agreement.pdf",
+     2
+    ],
+    [
+     "agreement.pdf",
+     1
+    ],
+    [
+     "builder_letter.pdf",
+     1
+    ],
+    [
+     "receipts.pdf",
+     2
+    ],
+    [
+     "receipts.pdf",
+     1
+    ]
+   ],
+   "mode": "hybrid",
+   "answer": "The allottee must take possession within two months of the written offer of possession; if they fail to do so, holding charges will apply.",
+   "insufficient": false,
+   "correct": true,
+   "citation_ok": true,
+   "removed_citations": 0,
+   "seconds": 17.6,
+   "error": null
+  },
+  {
+   "id": "A20",
+   "answerable": true,
+   "rank": 1,
+   "retrieved": [
+    [
+     "receipts.pdf",
+     1
+    ],
+    [
+     "receipts.pdf",
+     2
+    ],
+    [
+     "agreement.pdf",
+     1
+    ],
+    [
+     "agreement.pdf",
+     2
+    ],
+    [
+     "builder_letter.pdf",
+     1
+    ]
+   ],
+   "mode": "hybrid",
+   "answer": "The receipt number for the booking payment is AR/0912.",
+   "insufficient": false,
+   "correct": true,
+   "citation_ok": true,
+   "removed_citations": 0,
+   "seconds": 1.4,
+   "error": null
+  },
+  {
+   "id": "A22",
+   "answerable": true,
+   "rank": 1,
+   "retrieved": [
+    [
+     "receipts.pdf",
+     1
+    ],
+    [
+     "builder_letter.pdf",
+     1
+    ],
+    [
+     "agreement.pdf",
+     1
+    ],
+    [
+     "receipts.pdf",
+     2
+    ],
+    [
+     "agreement.pdf",
+     2
+    ]
+   ],
+   "mode": "hybrid",
+   "answer": "The booking payment was made by RTGS dated 12.03.2018.",
+   "insufficient": false,
+   "correct": true,
+   "citation_ok": true,
+   "removed_citations": 0,
+   "seconds": 2.8,
+   "error": null
+  },
+  {
+   "id": "A24",
+   "answerable": true,
+   "rank": 1,
+   "retrieved": [
+    [
+     "receipts.pdf",
+     2
+    ],
+    [
+     "agreement.pdf",
+     2
+    ],
+    [
+     "receipts.pdf",
+     1
+    ],
+    [
+     "agreement.pdf",
+     1
+    ],
+    [
+     "builder_letter.pdf",
+     1
+    ]
+   ],
+   "mode": "hybrid",
+   "answer": "The allotment amount of Rs. 14,40,000/- was paid by cheque dated 10.05.2018.",
+   "insufficient": false,
+   "correct": true,
+   "citation_ok": true,
+   "removed_citations": 0,
+   "seconds": 3.0,
+   "error": null
+  },
+  {
+   "id": "A26",
+   "answerable": true,
+   "rank": 1,
+   "retrieved": [
+    [
+     "receipts.pdf",
+     2
+    ],
+    [
+     "receipts.pdf",
+     1
+    ],
+    [
+     "agreement.pdf",
+     1
+    ],
+    [
+     "agreement.pdf",
+     2
+    ],
+    [
+     "builder_letter.pdf",
+     1
+    ]
+   ],
+   "mode": "hybrid",
+   "answer": "The receipt number for the allotment payment is AR/1187.",
+   "insufficient": false,
+   "correct": true,
+   "citation_ok": true,
+   "removed_citations": 0,
+   "seconds": 3.0,
+   "error": null
+  },
+  {
+   "id": "A28",
+   "answerable": true,
+   "rank": 1,
+   "retrieved": [
+    [
+     "builder_letter.pdf",
+     1
+    ],
+    [
+     "agreement.pdf",
+     1
+    ],
+    [
+     "agreement.pdf",
+     2
+    ],
+    [
+     "receipts.pdf",
+     1
+    ],
+    [
+     "receipts.pdf",
+     2
+    ]
+   ],
+   "mode": "hybrid",
+   "answer": "The revised completion date for Tower C is 31 December 2025.",
+   "insufficient": false,
+   "correct": true,
+   "citation_ok": true,
+   "removed_citations": 0,
+   "seconds": 3.0,
+   "error": null
+  },
+  {
+   "id": "A30",
+   "answerable": true,
+   "rank": 1,
+   "retrieved": [
+    [
+     "builder_letter.pdf",
+     1
+    ],
+    [
+     "agreement.pdf",
+     2
+    ],
+    [
+     "receipts.pdf",
+     1
+    ],
+    [
+     "receipts.pdf",
+     2
+    ],
+    [
+     "agreement.pdf",
+     1
+    ]
+   ],
+   "mode": "hybrid",
+   "answer": "The builder states that the completion date is revised due to circumstances beyond their control.",
+   "insufficient": false,
+   "correct": true,
+   "citation_ok": true,
+   "removed_citations": 0,
+   "seconds": 1.7,
+   "error": null
+  },
+  {
+   "id": "U06",
+   "answerable": false,
+   "rank": null,
+   "retrieved": [
+    [
+     "agreement.pdf",
+     2
+    ],
+    [
+     "receipts.pdf",
+     1
+    ],
+    [
+     "agreement.pdf",
+     1
+    ],
+    [
+     "receipts.pdf",
+     2
+    ],
+    [
+     "builder_letter.pdf",
+     1
+    ]
+   ],
+   "mode": "hybrid",
+   "answer": "The uploaded documents do not contain enough to answer this question.",
+   "insufficient": true,
+   "correct": true,
+   "citation_ok": true,
+   "removed_citations": 0,
+   "seconds": 1.2,
+   "error": null
+  },
+  {
+   "id": "U07",
+   "answerable": false,
+   "rank": null,
+   "retrieved": [
+    [
+     "agreement.pdf",
+     2
+    ],
+    [
+     "agreement.pdf",
+     1
+    ],
+    [
+     "builder_letter.pdf",
+     1
+    ],
+    [
+     "receipts.pdf",
+     2
+    ],
+    [
+     "receipts.pdf",
+     1
+    ]
+   ],
+   "mode": "hybrid",
+   "answer": "The uploaded documents do not contain enough to answer this question.",
+   "insufficient": true,
+   "correct": true,
+   "citation_ok": true,
+   "removed_citations": 0,
+   "seconds": 1.1,
+   "error": null
+  },
+  {
+   "id": "U08",
+   "answerable": false,
+   "rank": null,
+   "retrieved": [
+    [
+     "builder_letter.pdf",
+     1
+    ],
+    [
+     "agreement.pdf",
+     1
+    ],
+    [
+     "agreement.pdf",
+     2
+    ],
+    [
+     "receipts.pdf",
+     2
+    ],
+    [
+     "receipts.pdf",
+     1
+    ]
+   ],
+   "mode": "hybrid",
+   "answer": "The uploaded documents do not contain enough to answer this question.",
+   "insufficient": true,
+   "correct": true,
+   "citation_ok": true,
+   "removed_citations": 0,
+   "seconds": 3.1,
+   "error": null
+  },
+  {
+   "id": "U09",
+   "answerable": false,
+   "rank": null,
+   "retrieved": [
+    [
+     "agreement.pdf",
+     1
+    ],
+    [
+     "receipts.pdf",
+     2
+    ],
+    [
+     "receipts.pdf",
+     1
+    ],
+    [
+     "agreement.pdf",
+     2
+    ],
+    [
+     "builder_letter.pdf",
+     1
+    ]
+   ],
+   "mode": "hybrid",
+   "answer": "The uploaded documents do not contain enough to answer this question.",
+   "insufficient": true,
+   "correct": true,
+   "citation_ok": true,
+   "removed_citations": 0,
+   "seconds": 1.2,
+   "error": null
+  },
+  {
+   "id": "U10",
+   "answerable": false,
+   "rank": null,
+   "retrieved": [
+    [
+     "receipts.pdf",
+     1
+    ],
+    [
+     "builder_letter.pdf",
+     1
+    ],
+    [
+     "agreement.pdf",
+     2
+    ],
+    [
+     "receipts.pdf",
+     2
+    ],
+    [
+     "agreement.pdf",
+     1
+    ]
+   ],
+   "mode": "hybrid",
+   "answer": "The uploaded documents do not contain enough to answer this question.",
+   "insufficient": true,
+   "correct": true,
+   "citation_ok": true,
+   "removed_citations": 0,
+   "seconds": 17.4,
+   "error": null
+  }
+ ]
+}

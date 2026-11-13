@@ -47,8 +47,10 @@ gate removes any argument whose citation cannot be found in the stored order.
 | 0:00 | Landing page, then **Sign in** as the demo user | Accounts are real: hashed passwords, email verification, sessions. Other users cannot see this case. |
 | 0:30 | **Dashboard**, open the demo case, **Documents** step. Upload `receipt_scan.png` into a new demo case, or show the four files already uploaded. | PDFs are read from their text layer; this image was read by OCR on this machine. |
 | 1:15 | **Facts** step | Each fact shows its document, page and the exact quote. A value whose quote is not found in the document is rejected by code. The buyer confirms each fact. |
+| 1:40 | **Ask your documents** step: ask "By what date did the builder promise possession?", then "Who is the architect?" | The documents were split into chunks and embedded locally when uploaded. The answer cites file and page; the quote was found word for word by code. The second question gets "not enough in the documents" instead of a guess. |
 | 2:00 | **Questions**, then **Money** step | Interest is calculated by deterministic Python and shown payment by payment. Change the rate to show the figure move. |
 | 2:45 | **Hearing** step: press Run (or open the stored one) | It runs in the background. Buyer advocate, builder advocate, then the judge. Each citation carries a "verified" mark: the quote was found on that page of that real order. Unverified arguments are removed before the judge sees them. |
+| 3:30 | **Agent analysis** step: run example 1 or 3 | The model chooses the next tool each step (documents, facts, calculator, outcome estimate, past orders, specialist agents, the hearing); code runs it and the step list shows what came back. Limited to 6 steps and 7 minutes. Citations in the answer are checked by code; failed ones are removed and counted. |
 | 4:00 | **Report** step | Amount estimate with the basis of the rate, the rule-based outcome estimate with its measured accuracy, and where the case is weak. |
 | 4:20 | **Complaint draft** step | Put together by code from the confirmed facts and the citations that passed verification. Blanks in brackets where something is not known. Download as text. |
 | 4:40 | **Search orders** in the top bar | Keyword plus meaning-based search over the public orders; then paste part of an order into the classifier box to show the trained model and its measured accuracy. |
@@ -86,8 +88,11 @@ can be trusted.
 ## 5. Limitations to state openly
 
 - Runs locally; it is not deployed to a public address.
-- No question-answering over an uploaded document, and uploaded documents are not embedded: the
-  system extracts structured facts instead. Vector search covers the public orders only.
+- Question answering over uploaded documents is evaluated on 40 questions over the fictional demo
+  documents (all correct on both halves), which is a small, easy set: it tests the pipeline, not
+  real agreements.
+- The agent's specialist sub-agents and the hearing are bounded loops/pipelines; the hearing's own
+  order of roles is fixed. Only the orchestrator's tool choice is dynamic.
 - The trained classifiers work on the text of an order, not on a buyer's own papers; for a buyer's case the site shows the rule-based estimate.
 - The complaint draft is a starting point with blanks, to be checked by the complainant or an advocate.
 - Only fictional demo cases are sent to the language model, because the free tier may retain data.
@@ -114,7 +119,8 @@ about the model being busy (429 / 503).
 | Question | Short answer |
 |---|---|
 | Is it JWT? | No. Server-side sessions with an HttpOnly cookie; the server stores only a hash of the token and can revoke sessions. |
-| Is it RAG? | Retrieval over public orders feeds the advocates and judge, with citations verified by code. It is not a chat over the user's document. |
+| Is it RAG? | Yes, twice: over the buyer's own documents (Ask step, per-case chunks in pgvector) and over public orders (hearing, search). Every citation is verified by code. |
+| Is the agent autonomous? | Within limits: the model chooses each tool and its arguments from what it has seen (the step list proves it), code executes, and hard limits stop it. It cannot write anything except saving a hearing of the same case. |
 | Where is the vector database? | In PostgreSQL, through pgvector. No separate vector store. |
 | Was the model trained? | The language model is used as is. Two small classifiers were trained and evaluated on a frozen, time-based split; results are reported as measured. |
 | Why not 95%? | Labels are machine-made and inconsistent in places; results were not tuned on the test set. |

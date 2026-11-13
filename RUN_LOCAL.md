@@ -1,6 +1,6 @@
 # Run NyayaSim locally (Windows, PowerShell)
 
-Verified on 12 Nov 2026 on this machine. Project folder:
+Verified on 13 Nov 2026 on this machine (migrations run to 0010 automatically when the backend starts). Project folder:
 `C:\Users\pande\Downloads\CONTRACT_IQ\contractiq`
 
 ## Before you start
@@ -49,13 +49,17 @@ cd C:\Users\pande\Downloads\CONTRACT_IQ\contractiq\backend
 .\.venv\Scripts\python.exe -m scripts.e2e_check hearing
 .\.venv\Scripts\python.exe -m scripts.e2e_check insights
 .\.venv\Scripts\python.exe -m scripts.e2e_check session
+.\.venv\Scripts\python.exe -m scripts.e2e_check rag         # document Q&A (calls Gemini)
+.\.venv\Scripts\python.exe -m scripts.e2e_check agent       # agent run (calls Gemini)
+.\.venv\Scripts\python.exe -m scripts.e2e_check isolation   # a second user is refused
+.\.venv\Scripts\python.exe -m scripts.eval_rag dev --answer # 20 evaluation questions
 ```
 
 Each line printed is PASS or FAIL. `facts` and `hearing` call Gemini and can be slow or fail when
 the free tier is busy; the other two do not need it. Every `setup` run adds one more demo case and
 one private test case to the demo user.
 
-Unit tests (228, about 2 minutes):
+Unit tests (244, about 3 minutes):
 
 ```powershell
 cd C:\Users\pande\Downloads\CONTRACT_IQ\contractiq\backend
