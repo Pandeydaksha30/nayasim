@@ -49,8 +49,10 @@ gate removes any argument whose citation cannot be found in the stored order.
 | 1:15 | **Facts** step | Each fact shows its document, page and the exact quote. A value whose quote is not found in the document is rejected by code. The buyer confirms each fact. |
 | 2:00 | **Questions**, then **Money** step | Interest is calculated by deterministic Python and shown payment by payment. Change the rate to show the figure move. |
 | 2:45 | **Hearing** step: press Run (or open the stored one) | It runs in the background. Buyer advocate, builder advocate, then the judge. Each citation carries a "verified" mark: the quote was found on that page of that real order. Unverified arguments are removed before the judge sees them. |
-| 4:00 | **Report** step | Amount estimate with the basis of the rate, and where the case is weak. Note the honest message when too few similar orders have a recorded outcome. |
-| 4:30 | http://localhost:8000/docs | The API behind the site: accounts, cases, documents, facts, hearing, calculator. |
+| 4:00 | **Report** step | Amount estimate with the basis of the rate, the rule-based outcome estimate with its measured accuracy, and where the case is weak. |
+| 4:20 | **Complaint draft** step | Put together by code from the confirmed facts and the citations that passed verification. Blanks in brackets where something is not known. Download as text. |
+| 4:40 | **Search orders** in the top bar | Keyword plus meaning-based search over the public orders; then paste part of an order into the classifier box to show the trained model and its measured accuracy. |
+| 5:10 | http://localhost:8000/docs | The API behind the site: accounts, cases, documents, facts, hearing, calculator. |
 
 Optional, if asked about the database:
 
@@ -86,12 +88,11 @@ can be trusted.
 - Runs locally; it is not deployed to a public address.
 - No question-answering over an uploaded document, and uploaded documents are not embedded: the
   system extracts structured facts instead. Vector search covers the public orders only.
-- The trained classifiers are evaluated from the command line and are not called by the website.
-- Precedent search runs inside the hearing; there is no separate search page.
-- The complaint draft page is a placeholder.
+- The trained classifiers work on the text of an order, not on a buyer's own papers; for a buyer's case the site shows the rule-based estimate.
+- The complaint draft is a starting point with blanks, to be checked by the complainant or an advocate.
 - Only fictional demo cases are sent to the language model, because the free tier may retain data.
   Real buyers' documents are blocked by the API until a zero-retention model is configured.
-- Email is written to a local folder instead of being sent; Google sign-in is coded but not configured.
+- Email is written to a local folder instead of being sent. Google sign-in works for the test accounts added in the Google console.
 - Outcome prediction is well below a level anyone should rely on; the tool is for preparation,
   not legal advice.
 

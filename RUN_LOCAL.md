@@ -47,6 +47,7 @@ cd C:\Users\pande\Downloads\CONTRACT_IQ\contractiq\backend
 .\.venv\Scripts\python.exe -m scripts.e2e_check setup
 .\.venv\Scripts\python.exe -m scripts.e2e_check facts
 .\.venv\Scripts\python.exe -m scripts.e2e_check hearing
+.\.venv\Scripts\python.exe -m scripts.e2e_check insights
 .\.venv\Scripts\python.exe -m scripts.e2e_check session
 ```
 
@@ -54,7 +55,7 @@ Each line printed is PASS or FAIL. `facts` and `hearing` call Gemini and can be 
 the free tier is busy; the other two do not need it. Every `setup` run adds one more demo case and
 one private test case to the demo user.
 
-Unit tests (224, about 2 minutes):
+Unit tests (228, about 2 minutes):
 
 ```powershell
 cd C:\Users\pande\Downloads\CONTRACT_IQ\contractiq\backend

@@ -1,4 +1,4 @@
-import NotBuilt from "../live/not-built";
+import LiveDraft from "../live/live-draft";
 import { loadCase } from "@/lib/case-source";
 import { computeInterest } from "@/lib/api";
 import { fmtDate, fmtINR } from "@/lib/format";
@@ -9,7 +9,7 @@ export const metadata = { title: "Complaint draft" };
 
 export default async function DraftPage({ params }: { params: Promise<{ id: string }> }) {
   const src = await loadCase((await params).id);
-  if (src.kind === "live") return <NotBuilt what="Complaint draft" caseId={src.data.id} />;
+  if (src.kind === "live") return <LiveDraft c={src.data} />;
   if (src.kind !== "example") return null; // the layout shows the error
   const c = src.data;
   let result;

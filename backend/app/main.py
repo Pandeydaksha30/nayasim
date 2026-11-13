@@ -14,6 +14,7 @@ from app.api.auth import router as auth_router
 from app.api.calculations import router as calculations_router
 from app.api.cases import router as cases_router
 from app.api.hearing import router as hearing_router
+from app.api.insights import router as insights_router
 from app.config import settings
 from app.middleware import SecurityMiddleware
 
@@ -30,6 +31,20 @@ def _housekeeping_once() -> None:
         counts = purge_expired(s)
         s.commit()
     log.info("Housekeeping: removed %s", counts)
+
+
+def _warm_models() -> None:
+    """Load the trained classifiers in the background at start-up, so the first request that needs
+    them does not wait for scikit-learn to import. Missing model files are not an error here: the
+    endpoint reports that itself."""
+    try:
+        from app.api.insights import MODELS, _model
+
+        for task in ("claim_type", "outcome"):
+            if (MODELS / f"{task}_tfidf_lr.joblib").exists():
+                _model(task)
+    except Exception:  # noqa: BLE001 - optional warm-up; logged, never stops the API
+        log.exception("Could not preload the classifiers")
 
 
 async def _housekeeping_loop() -> None:
@@ -53,8 +68,10 @@ async def lifespan(_: FastAPI):
     except Exception:  # noqa: BLE001 - the API still starts; logged with traceback
         log.exception("Could not check for interrupted hearing runs")
     task = asyncio.create_task(_housekeeping_loop())
+    warm = asyncio.create_task(asyncio.to_thread(_warm_models))
     yield
     task.cancel()
+    warm.cancel()
 
 
 app = FastAPI(title="NyayaSim API", version="0.2.0", lifespan=lifespan)
@@ -74,6 +91,7 @@ app.include_router(auth_router)
 app.include_router(calculations_router)
 app.include_router(cases_router)
 app.include_router(hearing_router)
+app.include_router(insights_router)
 
 
 @app.get("/health")

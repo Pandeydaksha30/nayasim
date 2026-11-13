@@ -5,7 +5,7 @@
  */
 import { type NextRequest, NextResponse } from "next/server";
 
-const PRIVATE = [/^\/dashboard(\/|$)/, /^\/account(\/|$)/, /^\/cases\/new(\/|$)/, /^\/cases\/(?!demo(\/|$))[^/]+/];
+const PRIVATE = [/^\/dashboard(\/|$)/, /^\/search(\/|$)/, /^\/account(\/|$)/, /^\/cases\/new(\/|$)/, /^\/cases\/(?!demo(\/|$))[^/]+/];
 
 export function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
@@ -18,4 +18,4 @@ export function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
-export const config = { matcher: ["/dashboard/:path*", "/account/:path*", "/cases/:path*"] };
+export const config = { matcher: ["/dashboard/:path*", "/search/:path*", "/account/:path*", "/cases/:path*"] };

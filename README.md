@@ -5,7 +5,7 @@ out what they are owed, and simulates a hearing argued from real orders of the H
 Regulatory Authority (Gurugram). Every fact is tied to a page, every citation is checked against
 the stored order, and all money is calculated by ordinary code.
 
-**Status (12 Nov 2026):** runs locally end to end; 49 of 49 end-to-end checks and all 224 unit tests
+**Status (13 Nov 2026):** runs locally end to end; all end-to-end checks and all 228 unit tests
 pass (END_TO_END_TEST_REPORT.md). **Not deployed to a public address.** Accuracy figures are
 reported as measured and are modest; labels have not yet been checked by people.
 
@@ -17,16 +17,16 @@ reported as measured and are modest; labels have not yet been checked by people.
 | Upload of PDFs and images, text read locally (OCR for scans) | Working | `backend/app/buyer/documents.py` |
 | Facts read from the documents, each with page and quote, confirmed by the buyer | Working (fictional demo cases only, see Privacy) | `docs/buyer-documents.md` |
 | Delay interest and refund calculator | Working | `backend/app/calculator/` |
-| Search over 2,209 public orders: keyword + vector, with a decision-date cutoff | Working, used inside the hearing | `docs/search.md` |
+| Search over 2,209 public orders: keyword + vector, with a decision-date cutoff | Working: page `/search`, and inside the hearing | `docs/search.md` |
 | Citation checker | Working; precision 100%, recall 98.3% on held-out orders | `docs/citations.md` |
 | Simulated hearing (buyer advocate, builder advocate, citation gate, judge) and report | Working (demo cases only) | `docs/hearing.md` |
-| Trained classifiers for outcome and claim type | Offline scripts only | `MODEL_TRAINING_GUIDE.md` |
-| Google sign-in | Coded, not configured, untested against Google | `docs/accounts.md` |
-| Complaint draft | Placeholder page | |
+| Rule-based outcome estimate on the report; trained classifiers for pasted order text | Working | `backend/app/api/insights.py`, `MODEL_TRAINING_GUIDE.md` |
+| Google sign-in | Working locally with a configured Google client | `docs/accounts.md` |
+| Complaint draft, built by code from verified facts and verified citations | Working | `backend/app/insights/draft.py` |
 | Production stack (Docker Compose + Caddy) | Written, never run on a public server | `docs/deploy.md`, `DEPLOYMENT_CHECKLIST.md` |
 
-Not part of the system: question-answering over an uploaded document, embeddings of uploaded
-documents, API endpoints for the trained classifiers, a standalone precedent search page.
+Not part of the system: question-answering over an uploaded document, and embeddings of uploaded
+documents.
 
 ## Technology
 

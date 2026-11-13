@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Banner } from "@/components/icons";
 import { sessionAuth } from "@/lib/server-session";
 import { type CaseFull, getHearing } from "@/lib/cases-api";
+import { type Estimate, getEstimate } from "@/lib/insights-api";
 import { fmtDate, fmtINRShort, pct } from "@/lib/format";
 import styles from "../report/report.module.css";
 
@@ -31,6 +32,14 @@ export default async function LiveReport({ c }: { c: CaseFull }) {
         </Banner>
       </>
     );
+  }
+
+  // The rule-based estimate is extra information: if it cannot be loaded the report still shows.
+  let est: Estimate | null = null;
+  try {
+    est = await getEstimate(c.id, await sessionAuth());
+  } catch {
+    est = null;
   }
 
   const r = run.result;
@@ -106,6 +115,22 @@ export default async function LiveReport({ c }: { c: CaseFull }) {
           )}
         </section>
       </div>
+
+      {est?.available && (
+        <section className="panel panel-body" style={{ marginTop: 16 }}>
+          <div className="label">Rule-based estimate</div>
+          <p className={styles.read} style={{ borderTop: 0, paddingTop: 8 }}>
+            Most common result: <b>{OUTCOME_LABEL[est.predicted ?? ""] ?? est.predicted}</b>, counted from {est.orders_used}{" "}
+            {est.basis}:{" "}
+            {Object.entries(est.counts ?? {}).map(([k, n]) => `${OUTCOME_LABEL[k] ?? k} ${n}`).join(", ")}.
+          </p>
+          <p className="small muted" style={{ margin: "8px 0 0" }}>
+            This is a count, not a judgment on your facts. Tested on {est.measured?.test_cases} orders it had not seen,
+            the rule was right {est.measured?.accuracy_pct}% of the time; the outcomes it learns from were read by a
+            model and have not been checked by people.
+          </p>
+        </section>
+      )}
 
       <h3 className={styles.h}>Where your case is weak (bench’s view)</h3>
       {r.judge.weak_points.length === 0 && <p className="muted">The bench listed no weak points.</p>}

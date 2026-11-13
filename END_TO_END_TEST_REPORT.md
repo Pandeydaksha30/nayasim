@@ -125,7 +125,7 @@ already logged in; `/cases/<id>` redirects to its first step.
 | Hearing | Shows the outcome, "verified" marks and complaint numbers |
 | Report | Shows amount (Rs. 18.97 lakh), rate basis, weak points |
 | Money | Shows the three payments; figures are computed in the browser |
-| **Draft** | **Placeholder: "Complaint draft. Not built yet."** Do not show it as a feature. |
+| Draft | 12 Nov: placeholder. 13 Nov: built, see the update below. |
 
 ## Not present by design (not failures, not claimed)
 
@@ -142,3 +142,28 @@ already logged in; `/cases/<id>` redirects to its first step.
   found by keyword search only.
 - The demo documents name an invented Uttar Pradesh project while the precedents are Haryana
   (Gurugram) orders; this is a property of the fictional sample, not of the system.
+
+## Update 13 Nov 2026
+
+Added after the audit, each tested live (`scripts.e2e_check insights`, 16 of 16 checks) and by unit
+tests (`backend/tests/test_insights.py`):
+
+| Addition | Where | Notes |
+|---|---|---|
+| Complaint draft | `GET /api/v1/cases/{id}/draft`, step 7 of a case | Assembled by code from the buyer's facts and from citations verified in the latest hearing. No model call; unknown items are left as bracketed blanks and listed. Download as .txt. |
+| Rule-based outcome estimate | `GET /api/v1/cases/{id}/estimate`, shown on the report | Counts how past orders with the same claim type and delay ended; states its measured accuracy (72.9%). |
+| Search over past orders | `GET /api/v1/search/orders`, page `/search` | Hybrid keyword + vector search over the public orders, with order, page and passage. |
+| Classifier demo | `POST /api/v1/predictions/order-text`, on `/search` | The trained claim-type and outcome models on pasted order text, each answer shown with its measured test accuracy. |
+| Google sign-in | configured locally | A real Google sign-in completed on 13 Nov (seen in the API log). |
+| Embeddings | `scripts.embed_chunks` | The 6,996 chunks without an embedding are being embedded. |
+
+Still not present: question-answering over an uploaded document, embeddings of uploaded
+documents, a public deployment. Accuracy figures are unchanged.
+
+Results of 13 Nov: `insights` stage 16 of 16 passed (estimate: "partly allowed" from 63 past orders
+with the same claim type and a delay over 4 years; draft with 3 verified citations from hearing
+run 2; search 10 passages in about 5 s, hybrid mode; classifier demo; pages; login required).
+`session` stage 6 of 6 passed. Unit tests: all 228 pass. Frontend type-check clean.
+One fault found and fixed: the first classifier request after a restart failed while the model
+libraries loaded; the models are now preloaded at start-up, and the stage passes right after a
+restart. Again not clicked through in a real browser window by the tester.

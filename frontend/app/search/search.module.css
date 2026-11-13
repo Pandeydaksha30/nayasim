@@ -1,0 +1,14 @@
+.form { display: flex; gap: 12px; align-items: flex-end; }
+.examples { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border-top: 1px solid var(--border); }
+.hits { display: grid; gap: 12px; }
+.hitTop { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 8px; }
+.hitText { margin: 0; font-size: 14px; line-height: 1.6; color: var(--text-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+.h { margin: 36px 0 8px; font-size: 18px; }
+.area { width: 100%; min-height: 150px; resize: vertical; font-family: inherit; line-height: 1.5; padding-top: 10px; padding-bottom: 10px; height: auto; }
+.cls { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+.big { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; margin: 6px 0 8px; }
+
+@media (max-width: 720px) {
+  .form { flex-direction: column; align-items: stretch; }
+  .cls { grid-template-columns: 1fr; }
+}

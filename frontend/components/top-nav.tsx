@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 const SIGNED_IN = [
   { href: "/dashboard", label: "Cases", match: (p: string) => p.startsWith("/dashboard") || (p.startsWith("/cases") && !p.startsWith("/cases/demo")) },
+  { href: "/search", label: "Search orders", match: (p: string) => p.startsWith("/search") },
   { href: "/calculator", label: "Interest calculator", match: (p: string) => p.startsWith("/calculator") },
   { href: "/method", label: "How it works", match: (p: string) => p.startsWith("/method") },
 ];

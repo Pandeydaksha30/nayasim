@@ -96,3 +96,20 @@ The browser calls `/api/...` on the site's own address; Next.js forwards it to t
 8. **Model accuracy is modest** (MODEL_EVALUATION.md, MODEL_TRAINING_GUIDE.md): citation checker
    precision 100% / recall 98.3%; outcome prediction best 72.9%; claim type 74.3%. Labels are
    machine-made and unchecked. These numbers must be presented as they are.
+
+## Update 13 Nov 2026
+
+Added after the audit, each tested live (`scripts.e2e_check insights`, 16 of 16 checks) and by unit
+tests (`backend/tests/test_insights.py`):
+
+| Addition | Where | Notes |
+|---|---|---|
+| Complaint draft | `GET /api/v1/cases/{id}/draft`, step 7 of a case | Assembled by code from the buyer's facts and from citations verified in the latest hearing. No model call; unknown items are left as bracketed blanks and listed. Download as .txt. |
+| Rule-based outcome estimate | `GET /api/v1/cases/{id}/estimate`, shown on the report | Counts how past orders with the same claim type and delay ended; states its measured accuracy (72.9%). |
+| Search over past orders | `GET /api/v1/search/orders`, page `/search` | Hybrid keyword + vector search over the public orders, with order, page and passage. |
+| Classifier demo | `POST /api/v1/predictions/order-text`, on `/search` | The trained claim-type and outcome models on pasted order text, each answer shown with its measured test accuracy. |
+| Google sign-in | configured locally | A real Google sign-in completed on 13 Nov (seen in the API log). |
+| Embeddings | `scripts.embed_chunks` | The 6,996 chunks without an embedding are being embedded. |
+
+Still not present: question-answering over an uploaded document, embeddings of uploaded
+documents, a public deployment. Accuracy figures are unchanged.

@@ -75,7 +75,7 @@ export default async function CaseLayout({
       reviewFacts: c.facts.filter((f) => f.confidence === "review" && !f.confirmed).length,
       openQuestions: c.questions.filter((q) => !q.answer).length,
       analysisBuilt: true,
-      draftBuilt: false,
+      draftBuilt: true,
     };
   }
 

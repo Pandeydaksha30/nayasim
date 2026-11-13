@@ -1,3 +1,4 @@
+# ruff: noqa: E501  (check descriptions are kept on one line)
 """End-to-end check of the running local app, through the website address (so the /api forwarding
 and the session cookie are tested too). Uses only FICTIONAL documents (the "Mehra v. Arvant Infra"
 demo from scripts/demo_buyer_case.py).
@@ -318,9 +319,98 @@ def session() -> None:
         )
 
 
+def insights() -> None:
+    """Outcome estimate, complaint draft, order search and the classifier demo (no external model)."""
+    c = client()
+    check("login", login(c).status_code == 200)
+    st = load_state()
+    case_id, private_id = st["case_id"], st["private_case_id"]
+
+    r = c.get(f"{API}/cases/{case_id}/estimate")
+    e = r.json() if r.status_code == 200 else {}
+    check(
+        "rule-based outcome estimate",
+        r.status_code == 200 and e.get("available") is True,
+        f"{e.get('predicted')} from {e.get('orders_used')} {e.get('basis')}; counts {e.get('counts')}",
+    )
+    check("estimate states its measured accuracy", e.get("measured", {}).get("accuracy_pct") == 72.9)
+
+    r = c.get(f"{API}/cases/{case_id}/draft")
+    d = r.json() if r.status_code == 200 else {}
+    text = d.get("text", "")
+    check("complaint draft is built", r.status_code == 200 and len(d.get("sections", [])) == 6)
+    check(
+        "draft uses the verified facts",
+        "30 June 2021" in text and "Rs. 32,40,000/-" in text and "page 2" in text,
+    )
+    check(
+        "draft cites only citations verified in the hearing",
+        d.get("verified_citations", 0) > 0 and "RERA-GRG" in text,
+        f"{d.get('verified_citations')} citation(s), hearing run {d.get('based_on_hearing')}",
+    )
+    check(
+        "draft lists what is still missing",
+        len(d.get("missing", [])) > 0,
+        "; ".join(d.get("missing", []))[:160],
+    )
+    r = c.get(f"{API}/cases/{private_id}/draft")
+    check(
+        "draft works for a non-demo case without any model call",
+        r.status_code == 200 and r.json()["based_on_hearing"] is None,
+    )
+
+    t = time.monotonic()
+    r = c.get(f"{API}/search/orders", params={"q": "refund with interest after delay in possession"})
+    s = r.json() if r.status_code == 200 else {}
+    hits = s.get("hits", [])
+    check(
+        "order search returns passages with order and page",
+        r.status_code == 200 and len(hits) > 0 and all(h["complaint_no"] and h["page_no"] for h in hits),
+        f"{len(hits)} hits, mode {s.get('mode')}, {time.monotonic() - t:.1f} s; first {hits[0]['complaint_no'] if hits else ''}",
+    )
+    check(
+        "search rejects a too-short query",
+        c.get(f"{API}/search/orders", params={"q": "a"}).status_code == 422,
+    )
+    check(
+        "search without login is refused",
+        client().get(f"{API}/search/orders", params={"q": "refund"}).status_code == 401,
+    )
+
+    sample = (
+        "The complainant booked a unit in the project of the respondent and paid the instalments as demanded. "
+        "Possession was to be handed over within 36 months of the agreement but has not been offered till date. "
+        "C. Relief sought by the complainant: The complainant has sought following relief(s): "
+        "Direct the respondent to refund the entire amount paid along with interest at the prescribed rate."
+    )
+    r = c.post(f"{API}/predictions/order-text", json={"text": sample})
+    k = r.json() if r.status_code == 200 else {}
+    check(
+        "classifier demo answers and reports measured accuracy",
+        r.status_code == 200
+        and k["claim_type"]["label"] == "refund"
+        and k["claim_type"]["measured"]["accuracy_pct"] == 74.3,
+        f"claim {k.get('claim_type', {}).get('label')} by {k.get('claim_type', {}).get('decided_by')}; "
+        f"outcome model {k.get('outcome', {}).get('label')}: HTTP {r.status_code} {r.text[:120] if r.status_code != 200 else ''}",
+    )
+
+    for path, needle in (
+        (f"/cases/{case_id}/draft", "HARYANA REAL ESTATE"),
+        (f"/cases/{case_id}/report", "Rule-based estimate"),
+        ("/search", "Search past orders"),
+    ):
+        html = c.get(SITE + path, timeout=120)
+        check(
+            f"page {path.replace(case_id, '<case>')} shows its content",
+            html.status_code == 200 and needle in html.text,
+        )
+    r = client().get(SITE + "/search")
+    check("search page without login redirects to /login", r.status_code == 307)
+
+
 if __name__ == "__main__":
     stage = sys.argv[1] if len(sys.argv) > 1 else "setup"
-    {"setup": setup, "facts": facts, "hearing": hearing, "session": session}[stage]()
+    {"setup": setup, "facts": facts, "hearing": hearing, "insights": insights, "session": session}[stage]()
     failed = [r for r in results if r[0] == "FAIL"]
     print(f"\n{len(results) - len(failed)} passed, {len(failed)} failed")
     sys.exit(1 if failed else 0)
