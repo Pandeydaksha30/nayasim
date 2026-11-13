@@ -164,6 +164,40 @@ class CaseDocumentPage(Base):
     document: Mapped[CaseDocument] = relationship(back_populates="pages")
 
 
+class CaseDocumentChunk(Base):
+    """A searchable piece of a buyer's uploaded page (migration 0009). Owner: cases.user_id."""
+
+    __tablename__ = "case_document_chunks"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["document_id", "page_no"],
+            ["case_document_pages.document_id", "case_document_pages.page_no"],
+            ondelete="CASCADE",
+        ),
+    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    case_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("cases.id", ondelete="CASCADE"))
+    document_id: Mapped[uuid.UUID]
+    page_no: Mapped[int]
+    char_start: Mapped[int]
+    char_end: Mapped[int]
+    text: Mapped[str] = mapped_column(Text)
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(EMBEDDING_DIM))
+    tsv: Mapped[Any] = mapped_column(TSVECTOR, Computed("to_tsvector('english', text)", persisted=True))
+    embedding_model: Mapped[str | None] = mapped_column(Text)
+
+
+class CaseQuestion(Base):
+    """A question asked about a case's documents and the checked answer (migration 0009)."""
+
+    __tablename__ = "case_questions"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    case_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("cases.id", ondelete="CASCADE"))
+    question: Mapped[str] = mapped_column(Text)
+    result: Mapped[dict] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(server_default="now()")
+
+
 class CaseAnswer(Base):
     __tablename__ = "case_answers"
     case_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("cases.id", ondelete="CASCADE"), primary_key=True)

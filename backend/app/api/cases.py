@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import threading
 import uuid
 from datetime import datetime
@@ -14,8 +15,10 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
+from app.api.hearing import get_search_embedder
 from app.auth.deps import CurrentUser, case_for
 from app.buyer import documents as documents_mod
+from app.buyer.chunks import index_document
 from app.buyer.documents import KINDS, UploadRejected, store_document
 from app.buyer.facts import FactExtractor, PrivateDataBlocked, extract_case_facts
 from app.buyer.questions import questions_for, validate_answer
@@ -23,6 +26,9 @@ from app.config import settings
 from app.db.models import Case, CaseAnswer, CaseDocument, CaseDocumentPage, Fact
 from app.db.session import get_session
 from app.ingestion.pdf_text import OcrConfig, find_ocr
+from app.retrieval.embedder import Embedder
+
+log = logging.getLogger("nyayasim.cases")
 
 router = APIRouter(prefix="/api/v1/cases", tags=["cases"])
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -202,6 +208,14 @@ def get_case(case_id: uuid.UUID, s: SessionDep, user: CurrentUser) -> CaseOut:
     return _case_out(s, case_for(s, case_id, user))
 
 
+def _index_for_search(s: Session, document_id: uuid.UUID, embedder: Embedder | None) -> None:
+    try:
+        with s.begin_nested():
+            index_document(s, document_id, embedder)
+    except Exception:  # noqa: BLE001 - the document is stored; it is indexed on first search instead
+        log.exception("Could not index document %s for search", document_id)
+
+
 @router.post("/{case_id}/documents", status_code=201, response_model=DocumentOut)
 async def upload_document(
     case_id: uuid.UUID,
@@ -210,6 +224,7 @@ async def upload_document(
     file: Annotated[UploadFile, File()],
     kind: Annotated[str, Form()],
     ocr: Annotated[OcrConfig | None, Depends(get_ocr)],
+    embedder: Annotated[Embedder | None, Depends(get_search_embedder)],
 ) -> DocumentOut:
     case_for(s, case_id, user, write=True)
     if kind not in KINDS:
@@ -229,6 +244,9 @@ async def upload_document(
         stored = await run_in_threadpool(
             store_document, s, case_id, file.filename or "upload", kind, data, ocr
         )
+        # Make the document searchable (chunks + local embeddings). Never fails the upload.
+        if not stored.duplicate:
+            await run_in_threadpool(_index_for_search, s, stored.id, embedder)
     except UploadRejected as e:
         raise HTTPException(422, str(e)) from e
     finally:
