@@ -1,5 +1,7 @@
-# Local services for NyayaSim. Not used until the order store (step 3).
+# Local database for NyayaSim (PostgreSQL 17 + pgvector).
 # Start:  docker compose -f infra/docker-compose.yml up -d
+# Second copy on another port (e.g. a fresh install next to this one):
+#   PG_PORT=5433 docker compose -p nyayasim-fresh -f infra/docker-compose.yml up -d postgres
 services:
   postgres:
     image: pgvector/pgvector:0.8.0-pg17
@@ -9,7 +11,7 @@ services:
       POSTGRES_PASSWORD: nyayasim_local_only
       POSTGRES_DB: nyayasim
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:${PG_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:

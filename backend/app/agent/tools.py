@@ -48,6 +48,7 @@ class ToolContext:
     hearing: dict | None = None
     hearing_run_id: int | None = None
     hearing_evidence: dict[str, dict] = field(default_factory=dict)  # H1, H2...: verified hearing citations
+    fact_evidence: dict[str, Passage] = field(default_factory=dict)  # F1, F2...: the page a fact came from
 
     def add_doc(self, p: Passage) -> str:
         for ref, q in self.doc_evidence.items():
@@ -87,14 +88,45 @@ def search_documents(ctx: ToolContext, args: dict) -> dict:
 
 
 def get_facts(ctx: ToolContext, args: dict) -> dict:
+    from app.db.models import CaseDocument, CaseDocumentPage
+
     rows = ctx.s.scalars(select(Fact).where(Fact.case_id == ctx.case_id).order_by(Fact.id)).all()
+    out = []
+    for f in rows:
+        ref = next((r for r, p in ctx.fact_evidence.items() if p.chunk_id == -f.id), None)
+        if ref is None:
+            page = ctx.s.get(CaseDocumentPage, (f.document_id, f.page_no))
+            doc = ctx.s.get(CaseDocument, f.document_id)
+            ref = f"F{len(ctx.fact_evidence) + 1}"
+            # The fact's whole page is the evidence: a quote cited as F<n> must be found on it.
+            ctx.fact_evidence[ref] = Passage(
+                -f.id,
+                f.document_id,
+                doc.filename,
+                doc.kind,
+                f.page_no,
+                0,
+                len(page.text or ""),
+                page.text or "",
+                1.0,
+            )
+        out.append(
+            {
+                "ref": ref,
+                "key": f.key,
+                "label": f.label,
+                "value": f.value,
+                "file": ctx.fact_evidence[ref].filename,
+                "page": f.page_no,
+                "quote": f.quote[:300],
+                "confirmed": f.confirmed,
+            }
+        )
     return {
         "claim_type": ctx.claim_type,
-        "facts": [
-            {"key": f.key, "label": f.label, "value": f.value, "page": f.page_no, "confirmed": f.confirmed}
-            for f in rows
-        ],
-        "note": "Facts were extracted from the documents and checked against the page text by code."
+        "facts": out,
+        "note": "Facts were extracted from the documents and checked against the page text by code. "
+        "Cite a fact by its ref (F1...) with words from its quote."
         if rows
         else "No facts have been extracted for this case yet.",
     }
@@ -296,7 +328,8 @@ TOOLS: dict[str, Tool] = {
         ),
         Tool(
             "calculate_interest",
-            "Compute refund interest and delay interest from the verified payments, by code.",
+            "Compute refund interest and delay interest from the verified payments, by code. Use only a rate "
+            "stated in the objective or task; never choose a rate yourself; if none is given, skip it.",
             "rate_pct",
             calculate_interest,
         ),

@@ -37,6 +37,8 @@ def get_hearing_llm() -> LLM:
         settings.hearing_model,
         min_interval_s=0,
         thinking=settings.hearing_thinking,
+        max_retries=settings.model_retries,
+        fallback_models=settings.fallback_model_list,
     )
 
 

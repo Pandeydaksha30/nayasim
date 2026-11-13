@@ -58,6 +58,7 @@ class GeminiExtractor:
         max_retries: int = 4,
         log=print,
         thinking: str | None = "low",
+        fallback_models: tuple[str, ...] = (),
     ) -> None:
         from google import genai
         from google.genai import types
@@ -67,6 +68,9 @@ class GeminiExtractor:
             api_key=api_key, http_options=types.HttpOptions(timeout=REQUEST_TIMEOUT_S * 1000)
         )
         self.model = model
+        # Tried in order when the model is still overloaded (429 / 5xx / timeout) after its retries.
+        self.fallback_models = tuple(m for m in fallback_models if m and m != model)
+        self.last_model: str | None = None
         # Extraction is copying, not reasoning: at the default level a call took 22-207 s.
         # None leaves the model's default; otherwise minimal | low | medium | high.
         self.thinking = thinking
@@ -85,7 +89,30 @@ class GeminiExtractor:
         self._last = time.monotonic()
 
     def propose(self, prompt: str, schema: type[BaseModel] = ProposedFields) -> BaseModel:
-        """Ask for JSON matching ``schema`` (order fields by default, buyer facts in step 5)."""
+        """Ask for JSON matching ``schema`` (order fields by default, buyer facts in step 5).
+
+        If the model stays overloaded through all retries, the same prompt goes to each fallback
+        model in turn (same provider, same data handling). ``last_model`` records which answered."""
+        from google.genai import errors
+
+        models = (self.model, *self.fallback_models)
+        for i, model in enumerate(models):
+            last = i == len(models) - 1
+            try:
+                out = self._propose(prompt, schema, model, self.max_retries if i == 0 else 2)
+                self.last_model = model
+                return out
+            except errors.APIError as e:
+                if last or not (e.code == 429 or (e.code or 0) >= 500):
+                    raise
+                self.log(f"    gemini {model} still unavailable ({e.code}); trying {models[i + 1]}")
+            except CallTimedOut:
+                if last:
+                    raise
+                self.log(f"    gemini {model} timed out; trying {models[i + 1]}")
+        raise RuntimeError("unreachable")
+
+    def _propose(self, prompt: str, schema: type[BaseModel], model: str, max_retries: int) -> BaseModel:
         from google.genai import errors, types
 
         config = types.GenerateContentConfig(
@@ -99,33 +126,31 @@ class GeminiExtractor:
             ),
         )
         delay = 15.0
-        for attempt in range(self.max_retries + 1):
+        for attempt in range(max_retries + 1):
             self._wait()
             started = time.monotonic()
             try:
                 resp = call_with_deadline(
-                    lambda: self._client.models.generate_content(
-                        model=self.model, contents=prompt, config=config
-                    ),
+                    lambda: self._client.models.generate_content(model=model, contents=prompt, config=config),
                     REQUEST_TIMEOUT_S + 30,
                 )
             except errors.APIError as e:
                 retryable = e.code == 429 or (e.code or 0) >= 500
                 reason = (e.message or str(e)).splitlines()[0][:160]
-                if retryable and attempt < self.max_retries:
+                if retryable and attempt < max_retries:
                     self.log(
                         f"    gemini {e.code} after {time.monotonic() - started:.0f} s: {reason}; "
-                        f"retry {attempt + 1}/{self.max_retries} in {delay:.0f} s"
+                        f"retry {attempt + 1}/{max_retries} in {delay:.0f} s"
                     )
                     time.sleep(delay)
                     delay *= 2
                     continue
                 raise
             except Exception as e:  # timeouts and network errors: also retried, and shown
-                if attempt < self.max_retries:
+                if attempt < max_retries:
                     self.log(
                         f"    gemini {type(e).__name__} after {time.monotonic() - started:.0f} s; "
-                        f"retry {attempt + 1}/{self.max_retries} in {delay:.0f} s"
+                        f"retry {attempt + 1}/{max_retries} in {delay:.0f} s"
                     )
                     time.sleep(delay)
                     delay *= 2

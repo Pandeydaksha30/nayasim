@@ -3,16 +3,84 @@
 For a 5 to 7 minute demonstration of NyayaSim running on this laptop. Start-up commands are in
 RUN_LOCAL.md; test evidence is in END_TO_END_TEST_REPORT.md.
 
-## Before the professor arrives (10 minutes)
+## Before the professor arrives (15 minutes)
 
-1. Start Docker Desktop, then the backend (with `-AllowDemo`) and the website (RUN_LOCAL.md).
-2. Open http://localhost:3100 and http://localhost:8000/docs in two browser tabs.
-3. Log in as the demo user (`data\demo-credentials.txt`) and open the case
-   "Mehra v. Arvant Infra (DEMO)". Check that the Facts, Hearing and Report steps show content.
-4. Keep `demo\sample-documents\` open in File Explorer for the upload step.
-5. Run one hearing now. If it completes, the live step will most likely work; if Gemini is busy,
-   plan to show the stored hearing instead (see "If Gemini fails").
+1. Start Docker Desktop, then run these in three PowerShell windows (details: RUN_LOCAL.md):
+
+   ```powershell
+   docker compose -f C:\Users\pande\Downloads\CONTRACT_IQ\contractiq\infra\docker-compose.yml up -d
+   powershell -ExecutionPolicy Bypass -File C:\Users\pande\Downloads\CONTRACT_IQ\contractiq\scripts\dev-api.ps1 -AllowDemo
+   powershell -ExecutionPolicy Bypass -File C:\Users\pande\Downloads\CONTRACT_IQ\contractiq\scripts\dev-web.ps1
+   ```
+
+2. Open http://localhost:3100 (website) and http://localhost:8000/docs (API) in two browser tabs.
+3. **Demo account.** It already exists on this machine: the email and password are in
+   `data\demo-credentials.txt` (never shown on screen, not in the ZIP). On a new machine, create it
+   and a ready demo case with:
+
+   ```powershell
+   cd C:\Users\pande\Downloads\CONTRACT_IQ\contractiq\backend
+   .\.venv\Scripts\python.exe -m scripts.e2e_check setup
+   .\.venv\Scripts\python.exe -m scripts.e2e_check facts
+   ```
+
+   `setup` registers the user, confirms the email from `data\outbox\`, creates the case
+   "Mehra v. Arvant Infra (DEMO)" and uploads the four fictional documents; `facts` extracts and
+   confirms the facts. The newest case with that name on the dashboard is the prepared one.
+4. Log in and open that case. Check that Facts, Ask your documents, Agent analysis, Hearing and
+   Report show content. Run one hearing and one agent analysis now, so stored results exist as a
+   backup (see "If Gemini fails").
+5. Keep `demo\sample-documents\` open in File Explorer for the upload step.
 6. Close other heavy programs. Keep the laptop on power.
+
+## Fictional documents to upload
+
+`demo\sample-documents\` (every name and number is invented): `agreement.pdf` (2 pages),
+`receipts.pdf` (2 pages), `builder_letter.pdf` (1 page), `receipt_scan.png` (an image, read by OCR).
+For a live upload: Dashboard, **New case**, tick the fictional demo option, then the Documents step.
+
+## Questions to ask on "Ask your documents" (measured answers, 13 Nov)
+
+| Ask | Expected |
+|---|---|
+| By what date did the builder promise possession? | "on or before 30th June 2021", cited to `agreement.pdf` page 2, marked verified |
+| What is the total price of the apartment? | Rs. 72,00,000, `agreement.pdf` page 1 |
+| How much cost escalation charge does the builder demand? | Rs. 1,44,000, `builder_letter.pdf` page 1 |
+| What is the revised completion date for Tower C? | 31 December 2025, `builder_letter.pdf` page 1 |
+| Who is the project architect? (not in the documents) | "The uploaded documents do not contain enough to answer this question." |
+
+Wording of the answer varies slightly between runs; the value, the page and the "verified" mark
+should not.
+
+## Agent analysis: exact steps
+
+1. Open the case, step **Agent analysis**.
+2. Paste this objective and press **Run analysis**:
+   "Prepare a complete assessment of this buyer's case: what the documents say, relevant
+   precedents, money owed at 10.85%, the likely outcome, and a simulated hearing with the judge's
+   assessment."
+3. Expected (live run of 13 Nov, about 90 seconds): the step list fills in while it runs:
+   `delegate` to **document_analysis** (which called `search_documents`), `delegate` to
+   **legal_research** (which called `search_orders`), `calculate_interest` with 10.85,
+   `estimate_outcome`, `run_hearing`; then an answer with citations marked verified (5 verified,
+   0 removed in that run) and the judge assessment below it.
+4. Open "What came back" on a step to show the tool's observation. The "by" label shows which
+   agent took the step.
+5. The order and number of steps is chosen by the model and can differ between runs; that is the
+   point. If a citation is removed, the page says how many: show it as the checker working.
+
+Shorter objective if time is tight: "When was possession promised, how late is it, and what
+interest could the buyer claim at 10.85%?" (about 20 seconds, no hearing).
+
+## Hearing simulation: exact steps
+
+1. Step **Simulated hearing**, press **Run hearing**. It runs in the background (60 to 90 seconds
+   when Gemini is free); the page updates by itself.
+2. Expected: buyer's arguments and builder's arguments, each with citations to real HRERA orders
+   marked verified; arguments whose citation failed are listed as removed; then the bench's outcome
+   (the runs on 13 Nov gave "partly allowed"), reasoning and up to three weak points.
+3. Step **Report** then shows the amount, the rule-based estimate with its measured accuracy
+   (72.9%), and the weak points. Step **Complaint draft** uses the verified citations.
 
 ## 1. Introduction (30 seconds)
 
@@ -91,8 +159,9 @@ can be trusted.
 - Question answering over uploaded documents is evaluated on 40 questions over the fictional demo
   documents (all correct on both halves), which is a small, easy set: it tests the pipeline, not
   real agreements.
-- The agent's specialist sub-agents and the hearing are bounded loops/pipelines; the hearing's own
-  order of roles is fixed. Only the orchestrator's tool choice is dynamic.
+- The specialist agents and the hearing are bounded: specialists get 3 steps and a fixed tool
+  set, and the hearing's own order of roles is fixed. Tool choices of the orchestrator and the
+  specialists are made by the model; whether it delegates varies from run to run.
 - The trained classifiers work on the text of an order, not on a buyer's own papers; for a buyer's case the site shows the rule-based estimate.
 - The complaint draft is a starting point with blanks, to be checked by the complainant or an advocate.
 - Only fictional demo cases are sent to the language model, because the free tier may retain data.
@@ -103,16 +172,23 @@ can be trusted.
 
 ## If Gemini fails during the demo
 
-Symptoms: the hearing stays "running" for more than about two minutes, or ends with a message
-about the model being busy (429 / 503).
+What the app does by itself: when the model answers "high demand" (503) or times out, the call is
+retried twice (15 s, 30 s) and then sent to a second Gemini model (`gemini-3.6-flash`). So a busy
+moment shows up as a slower step, not an error. If both models are unavailable:
 
 1. Do not retry more than once.
-2. Open the demo case's **Hearing** step: the last completed hearing is stored in the database and
-   is shown without calling the model (two completed runs exist as of 12 Nov).
-3. Say plainly: "The free model tier is overloaded right now, so this is the result of the run
-   stored earlier today; the background job and storage are what you are seeing."
-4. Everything else in the sequence (login, upload, OCR, facts already extracted, money, report,
-   API docs) works without Gemini.
+2. **Hearing:** the Hearing step shows the last completed hearing from the database without
+   calling the model.
+3. **Agent analysis:** the page opens the latest saved run with all its steps; "Earlier runs" at
+   the bottom lists the others.
+4. **Ask your documents:** "Earlier questions" shows saved answers with their citations.
+5. Say plainly: "The free model tier is overloaded right now, so this is the stored result of an
+   earlier run; what you see is read from the database."
+6. Login, upload, OCR, chunking, passage search, facts already extracted, money, report, order
+   search, classifier and API docs work without Gemini.
+7. To show the agent loop itself without any model, run
+   `.\.venv\Scripts\python.exe -m pytest -q tests/test_agent.py` in `backend`: the same loop with a
+   scripted stand-in model (9 tests). Say that it is scripted; it is not a Gemini run.
 
 ## Likely questions
 

@@ -1,6 +1,6 @@
 """Settings read from environment variables (or backend/.env)."""
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,6 +21,13 @@ class Settings(BaseSettings):
     # Gemini key for field extraction. Read from GEMINI_API_KEY (Google's own variable name),
     # normally set in backend/.env, which git ignores. Never logged or printed.
     gemini_api_key: SecretStr | None = Field(None, validation_alias="GEMINI_API_KEY")
+
+    @field_validator("gemini_api_key", mode="before")
+    @classmethod
+    def _empty_key_is_unset(cls, v):
+        """`GEMINI_API_KEY=` (empty, as the compose file passes when unset) means no key."""
+        return None if isinstance(v, str) and not v.strip() else v
+
     # Model id. gemini-2.5-flash is still *listed* but returns 404 for new accounts (7 Nov 2026);
     # `extract_fields --check-key` makes a real call, so it catches that. Override with
     # NYAYASIM_GEMINI_MODEL in backend/.env.
@@ -45,6 +52,14 @@ class Settings(BaseSettings):
     # ran out; set NYAYASIM_HEARING_MODEL=gemini-3.8-flash and NYAYASIM_HEARING_THINKING=low to use it.
     hearing_model: str = "gemini-3.5-flash-lite"
     hearing_thinking: str | None = None
+    # When the model is still overloaded after `model_retries` retries (15 s, 30 s ...), the call
+    # goes to these models in turn (comma-separated; same provider). Empty: no fallback.
+    fallback_models: str = "gemini-3.6-flash"
+    model_retries: int = 2
+
+    @property
+    def fallback_model_list(self) -> tuple[str, ...]:
+        return tuple(m.strip() for m in self.fallback_models.split(",") if m.strip())
 
     # Lets users mark their own new case as "demo" (fictional documents, which may be sent to a
     # data-retaining model). Developer machines only: on a public site anyone could tick it for real

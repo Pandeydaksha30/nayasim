@@ -53,6 +53,13 @@ def verify_cites(ctx: ToolContext, cites: list[dict]) -> tuple[list[dict], list[
                 )
             else:
                 bad.append({"ref": ref, "quote": quote, "reason": "; ".join(v.reasons)})
+        elif ref in ctx.fact_evidence:
+            p = ctx.fact_evidence[ref]
+            g, b = check_citations([DocCite(ref="D1", quote=quote)], [p])
+            if g:
+                good.append({**g[0], "ref": ref, "source": "document"})
+            else:
+                bad.append({"ref": ref, "quote": quote, "reason": b[0]["reason"]})
         elif ref in ctx.hearing_evidence:
             e = ctx.hearing_evidence[ref]
             v = verify_citation(

@@ -7,7 +7,32 @@ Verified on 13 Nov 2026 on this machine (migrations run to 0010 automatically wh
 
 - Docker Desktop is running.
 - `backend\.env` exists and contains `GEMINI_API_KEY=...` (never commit or show this file).
-- First time only: `backend\.venv` and `frontend\node_modules` already exist on this machine.
+- On this machine `backend\.venv` and `frontend\node_modules` already exist. On a new machine or
+  from the ZIP, do the first-time setup below once.
+
+## First-time setup (new machine or extracted ZIP)
+
+Needs: Docker Desktop, Node.js 20+ and `uv` (Python package manager; it downloads Python 3.12
+itself). Install uv once with `pip install uv` or from https://docs.astral.sh/uv/.
+Run these from the project folder (the one containing `backend`, `frontend`, `infra`):
+
+```powershell
+copy backend\.env.example backend\.env          # then edit backend\.env: set GEMINI_API_KEY
+cd backend; uv sync --frozen; cd ..             # Python 3.12 + locked packages into backend\.venv
+cd frontend; npm ci; cd ..                       # website packages
+docker compose -f infra\docker-compose.yml up -d postgres
+cd backend; .\.venv\Scripts\python.exe -m alembic upgrade head; cd ..   # empty tables (to 0010)
+```
+
+Load the public HRERA orders used by search and hearings (186 MB file in `release\`, about
+3 minutes; run in Git Bash):
+
+```bash
+LOCAL=1 bash infra/import-data.sh release/nyayasim-public-orders.dump
+```
+
+Without this step the app runs, but order search finds nothing and hearings answer "no similar
+orders". The embedding model (~67 MB) downloads by itself on first use.
 
 ## Start (three PowerShell windows)
 
@@ -55,11 +80,12 @@ cd C:\Users\pande\Downloads\CONTRACT_IQ\contractiq\backend
 .\.venv\Scripts\python.exe -m scripts.eval_rag dev --answer # 20 evaluation questions
 ```
 
-Each line printed is PASS or FAIL. `facts` and `hearing` call Gemini and can be slow or fail when
-the free tier is busy; the other two do not need it. Every `setup` run adds one more demo case and
+Each line printed is PASS or FAIL. `facts`, `hearing`, `rag` and `agent` call Gemini and can be
+slow or fail when the free tier is busy; the others do not need it. Run `setup` first, then `facts`
+(the hearing and the agent need confirmed facts). Every `setup` run adds one more demo case and
 one private test case to the demo user.
 
-Unit tests (244, about 3 minutes):
+Unit tests (250, about 3 minutes):
 
 ```powershell
 cd C:\Users\pande\Downloads\CONTRACT_IQ\contractiq\backend

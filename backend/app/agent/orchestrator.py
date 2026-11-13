@@ -64,7 +64,10 @@ PROFILES: dict[str, Profile] = {
     "orchestrator": Profile(
         "orchestrator",
         "You coordinate the analysis of a home buyer's RERA case. Decide which tool or specialist "
-        "agent gives the evidence the objective needs, gather it, then finish.",
+        "agent gives the evidence the objective needs, gather it, then finish. When the objective has "
+        "several parts, hand each part that matches a specialist (documents, precedents, claims and "
+        "outcome) to that specialist with delegate. Finish only when every part of the objective has "
+        "been addressed or cannot be.",
         tuple(TOOLS) + ("delegate",),
         MAX_STEPS,
     ),
@@ -106,7 +109,7 @@ class Step(BaseModel):
 
 
 class FinalCite(BaseModel):
-    ref: str = Field(description="Evidence label, e.g. D2, O3 or H1")
+    ref: str = Field(description="Evidence label, e.g. D2, F1, O3 or H1")
     quote: str = Field(description="Words copied exactly from that passage or excerpt")
 
 
@@ -145,7 +148,7 @@ OBJECTIVE:
 {objective}
 
 Answer from the observations below ONLY. Cite evidence by its label
-(D1 documents, O2 orders, H3 hearing citations) with words copied
+(D1 document passages, F1 facts, O2 orders, H3 hearing citations) with words copied
 exactly from that passage or excerpt; citations are checked by code and false ones are removed.
 Money figures must come from calculate_interest observations. Say plainly what is uncertain. Not legal
 advice. If the observations are not enough, set insufficient to true.
@@ -277,7 +280,9 @@ def build_agent(
             if not step.agent or not step.task:
                 ok, obs = False, {"error": "delegate needs agent and task"}
             else:
-                sub = run_agent(ctx, PROFILES[step.agent], step.task, deadline, on_step, counter)
+                # The specialist sees the task and the user's objective (e.g. a rate the user gave).
+                task = f"{step.task}\n(Overall objective from the user: {objective})"
+                sub = run_agent(ctx, PROFILES[step.agent], task, deadline, on_step, counter)
                 obs = {
                     "agent": step.agent,
                     "answer": sub["answer"],

@@ -3,12 +3,18 @@
 # Run after the stack is up (migrations create the empty tables first).
 #
 # Usage (from the repo root):  bash infra/import-data.sh nyayasim-data.dump
+# Local development database instead of the production stack:
+#   LOCAL=1 bash infra/import-data.sh release/nyayasim-public-orders.dump
 # Refuses to run if the orders table already has rows, so it never mixes or duplicates data.
 # To replace existing data: FORCE=1 bash infra/import-data.sh nyayasim-data.dump
 set -euo pipefail
 
 DUMP="${1:?usage: bash infra/import-data.sh <file.dump>}"
-COMPOSE=(docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod)
+if [ "${LOCAL:-0}" = "1" ]; then
+  COMPOSE=(docker compose -f infra/docker-compose.yml)
+else
+  COMPOSE=(docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod)
+fi
 # Fresh servers: the user may not be in the docker group until they log in again.
 if ! docker info >/dev/null 2>&1 && command -v sudo >/dev/null && sudo docker info >/dev/null 2>&1; then
   COMPOSE=(sudo "${COMPOSE[@]}")

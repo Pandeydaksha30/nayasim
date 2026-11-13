@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import io
 import json
+import os
 import quopri
 import re
 import secrets
@@ -30,7 +31,7 @@ from PIL import Image, ImageDraw, ImageFont
 from scripts.demo_buyer_case import AGREEMENT, LETTER, RECEIPTS, pdf
 
 ROOT = Path(__file__).resolve().parents[2]
-SITE = "http://localhost:3100"
+SITE = os.environ.get("NYAYASIM_E2E_SITE", "http://localhost:3100")
 API = SITE + "/api/v1"
 CREDS = ROOT / "data" / "demo-credentials.txt"
 STATE = ROOT / "data" / "e2e_state.json"

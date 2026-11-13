@@ -233,3 +233,62 @@ def test_interrupted_agent_runs_are_marked_failed(api, db_engine, run_now):  # n
             {"c": case_id},
         )
     assert agent_jobs.fail_interrupted_agent_runs() == 1
+
+
+def test_fact_citations_are_checked_against_the_facts_page(api, db_engine):  # noqa: F811
+    client, _, _ = api
+    case_id = demo_case(client)
+    with db_engine.begin() as c:
+        doc = c.execute(
+            text(
+                "SELECT document_id FROM case_document_pages p JOIN case_documents d ON d.id = p.document_id "
+                "WHERE d.case_id = :c AND p.page_no = 2"
+            ),
+            {"c": case_id},
+        ).scalar()
+        page = c.execute(
+            text("SELECT text FROM case_document_pages WHERE document_id = :d AND page_no = 2"), {"d": doc}
+        ).scalar()
+        start = page.index("30th June 2021")
+        c.execute(
+            text("""INSERT INTO facts (case_id, document_id, key, label, value, page_no, char_start,
+                    char_end, quote, confidence) VALUES (:c, :d, 'possession_promised',
+                    'Possession promised by',
+                    '2021-06-30', 2, :s, :e, '30th June 2021', 'high')"""),
+            {"c": case_id, "d": doc, "s": start, "e": start + len("30th June 2021")},
+        )
+    llm = Script(
+        Step(thought="facts", action="get_facts"),
+        Step(thought="done", action="finish"),
+        Final(
+            answer="Possession was due on 30 June 2021.",
+            insufficient=False,
+            citations=[
+                FinalCite(ref="F1", quote="on or before 30th June 2021"),
+                FinalCite(ref="F1", quote="on or before 30th June 2022"),  # altered year
+            ],
+        ),
+    )
+    steps: list[dict] = []
+    with Session(db_engine) as s:
+        out = run_orchestrator(ctx_for(s, case_id, llm), "When was possession due?", steps.append)
+    assert steps[0]["observation"]["facts"][0]["ref"] == "F1"
+    assert [c["page_no"] for c in out["citations"]] == [2] and len(out["rejected_citations"]) == 1
+
+
+def test_time_limit_and_model_timeouts_stop_the_run(api, db_engine):  # noqa: F811
+    from app.extraction.gemini import CallTimedOut
+
+    client, _, _ = api
+    case_id = demo_case(client)
+    llm = Script()  # never called: the budget is already spent
+    with Session(db_engine) as s:
+        out = run_orchestrator(ctx_for(s, case_id, llm), "When was possession due?", time_budget_s=0)
+    assert out["stop_reason"] == "time limit reached" and out["insufficient"] and llm.calls == []
+    llm = Script(CallTimedOut("no answer within 150 s"), CallTimedOut("no answer within 150 s"))
+    steps: list[dict] = []
+    with Session(db_engine) as s:
+        out = run_orchestrator(ctx_for(s, case_id, llm), "When was possession due?", steps.append)
+    assert out["stop_reason"] == "model failed twice"
+    assert [st["action"] for st in steps] == ["model_error", "model_error"]
+    assert "CallTimedOut" in steps[0]["observation"]["error"]

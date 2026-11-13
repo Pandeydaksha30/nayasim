@@ -50,7 +50,11 @@ def get_fact_extractor() -> FactExtractor:
     from app.extraction.gemini import GeminiExtractor
 
     return GeminiExtractor(
-        settings.gemini_api_key.get_secret_value(), settings.gemini_model, min_interval_s=0
+        settings.gemini_api_key.get_secret_value(),
+        settings.gemini_model,
+        min_interval_s=0,
+        max_retries=settings.model_retries,
+        fallback_models=settings.fallback_model_list,
     )
 
 

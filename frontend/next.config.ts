@@ -29,6 +29,9 @@ const nextConfig: NextConfig = {
   // Self-contained server for the Docker image (frontend/Dockerfile).
   output: "standalone",
   poweredByHeader: false,
+  // Model calls (fact extraction, document answers) can take minutes when Gemini is busy and the
+  // backend retries. Without this the /api forwarding gives up after 30 s with a bare HTTP 500.
+  experimental: { proxyTimeout: 600_000 },
   async rewrites() {
     return [
       { source: "/api/:path*", destination: `${API_URL}/api/:path*` },
