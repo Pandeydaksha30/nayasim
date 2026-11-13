@@ -15,6 +15,7 @@ from app.api.calculations import router as calculations_router
 from app.api.cases import router as cases_router
 from app.api.hearing import router as hearing_router
 from app.api.insights import router as insights_router
+from app.api.agent import router as agent_router
 from app.api.rag import router as rag_router
 from app.config import settings
 from app.middleware import SecurityMiddleware
@@ -66,6 +67,11 @@ async def lifespan(_: FastAPI):
         n = await asyncio.to_thread(fail_interrupted_runs)
         if n:
             log.warning("Marked %s interrupted hearing run(s) as failed", n)
+        from app.agent.jobs import fail_interrupted_agent_runs
+
+        n = await asyncio.to_thread(fail_interrupted_agent_runs)
+        if n:
+            log.warning("Marked %s interrupted agent run(s) as failed", n)
     except Exception:  # noqa: BLE001 - the API still starts; logged with traceback
         log.exception("Could not check for interrupted hearing runs")
     task = asyncio.create_task(_housekeeping_loop())
@@ -94,6 +100,7 @@ app.include_router(cases_router)
 app.include_router(hearing_router)
 app.include_router(insights_router)
 app.include_router(rag_router)
+app.include_router(agent_router)
 
 
 @app.get("/health")

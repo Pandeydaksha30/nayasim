@@ -239,6 +239,22 @@ class HearingRun(Base):
     finished_at: Mapped[datetime | None]
 
 
+class AgentRun(Base):
+    """One orchestrated analysis of a buyer case: objective, each step taken, result (migration 0010)."""
+
+    __tablename__ = "agent_runs"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    case_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("cases.id", ondelete="CASCADE"))
+    objective: Mapped[str] = mapped_column(Text)
+    model: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(Text)
+    steps: Mapped[list] = mapped_column(JSONB, server_default="[]")
+    result: Mapped[dict] = mapped_column(JSONB, server_default="{}")
+    error: Mapped[str | None] = mapped_column(Text)
+    started_at: Mapped[datetime] = mapped_column(server_default="now()")
+    finished_at: Mapped[datetime | None]
+
+
 # ── Accounts (migration 0007) ──
 TZ = DateTime(timezone=True)
 
