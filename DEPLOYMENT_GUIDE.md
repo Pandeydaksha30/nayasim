@@ -28,6 +28,8 @@ whenever the download fails, search uses keywords only.
 - 4 GB of memory free for Docker (the API needs about 2 GB for OCR and the search model).
 - 6 GB of disk: images about 3 GB, database about 0.5 GB with the order data.
 - Internet access while building, and once at first search for the embedding model.
+  The website build downloads its fonts from Google Fonts; if it stops with
+  `An error occurred in next/font`, run the same command again.
 - For a public site: a domain name pointing at the server, and ports 80 and 443 open.
 
 ## 3. Deploy on a Linux server (public site with HTTPS)
