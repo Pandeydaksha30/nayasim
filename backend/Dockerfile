@@ -24,7 +24,7 @@ COPY scripts ./scripts
 # Uploads, downloaded orders and model files live in /srv/data (a volume): the code resolves
 # data/ as the parent of backend/.
 RUN useradd --create-home --uid 10001 nyayasim \
-    && mkdir -p /srv/data && chown -R nyayasim:nyayasim /srv/data
+    && mkdir -p /srv/data/models /srv/data/uploads /srv/data/outbox && chown -R nyayasim:nyayasim /srv/data
 USER nyayasim
 
 ENV PATH="/srv/backend/.venv/bin:$PATH"

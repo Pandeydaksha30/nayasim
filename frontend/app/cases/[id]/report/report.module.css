@@ -36,3 +36,7 @@
 @media (max-width: 960px) {
   .summary { grid-template-columns: 1fr; }
 }
+
+/* Order numbers stay on one line; the outcome tag moves below when the card is narrow. */
+.orderTop { flex-wrap: wrap; gap: 6px 10px; }
+.orderTop :global(.code) { white-space: nowrap; }

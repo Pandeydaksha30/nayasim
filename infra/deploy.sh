@@ -16,7 +16,8 @@
 #   2. Creates infra/.env.prod on first run (random database password, your domain, the options
 #      above). An existing .env.prod is kept as it is.
 #   3. Builds and starts database, API, website and Caddy (HTTPS with automatic certificates).
-#   4. Loads the order data file if DATA is given and the database is still empty.
+#   4. Loads the order data file if DATA is given and the database is still empty, and installs
+#      the trained classifier files from data/models/ if they are there.
 #   5. Checks https://DOMAIN/health.
 # DOMAIN=none starts on http://SERVER_IP:3000 without HTTPS: only for a server behind a firewall.
 set -euo pipefail
@@ -128,6 +129,22 @@ if [ -n "${DATA:-}" ]; then
   else
     say "Database already has $orders orders; not loading $DATA"
   fi
+fi
+
+# 4b. Trained classifier files (optional) -----------------------------------------------------
+# The claim-type / outcome models used by the classifier demo on the Search page. They ship in
+# data/models/ of the project ZIP; the API reads them from its data volume.
+if ls data/models/*_tfidf_lr.joblib >/dev/null 2>&1; then
+  say "Installing the trained classifier files"
+  "${COMPOSE[@]}" exec -T api sh -c 'mkdir -p /srv/data/models'
+  for f in data/models/*_tfidf_lr.joblib; do
+    "${COMPOSE[@]}" cp "$f" "api:/srv/data/models/$(basename "$f")"
+  done
+  # Copied files belong to root; the API runs as its own user and must be able to write the
+  # search model into the same folder.
+  "${COMPOSE[@]}" exec -T -u root api sh -c 'chown -R nyayasim:nyayasim /srv/data/models'
+else
+  echo "note: no classifier files in data/models/; the classifier demo will answer 'not trained'."
 fi
 
 # 5. Check ------------------------------------------------------------------------------------
