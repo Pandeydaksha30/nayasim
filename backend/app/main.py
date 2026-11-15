@@ -81,7 +81,16 @@ async def lifespan(_: FastAPI):
     warm.cancel()
 
 
-app = FastAPI(title="NyayaSim API", version="0.2.0", lifespan=lifespan)
+# The interactive API pages are a development aid: off wherever the site runs over HTTPS.
+_docs = not settings.cookie_secure
+app = FastAPI(
+    title="NyayaSim API",
+    version="0.3.0",
+    lifespan=lifespan,
+    docs_url="/docs" if _docs else None,
+    redoc_url=None,
+    openapi_url="/openapi.json" if _docs else None,
+)
 
 app.add_middleware(SecurityMiddleware)
 

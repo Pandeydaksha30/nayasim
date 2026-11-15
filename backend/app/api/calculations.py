@@ -10,6 +10,7 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from app.auth.limits import ip_limit
 from app.calculator.interest import (
     CalculationError,
     InterestResult,
@@ -84,7 +85,7 @@ def _out(result: InterestResult) -> ResultOut:
     )
 
 
-@router.post("/interest", response_model=InterestResponse)
+@router.post("/interest", response_model=InterestResponse, dependencies=[ip_limit("interest", 120, 60)])
 def calculate_interest(req: InterestRequest) -> InterestResponse:
     payments = [Payment(p.paid_on, p.amount, p.reference) for p in req.payments]
     try:

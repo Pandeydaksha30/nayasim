@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { demoCase } from "@/lib/demo-case";
-import { pct } from "@/lib/format";
+import { getCase, getHearing } from "@/lib/cases-api";
+import { fmtINRShort } from "@/lib/format";
+import { EXAMPLE_ID } from "@/lib/http";
+import { getStats, type PublicStats } from "@/lib/insights-api";
 import { getUser } from "@/lib/server-session";
 import styles from "./home.module.css";
 
@@ -23,7 +25,22 @@ const LIMITS = [
 
 export default async function HomePage() {
   const user = await getUser();
-  const r = demoCase.report;
+  // Figures are counted from the database on each visit; if the API is down the band is left out.
+  let stats: PublicStats | null = null;
+  try {
+    stats = await getStats();
+  } catch {
+    stats = null;
+  }
+  // The excerpt is read from the recorded example, so it shows what the system really produced.
+  const [example, run] = await Promise.all([getCase(EXAMPLE_ID), getHearing(EXAMPLE_ID)]);
+  const h = run?.result;
+  const kept = h ? h.arguments.buyer.length + h.arguments.builder.length : 0;
+  const quotes = h
+    ? [...h.arguments.buyer, ...h.arguments.builder].reduce((n, a) => n + a.citations.length, 0) + h.judge.citations.length
+    : 0;
+  const num = (n: number) => n.toLocaleString("en-IN");
+  const year = (iso: string | null) => (iso ? iso.slice(0, 4) : "");
   return (
     <main>
       <section className={styles.hero}>
@@ -41,58 +58,67 @@ export default async function HomePage() {
               ) : (
                 <Link href="/signup" className="btn btn-primary">Create a free account</Link>
               )}
-              <Link href={`/cases/${demoCase.id}/report`} className="btn">See an example report</Link>
+              <Link href={`/cases/${EXAMPLE_ID}/report`} className="btn">See an example report</Link>
             </div>
             <div className={styles.fine}>Free during early access. Decision support, not legal advice.</div>
           </div>
 
           <div className={styles.sheet} aria-label="Excerpt from the example report">
             <div className={styles.sheetHead}>
-              <span className="label" style={{ fontSize: 11 }}>Decision report · excerpt</span>
-              <span className="tag tag-neutral">Fictional example</span>
+              <span className={`label ${styles.sheetLabel}`}>Decision report · excerpt</span>
+              <span className="tag tag-neutral">Fictional buyer, real orders</span>
             </div>
             <div className={styles.sheetBody}>
-              <div className={styles.caseName}>{demoCase.title}</div>
-              <div className={styles.caseSub}>{demoCase.claimType} · {demoCase.project}</div>
-              <div className={styles.bars}>
-                {[
-                  ["Allowed", r.outcome.allowed, ""],
-                  ["Partly allowed", r.outcome.partly, styles.fillMid],
-                  ["Dismissed", r.outcome.dismissed, styles.fillLow],
-                ].map(([label, v, cls]) => (
-                  <div key={label as string} className={styles.bar}>
-                    <span className="muted">{label}</span>
-                    <span className={styles.track}><span className={`${styles.fill} ${cls}`} style={{ width: `${(v as number) * 100}%` }} /></span>
-                    <span className={styles.pct}>{pct(v as number)}</span>
-                  </div>
-                ))}
+              <div className={styles.caseName}>{example.title.replace(/\s*\(DEMO\)$/, "")}</div>
+              <div className={styles.caseSub}>
+                Delayed possession · {example.documents.length} documents, {example.facts.length} facts checked
               </div>
-              <dl className={styles.sheetRows}>
-                <div className={styles.sheetRow}><dt>Similar past orders</dt><dd className="num">{r.similarCount}</dd></div>
-                <div className={styles.sheetRow}><dt>Weak points found</dt><dd className="num">{r.weakPoints.length}</dd></div>
-                <div className={styles.sheetRow}><dt>Citations kept only if verified</dt><dd>Yes</dd></div>
-              </dl>
+              {h && (
+                <dl className={styles.sheetRows}>
+                  <div className={styles.sheetRow}><dt>Past orders the hearing drew on</dt><dd className="num">{h.precedents.length}</dd></div>
+                  <div className={styles.sheetRow}><dt>Arguments that passed the citation check</dt><dd className="num">{kept}</dd></div>
+                  <div className={styles.sheetRow}><dt>Quotes verified word for word</dt><dd className="num">{quotes}</dd></div>
+                  {h.award.available && h.award.delay_interest && (
+                    <div className={styles.sheetRow}>
+                      <dt>Delay interest, worked out by code</dt>
+                      <dd className="num">{fmtINRShort(Number(h.award.delay_interest))}</dd>
+                    </div>
+                  )}
+                  <div className={styles.sheetRow}>
+                    <dt>Share of similar orders won</dt>
+                    <dd>
+                      {h.outcome_shares.insufficient
+                        ? "Not shown: too few verified"
+                        : `${Math.round((h.outcome_shares.buyer_wins ?? 0) * 100)}%`}
+                    </dd>
+                  </div>
+                </dl>
+              )}
             </div>
           </div>
         </div>
       </section>
 
-      <div className={styles.figuresWrap}>
-        <div className={styles.figures}>
-          <div className={styles.figure}>
-            <div className={styles.figureValue}>2,019</div>
-            <div className={styles.figureLabel}>public HRERA Gurugram orders read and searched for cases like yours, of 13,992 published</div>
-          </div>
-          <div className={styles.figure}>
-            <div className={styles.figureValue}>2018–2026</div>
-            <div className={styles.figureLabel}>decisions covered, from April 2018 to October 2026</div>
-          </div>
-          <div className={styles.figure}>
-            <div className={styles.figureValue}>65,974</div>
-            <div className={styles.figureLabel}>passages indexed, so a cited quote can be checked word for word</div>
+      {stats && stats.orders_read > 0 && (
+        <div className={styles.figuresWrap}>
+          <div className={styles.figures}>
+            <div className={styles.figure}>
+              <div className={styles.figureValue}>{num(stats.orders_read)}</div>
+              <div className={styles.figureLabel}>
+                public {stats.source} orders read and searchable, of {num(stats.orders_listed)} published
+              </div>
+            </div>
+            <div className={styles.figure}>
+              <div className={styles.figureValue}>{year(stats.first_decided)}–{year(stats.last_decided)}</div>
+              <div className={styles.figureLabel}>years of decisions covered by those orders</div>
+            </div>
+            <div className={styles.figure}>
+              <div className={styles.figureValue}>{num(stats.passages)}</div>
+              <div className={styles.figureLabel}>passages indexed, so a cited quote can be checked word for word</div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <section className={styles.section}>
         <div className={styles.sectionHead}>

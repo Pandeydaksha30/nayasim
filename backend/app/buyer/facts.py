@@ -21,7 +21,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field
 from rapidfuzz import fuzz
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -109,6 +109,16 @@ Facts:
 DOCUMENT TEXT (selected pages; page numbers are the real ones):
 {pages}
 """
+
+
+# Which stored facts later steps may rely on (calculator, hearing, agent, estimate, draft).
+# "high": the quote matched the page exactly on a text layer. "review": read from a weak scan or
+# matched approximately; it counts only once the buyer has confirmed it against the page.
+USABLE = or_(Fact.confirmed.is_(True), Fact.confidence == "high")
+
+
+def is_usable(f: Fact) -> bool:
+    return bool(f.confirmed) or f.confidence == "high"
 
 
 class FactExtractor(Protocol):

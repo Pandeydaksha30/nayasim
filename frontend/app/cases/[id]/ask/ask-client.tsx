@@ -1,15 +1,22 @@
 "use client";
-
 /**
  * Ask a question about this case's uploaded documents. The answer is shown only with citations
  * the server found word for word in the stored page text; otherwise "not enough evidence".
  * Private (non-demo) cases can be searched, but are not sent to the model.
  */
 import { useEffect, useState } from "react";
+import { Citations, Passages } from "@/components/evidence";
+import styles from "@/components/evidence.module.css";
 import { Banner } from "@/components/icons";
-import { type AskResult, type PassageHit, askCase, citeLabel, listQuestions, searchPassages } from "@/lib/agent-api";
+import { type AskResult, type PassageHit, askCase, listQuestions, searchPassages } from "@/lib/agent-api";
 
-export default function AskClient({ caseId, isDemo }: { caseId: string; isDemo: boolean }) {
+const SUGGESTIONS = [
+  "When was possession promised?",
+  "What does the agreement say the builder pays for delay?",
+  "How much has the buyer paid, and when?",
+];
+
+export default function AskClient({ caseId, isDemo, readOnly }: { caseId: string; isDemo: boolean; readOnly: boolean }) {
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,104 +60,104 @@ export default function AskClient({ caseId, isDemo }: { caseId: string; isDemo: 
           </p>
         </div>
       </div>
-      {!isDemo && (
-        <div style={{ marginBottom: 12 }}>
-          <Banner tone="info">
-            This is a private case, so its text is not sent to the AI model. You see the matching passages of your
-            documents instead of a written answer.
-          </Banner>
-        </div>
-      )}
-      <form onSubmit={submit} className="panel">
-        <div className="panel-body">
-          <label className="field">
-            <span className="field-label">Your question</span>
-            <input
-              className="input"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="When was possession promised?"
-              minLength={5}
-              maxLength={500}
-              required
-            />
-          </label>
-          <div className="section-actions" style={{ marginTop: 12 }}>
-            <button className="btn btn-primary" disabled={busy || q.trim().length < 5}>
-              {busy ? "Searching…" : isDemo ? "Ask" : "Search passages"}
-            </button>
-          </div>
-        </div>
-      </form>
 
-      {error && (
-        <div style={{ marginTop: 12 }}>
-          <Banner tone="error">{error}</Banner>
-        </div>
-      )}
-      {result && <Answer r={result} />}
-      {hits && (
-        <div className="panel" style={{ marginTop: 16 }}>
-          <div className="panel-head">Matching passages ({hits.length})</div>
-          <div className="panel-body">
-            {hits.length === 0 && <p className="muted">No passage of your documents matched.</p>}
-            {hits.map((h) => (
-              <blockquote key={h.chunk_id} style={{ margin: "0 0 12px" }}>
-                <div className="small faint">
-                  {h.filename}, page {h.page_no}
-                </div>
-                {h.text}
-              </blockquote>
-            ))}
-          </div>
-        </div>
+      {readOnly ? (
+        <Banner tone="info">
+          <b>This example is a recording, so new questions cannot be asked here.</b> The questions below were asked when it
+          was recorded; the answers and quotes are shown exactly as the system returned them.
+        </Banner>
+      ) : (
+        <>
+          {!isDemo && (
+            <div className={styles.stack} style={{ marginTop: 0, marginBottom: 12 }}>
+              <Banner tone="info">
+                This is a private case, so its text is not sent to the AI model. You see the matching passages of your
+                documents instead of a written answer.
+              </Banner>
+            </div>
+          )}
+          <form onSubmit={submit} className="panel">
+            <div className="panel-body">
+              <div className={styles.formRow}>
+                <label className="field">
+                  <span className="field-label">Your question</span>
+                  <input className="input" value={q} onChange={(e) => setQ(e.target.value)}
+                         placeholder="When was possession promised?" minLength={5} maxLength={500} required />
+                </label>
+                <button className="btn btn-primary" disabled={busy || q.trim().length < 5}>
+                  {busy ? "Searching…" : isDemo ? "Ask" : "Search passages"}
+                </button>
+              </div>
+              <div className={styles.suggest}>
+                {SUGGESTIONS.map((s) => (
+                  <button key={s} type="button" className={styles.chip} disabled={busy} onClick={() => setQ(s)}>{s}</button>
+                ))}
+              </div>
+            </div>
+          </form>
+        </>
       )}
 
-      {history.length > 0 && (
-        <div className="panel" style={{ marginTop: 16 }}>
-          <div className="panel-head">Earlier questions</div>
-          <div className="panel-body">
-            {history.map((h, i) => (
-              <details key={h.id ?? i} style={{ marginBottom: 8 }}>
-                <summary>{h.question}</summary>
-                <Answer r={h} compact />
-              </details>
-            ))}
-          </div>
-        </div>
-      )}
+      <div className={styles.stack}>
+        {error && <Banner tone="error">{error}</Banner>}
+
+        {result && (
+          <section className="panel">
+            <div className="panel-head"><h3>Answer</h3></div>
+            <div className="panel-body"><Answer r={result} /></div>
+          </section>
+        )}
+
+        {hits && (
+          <section className="panel">
+            <div className="panel-head"><h3>Matching passages</h3><span className="small faint">{hits.length} found</span></div>
+            <div className="panel-body">
+              <Passages
+                empty="No passage of your documents matched these words."
+                items={hits.map((h) => ({ key: h.chunk_id, source: h.filename, where: `page ${h.page_no}`, text: h.text }))}
+              />
+            </div>
+          </section>
+        )}
+
+        {history.length > 0 && (
+          <section className="panel">
+            <div className="panel-head"><h3>{readOnly ? "Recorded questions" : "Earlier questions"}</h3><span className="small faint">{history.length}</span></div>
+            <ul className={styles.history}>
+              {history.map((h, i) => (
+                <li key={h.id ?? i}>
+                  <details open={readOnly && i === 0}>
+                    <summary>{h.question}</summary>
+                    <div className={styles.historyBody}><Answer r={h} /></div>
+                  </details>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
     </>
   );
 }
 
-function Answer({ r, compact }: { r: AskResult; compact?: boolean }) {
+function Answer({ r }: { r: AskResult }) {
   return (
-    <div className={compact ? "" : "panel"} style={{ marginTop: compact ? 8 : 16 }}>
-      {!compact && <div className="panel-head">Answer</div>}
-      <div className={compact ? "" : "panel-body"}>
-        {r.insufficient ? (
-          <Banner tone="warn">
-            <b>{r.answer}</b>
-            {r.reason && <div className="small">Why: {r.reason}.</div>}
-          </Banner>
-        ) : (
-          <p>{r.answer}</p>
-        )}
-        {r.citations.map((c, i) => (
-          <blockquote key={i} style={{ margin: "6px 0" }}>
-            <span className="tag tag-pos">verified</span> {citeLabel(c)}: “{c.quote}”
-          </blockquote>
-        ))}
-        {r.rejected_citations.length > 0 && (
-          <p className="small faint" style={{ marginTop: 8 }}>
-            {r.rejected_citations.length} quote(s) proposed by the model were removed: not found in your documents.
-          </p>
-        )}
-        <p className="small faint">
-          Passages searched: {r.retrieved.map((x) => `${x.filename} p.${x.page_no}`).join(", ") || "none"} · search:{" "}
-          {r.mode} · model: {r.model}
-        </p>
+    <>
+      {r.insufficient ? (
+        <Banner tone="warn">
+          <b>{r.answer}</b>
+          {r.reason && <div className="small">Why: {r.reason}.</div>}
+        </Banner>
+      ) : (
+        <p className={styles.answer}>{r.answer}</p>
+      )}
+      {r.citations.length > 0 && <div className={styles.subhead}>Where this comes from</div>}
+      <Citations citations={r.citations} rejected={r.rejected_citations} />
+      <div className={styles.answerMeta}>
+        <span>Passages read: {r.retrieved.map((x) => `${x.filename} p. ${x.page_no}`).join(", ") || "none"}</span>
+        <span>Search: {r.mode === "hybrid" ? "keywords and meaning" : "keywords"}</span>
+        <span>Model: {r.model}</span>
       </div>
-    </div>
+    </>
   );
 }

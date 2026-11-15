@@ -1,0 +1,9 @@
+.welcome { margin-bottom: 6px; }
+.gap { margin-bottom: 16px; }
+.h { font-size: 16px; }
+.examples { margin-top: 24px; }
+.empty { padding: 36px 32px; max-width: 760px; }
+.empty h2 { font-family: var(--serif); font-size: 24px; color: var(--navy); margin-bottom: 10px; }
+.empty p { max-width: 62ch; }
+.emptyActions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+@media (max-width: 640px) { .empty { padding: 24px 20px; } }

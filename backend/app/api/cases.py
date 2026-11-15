@@ -3,24 +3,27 @@
 from __future__ import annotations
 
 import logging
+import shutil
 import threading
 import uuid
 from datetime import datetime
 from decimal import Decimal
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Response, UploadFile
 from pydantic import BaseModel, Field
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
 from app.api.hearing import get_search_embedder
 from app.auth.deps import CurrentUser, case_for
+from app.auth.limits import user_limit
 from app.buyer import documents as documents_mod
 from app.buyer.chunks import index_document
 from app.buyer.documents import KINDS, UploadRejected, store_document
-from app.buyer.facts import FactExtractor, PrivateDataBlocked, extract_case_facts
+from app.buyer.facts import FactExtractor, PrivateDataBlocked, extract_case_facts, is_usable
+from app.buyer.page_view import PageNotAvailable, quote_rects, render_page
 from app.buyer.questions import questions_for, validate_answer
 from app.config import settings
 from app.db.models import Case, CaseAnswer, CaseDocument, CaseDocumentPage, Fact
@@ -107,6 +110,8 @@ class CaseOut(BaseModel):
     facts: list[FactOut]
     questions: list[QuestionOut]
     payments_total: str
+    # Facts marked "review" that the buyer has not confirmed: shown, but not used by later steps.
+    facts_to_check: int
 
 
 class AnswerIn(BaseModel):
@@ -118,12 +123,15 @@ def _case_out(s: Session, case: Case) -> CaseOut:
         select(Fact).where(Fact.case_id == case.id).order_by(Fact.document_id, Fact.page_no, Fact.char_start)
     ).all()
     by_key: dict[str, list[str]] = {}
+    usable_payments: list[str] = []
     for f in facts:
         by_key.setdefault(f.key, []).append(f.value)
+        if f.key == "payment" and is_usable(f):
+            usable_payments.append(f.value)
     answers = {
         a.question_id: a.answer for a in s.scalars(select(CaseAnswer).where(CaseAnswer.case_id == case.id))
     }
-    payments_total = sum((Decimal(v.split(";")[1]) for v in by_key.get("payment", [])), Decimal(0))
+    payments_total = sum((Decimal(v.split(";")[1]) for v in usable_payments), Decimal(0))
     docs = s.scalars(
         select(CaseDocument).where(CaseDocument.case_id == case.id).order_by(CaseDocument.uploaded_at)
     ).all()
@@ -153,6 +161,7 @@ def _case_out(s: Session, case: Case) -> CaseOut:
             for q in questions_for(by_key)
         ],
         payments_total=str(payments_total.quantize(Decimal("0.01"))),
+        facts_to_check=sum(not is_usable(f) for f in facts),
     )
 
 
@@ -170,10 +179,24 @@ class CaseSummary(BaseModel):
 
 @router.get("", response_model=list[CaseSummary])
 def list_cases(s: SessionDep, user: CurrentUser) -> list[CaseSummary]:
+    cases = s.scalars(
+        select(Case)
+        .where((Case.user_id == user.id) | (Case.user_id.is_(None) & Case.is_demo))
+        .order_by(Case.created_at.desc())
+    ).all()
+    ids = [c.id for c in cases]
     doc_counts = dict(
-        s.execute(select(CaseDocument.case_id, func.count()).group_by(CaseDocument.case_id)).all()
+        s.execute(
+            select(CaseDocument.case_id, func.count())
+            .where(CaseDocument.case_id.in_(ids))
+            .group_by(CaseDocument.case_id)
+        ).all()
     )
-    fact_counts = dict(s.execute(select(Fact.case_id, func.count()).group_by(Fact.case_id)).all())
+    fact_counts = dict(
+        s.execute(
+            select(Fact.case_id, func.count()).where(Fact.case_id.in_(ids)).group_by(Fact.case_id)
+        ).all()
+    )
     return [
         CaseSummary(
             id=c.id,
@@ -186,11 +209,7 @@ def list_cases(s: SessionDep, user: CurrentUser) -> list[CaseSummary]:
             documents=doc_counts.get(c.id, 0),
             facts=fact_counts.get(c.id, 0),
         )
-        for c in s.scalars(
-            select(Case)
-            .where((Case.user_id == user.id) | (Case.user_id.is_(None) & Case.is_demo))
-            .order_by(Case.created_at.desc())
-        )
+        for c in cases
     ]
 
 
@@ -220,7 +239,12 @@ def _index_for_search(s: Session, document_id: uuid.UUID, embedder: Embedder | N
         log.exception("Could not index document %s for search", document_id)
 
 
-@router.post("/{case_id}/documents", status_code=201, response_model=DocumentOut)
+@router.post(
+    "/{case_id}/documents",
+    status_code=201,
+    response_model=DocumentOut,
+    dependencies=[user_limit("upload", 40, 600)],
+)
 async def upload_document(
     case_id: uuid.UUID,
     s: SessionDep,
@@ -278,7 +302,7 @@ def get_page(
     }
 
 
-@router.post("/{case_id}/facts/extract")
+@router.post("/{case_id}/facts/extract", dependencies=[user_limit("extract", 6, 600)])
 def extract_facts(
     case_id: uuid.UUID,
     s: SessionDep,
@@ -323,3 +347,105 @@ def answer_question(
         s.add(CaseAnswer(case_id=case_id, question_id=question_id, answer=body.answer))
     s.flush()
     return _case_out(s, case)
+
+
+# ── Deleting ──
+
+
+@router.delete("/{case_id}")
+def delete_case(case_id: uuid.UUID, s: SessionDep, user: CurrentUser) -> dict:
+    """Delete a case with everything derived from it: documents and their files, page text, search
+    chunks and embeddings, facts, answers, questions asked, hearing and agent runs."""
+    case = case_for(s, case_id, user, write=True)
+    s.delete(case)  # the database cascades to every table that references the case
+    s.commit()
+    folder = documents_mod.UPLOAD_ROOT / str(case_id)
+    try:
+        if folder.exists():
+            shutil.rmtree(folder)
+    except OSError as e:
+        log.exception("Could not remove uploads of case %s", case_id)
+        raise HTTPException(
+            500, "The case was deleted, but some uploaded files could not be removed. Contact support."
+        ) from e
+    return {"deleted": True}
+
+
+@router.delete("/{case_id}/documents/{document_id}")
+def delete_document(case_id: uuid.UUID, document_id: uuid.UUID, s: SessionDep, user: CurrentUser) -> dict:
+    """Delete one document with its file, page text, search chunks and the facts read from it.
+    Hearings already run stay as a record of what was argued then; run a new one afterwards."""
+    case_for(s, case_id, user, write=True)
+    doc = s.get(CaseDocument, document_id)
+    if doc is None or doc.case_id != case_id:
+        raise HTTPException(404, "Document not found.")
+    path = documents_mod.UPLOAD_ROOT / doc.storage_key
+    facts = s.scalar(select(func.count()).select_from(Fact).where(Fact.document_id == document_id)) or 0
+    s.execute(delete(Fact).where(Fact.document_id == document_id))
+    s.delete(doc)  # cascades to pages and chunks
+    s.commit()
+    try:
+        path.unlink(missing_ok=True)
+    except OSError as e:
+        log.exception("Could not remove %s", path)
+        raise HTTPException(
+            500, "The document was deleted, but its file could not be removed. Contact support."
+        ) from e
+    return {"deleted": True, "facts_removed": facts}
+
+
+# ── The page as filed ──
+
+
+def _stored_page(s: Session, case_id: uuid.UUID, document_id: uuid.UUID, page_no: int):
+    doc = s.get(CaseDocument, document_id)
+    if doc is None or doc.case_id != case_id:
+        raise HTTPException(404, "Document not found.")
+    page = s.get(CaseDocumentPage, (document_id, page_no))
+    if page is None:
+        raise HTTPException(404, "Page not found.")
+    return documents_mod.UPLOAD_ROOT / doc.storage_key, page
+
+
+@router.get(
+    "/{case_id}/documents/{document_id}/pages/{page_no}/image",
+    dependencies=[user_limit("page-image", 240, 60)],
+)
+def page_image(
+    case_id: uuid.UUID, document_id: uuid.UUID, page_no: int, s: SessionDep, user: CurrentUser
+) -> Response:
+    """A picture (PNG) of the uploaded page, for comparing a fact with the real document."""
+    case_for(s, case_id, user)
+    path, _ = _stored_page(s, case_id, document_id, page_no)
+    s.commit()  # nothing stays open while the page is drawn
+    try:
+        png = render_page(path, page_no)
+    except PageNotAvailable as e:
+        raise HTTPException(404, str(e)) from e
+    except Exception as e:  # noqa: BLE001 - a damaged file: say so, the text view still works
+        log.exception("Could not draw page %s of document %s", page_no, document_id)
+        raise HTTPException(422, "This page could not be drawn. The extracted text is still shown.") from e
+    return Response(png, media_type="image/png", headers={"Cache-Control": "private, max-age=600"})
+
+
+@router.get("/{case_id}/documents/{document_id}/pages/{page_no}/highlight")
+def page_highlight(
+    case_id: uuid.UUID,
+    document_id: uuid.UUID,
+    page_no: int,
+    s: SessionDep,
+    user: CurrentUser,
+    start: Annotated[int, Query(ge=0)],
+    end: Annotated[int, Query(ge=1)],
+) -> dict:
+    """Where the characters [start, end) of the stored page text sit on the page picture, as
+    fractions of the page. `rects` is null when the position cannot be known for certain (scans
+    read by OCR, photos): the page is then shown without a highlight."""
+    case_for(s, case_id, user)
+    path, page = _stored_page(s, case_id, document_id, page_no)
+    try:
+        rects = quote_rects(path, page_no, page.text, start, end)
+    except Exception:  # noqa: BLE001 - no highlight is safe; logged
+        log.exception("Could not place the highlight on page %s of %s", page_no, document_id)
+        rects = None
+    return {"rects": rects, "text_source": page.text_source}

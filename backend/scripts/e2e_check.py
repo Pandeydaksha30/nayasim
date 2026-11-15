@@ -8,6 +8,7 @@ Usage (from backend/, with the API started with -AllowDemo and the website runni
   .\\.venv\\Scripts\\python.exe -m scripts.e2e_check facts      # fact extraction (calls Gemini)
   .\\.venv\\Scripts\\python.exe -m scripts.e2e_check hearing    # start a hearing and wait for it
   .\\.venv\\Scripts\\python.exe -m scripts.e2e_check session    # logout, login again
+  .\\.venv\\Scripts\\python.exe -m scripts.e2e_check lifecycle  # page picture, highlight, deleting
 
 The demo user's password is generated once and kept in data/demo-credentials.txt (git-ignored);
 it is never printed. Each line of output is one check: PASS, FAIL or INFO.
@@ -467,6 +468,59 @@ def agent() -> None:
     check("run saved and returned again", again.status_code == 200 and again.json()[0]["id"] == run["id"])
 
 
+def lifecycle() -> None:
+    """The page as filed (picture and highlight), public figures, and deleting a document and a
+    case with everything derived from them. Uses its own throwaway case; calls no external model."""
+    c = client()
+    check("login", login(c).status_code == 200)
+    files = sample_files()
+    r = c.post(f"{API}/cases", json={"title": "Lifecycle check (DEMO)", "is_demo": True})
+    check("create a throwaway case", r.status_code == 201, f"HTTP {r.status_code}")
+    case_id = r.json()["id"]
+    kind, data = files["agreement.pdf"]
+    r = c.post(f"{API}/cases/{case_id}/documents", data={"kind": kind}, files={"file": ("agreement.pdf", data, "application/pdf")})
+    check("upload the agreement", r.status_code == 201, f"HTTP {r.status_code}")
+    doc_id = r.json()["id"]
+    base = f"{API}/cases/{case_id}/documents/{doc_id}/pages/1"
+
+    r = c.get(f"{base}/image")
+    ok = r.status_code == 200 and r.headers.get("content-type") == "image/png"
+    size = Image.open(io.BytesIO(r.content)).size if ok else None
+    check("page picture is a PNG of the uploaded page", ok and size[0] >= 600, f"{size}")
+    text = c.get(base).json()["text"]
+    at = text.find("Total Price")
+    r = c.get(f"{base}/highlight", params={"start": max(at, 0), "end": max(at, 0) + 11})
+    rects = r.json().get("rects") if r.status_code == 200 else None
+    check("the words 'Total Price' are located on the page picture", bool(rects) and all(0 <= x["x"] <= 1 and 0 <= x["y"] <= 1 for x in rects), f"{rects}")
+    r2 = c.get(f"{base}/highlight", params={"start": 0, "end": 10}).json().get("rects")
+    check("another passage is located somewhere else", bool(r2) and r2 != rects)
+    check("a page that does not exist: 404", c.get(f"{API}/cases/{case_id}/documents/{doc_id}/pages/99/image").status_code == 404)
+    hits = c.get(f"{API}/cases/{case_id}/passages", params={"q": "total price"}).json()["hits"]
+    check("the document is searchable before deletion", len(hits) > 0, f"{len(hits)} passages")
+
+    anon = httpx.Client(headers=HEADERS, timeout=60)
+    st = anon.get(f"{API}/stats")
+    check("public figures need no sign-in and count the order store", st.status_code == 200 and st.json()["orders_read"] > 0, f"{st.json() if st.status_code == 200 else st.status_code}")
+    check("signed-out visitor cannot see the page picture", anon.get(f"{base}/image").status_code == 401)
+    check("signed-out visitor cannot delete the case", anon.delete(f"{API}/cases/{case_id}").status_code == 401)
+
+    r = c.delete(f"{API}/cases/{case_id}/documents/{doc_id}")
+    check("delete the document", r.status_code == 200 and r.json()["deleted"], f"HTTP {r.status_code}")
+    case = c.get(f"{API}/cases/{case_id}").json()
+    check("the case has no documents and no facts left", case["documents"] == [] and case["facts"] == [])
+    hits = c.get(f"{API}/cases/{case_id}/passages", params={"q": "total price"}).json()["hits"]
+    check("its passages are gone from search", hits == [], f"{len(hits)} passages")
+    check("its page picture is gone", c.get(f"{base}/image").status_code == 404)
+    stored = ROOT / "data" / "uploads" / case_id
+    check("its file is removed from disk", not stored.exists() or not any(stored.iterdir()), str(stored))
+
+    r = c.delete(f"{API}/cases/{case_id}")
+    check("delete the case", r.status_code == 200 and r.json()["deleted"], f"HTTP {r.status_code}")
+    check("the deleted case is not found", c.get(f"{API}/cases/{case_id}").status_code == 404)
+    check("it is no longer in the case list", all(x["id"] != case_id for x in c.get(f"{API}/cases").json()))
+    check("its upload folder is removed", not stored.exists(), str(stored))
+
+
 def isolation() -> None:
     """A second user cannot read the demo user's case, chunks, answers or agent runs."""
     st = load_state()
@@ -498,7 +552,7 @@ def isolation() -> None:
 if __name__ == "__main__":
     stage = sys.argv[1] if len(sys.argv) > 1 else "setup"
     {"setup": setup, "facts": facts, "hearing": hearing, "insights": insights, "session": session,
-     "rag": rag, "agent": agent, "isolation": isolation}[stage]()
+     "rag": rag, "agent": agent, "isolation": isolation, "lifecycle": lifecycle}[stage]()
     failed = [r for r in results if r[0] == "FAIL"]
     print(f"\n{len(results) - len(failed)} passed, {len(failed)} failed")
     sys.exit(1 if failed else 0)

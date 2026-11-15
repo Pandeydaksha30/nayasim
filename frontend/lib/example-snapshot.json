@@ -1,0 +1,1891 @@
+{
+ "recorded_at": "2026-11-15T17:45:47+00:00",
+ "note": "Recorded from a real run on fictional buyer documents by scripts/export_example.py. Not edited by hand.",
+ "responses": {
+  "/api/v1/cases/demo": {
+   "id": "demo",
+   "title": "Mehra v. Arvant Infra (DEMO)",
+   "claim_type": "delayed_possession",
+   "status": "draft",
+   "is_demo": true,
+   "shared": true,
+   "created_at": "2026-11-13T08:53:00.704005Z",
+   "documents": [
+    {
+     "id": "doc-1",
+     "filename": "agreement.pdf",
+     "kind": "agreement",
+     "page_count": 2,
+     "ocr_pages": 0,
+     "duplicate": false
+    },
+    {
+     "id": "doc-2",
+     "filename": "receipts.pdf",
+     "kind": "receipt",
+     "page_count": 2,
+     "ocr_pages": 0,
+     "duplicate": false
+    },
+    {
+     "id": "doc-3",
+     "filename": "builder_letter.pdf",
+     "kind": "builder_letter",
+     "page_count": 1,
+     "ocr_pages": 0,
+     "duplicate": false
+    },
+    {
+     "id": "doc-4",
+     "filename": "receipt_scan.png",
+     "kind": "receipt",
+     "page_count": 1,
+     "ocr_pages": 1,
+     "duplicate": false
+    }
+   ],
+   "facts": [
+    {
+     "id": 40,
+     "document_id": "doc-4",
+     "key": "builder_name",
+     "label": "Promoter (builder)",
+     "value": "ARVANT INFRA PRIVATE LIMITED",
+     "page_no": 1,
+     "char_start": 0,
+     "char_end": 28,
+     "quote": "ARVANT INFRA PRIVATE LIMITED",
+     "confidence": "high",
+     "confirmed": true
+    },
+    {
+     "id": 42,
+     "document_id": "doc-4",
+     "key": "payment",
+     "label": "Payment",
+     "value": "2018-09-15;1080000.00",
+     "page_no": 1,
+     "char_start": 124,
+     "char_end": 164,
+     "quote": "Rs. 10,80,000/- by RTGS dated 15.09.2018",
+     "confidence": "high",
+     "confirmed": true
+    },
+    {
+     "id": 41,
+     "document_id": "doc-4",
+     "key": "unit",
+     "label": "Unit",
+     "value": "Apartment C-1204",
+     "page_no": 1,
+     "char_start": 188,
+     "char_end": 204,
+     "quote": "Apartment C-1204",
+     "confidence": "high",
+     "confirmed": true
+    },
+    {
+     "id": 36,
+     "document_id": "doc-2",
+     "key": "builder_name",
+     "label": "Promoter (builder)",
+     "value": "ARVANT INFRA PRIVATE LIMITED",
+     "page_no": 1,
+     "char_start": 0,
+     "char_end": 28,
+     "quote": "ARVANT INFRA PRIVATE LIMITED",
+     "confidence": "high",
+     "confirmed": true
+    },
+    {
+     "id": 38,
+     "document_id": "doc-2",
+     "key": "payment",
+     "label": "Payment",
+     "value": "2018-03-12;720000.00",
+     "page_no": 1,
+     "char_start": 68,
+     "char_end": 161,
+     "quote": "Received with thanks from Ms. Ananya Mehra the sum of Rs. 7,20,000/- by RTGS dated 12.03.2018",
+     "confidence": "high",
+     "confirmed": true
+    },
+    {
+     "id": 37,
+     "document_id": "doc-2",
+     "key": "unit",
+     "label": "Unit",
+     "value": "C-1204",
+     "page_no": 1,
+     "char_start": 181,
+     "char_end": 198,
+     "quote": "Apartment C-1204.",
+     "confidence": "high",
+     "confirmed": true
+    },
+    {
+     "id": 39,
+     "document_id": "doc-2",
+     "key": "payment",
+     "label": "Payment",
+     "value": "2018-05-10;1440000.00",
+     "page_no": 2,
+     "char_start": 68,
+     "char_end": 164,
+     "quote": "Received with thanks from Ms. Ananya Mehra the sum of Rs. 14,40,000/- by cheque dated 10.05.2018",
+     "confidence": "high",
+     "confirmed": true
+    },
+    {
+     "id": 51,
+     "document_id": "doc-1",
+     "key": "agreement_date",
+     "label": "Agreement date",
+     "value": "2018-05-02",
+     "page_no": 1,
+     "char_start": 90,
+     "char_end": 102,
+     "quote": "2nd May 2018",
+     "confidence": "high",
+     "confirmed": true
+    },
+    {
+     "id": 48,
+     "document_id": "doc-1",
+     "key": "builder_name",
+     "label": "Promoter (builder)",
+     "value": "Arvant Infra Private Limited",
+     "page_no": 1,
+     "char_start": 111,
+     "char_end": 139,
+     "quote": "Arvant Infra Private Limited",
+     "confidence": "high",
+     "confirmed": true
+    },
+    {
+     "id": 49,
+     "document_id": "doc-1",
+     "key": "project_name",
+     "label": "Project",
+     "value": "Skyline Residency",
+     "page_no": 1,
+     "char_start": 299,
+     "char_end": 316,
+     "quote": "Skyline Residency",
+     "confidence": "high",
+     "confirmed": true
+    },
+    {
+     "id": 50,
+     "document_id": "doc-1",
+     "key": "rera_registration",
+     "label": "Project registration",
+     "value": "UPRERAPRJ-DEMO-0417",
+     "page_no": 1,
+     "char_start": 397,
+     "char_end": 416,
+     "quote": "UPRERAPRJ-DEMO-0417",
+     "confidence": "high",
+     "confirmed": true
+    },
+    {
+     "id": 52,
+     "document_id": "doc-1",
+     "key": "total_price",
+     "label": "Total price",
+     "value": "7200000.00",
+     "page_no": 1,
+     "char_start": 623,
+     "char_end": 638,
+     "quote": "Rs. 72,00,000/-",
+     "confidence": "high",
+     "confirmed": true
+    },
+    {
+     "id": 53,
+     "document_id": "doc-1",
+     "key": "possession_promised",
+     "label": "Promised possession",
+     "value": "2021-06-30",
+     "page_no": 2,
+     "char_start": 121,
+     "char_end": 135,
+     "quote": "30th June 2021",
+     "confidence": "high",
+     "confirmed": true
+    },
+    {
+     "id": 54,
+     "document_id": "doc-1",
+     "key": "delay_compensation_clause",
+     "label": "Delay clause",
+     "value": "compensation at Rs. 5/- per square foot of carpet area per month for the period of delay",
+     "page_no": 2,
+     "char_start": 317,
+     "char_end": 406,
+     "quote": "compensation at Rs. 5/- per square foot of carpet area per month for the period of delay.",
+     "confidence": "high",
+     "confirmed": true
+    },
+    {
+     "id": 43,
+     "document_id": "doc-3",
+     "key": "builder_name",
+     "label": "Promoter (builder)",
+     "value": "Arvant Infra Private Limited",
+     "page_no": 1,
+     "char_start": 0,
+     "char_end": 47,
+     "quote": "ARVANT INFRA PRIVATE LIMITED (DEMO - FICTIONAL)",
+     "confidence": "high",
+     "confirmed": true
+    },
+    {
+     "id": 44,
+     "document_id": "doc-3",
+     "key": "project_name",
+     "label": "Project",
+     "value": "Skyline Residency Tower C",
+     "page_no": 1,
+     "char_start": 99,
+     "char_end": 124,
+     "quote": "Skyline Residency Tower C",
+     "confidence": "high",
+     "confirmed": true
+    },
+    {
+     "id": 45,
+     "document_id": "doc-3",
+     "key": "unit",
+     "label": "Unit",
+     "value": "Tower C",
+     "page_no": 1,
+     "char_start": 117,
+     "char_end": 124,
+     "quote": "Tower C",
+     "confidence": "high",
+     "confirmed": true
+    },
+    {
+     "id": 46,
+     "document_id": "doc-3",
+     "key": "revised_completion_date",
+     "label": "Builder's revised date",
+     "value": "2025-12-31",
+     "page_no": 1,
+     "char_start": 211,
+     "char_end": 227,
+     "quote": "31 December 2025",
+     "confidence": "high",
+     "confirmed": true
+    },
+    {
+     "id": 47,
+     "document_id": "doc-3",
+     "key": "escalation_demand",
+     "label": "Extra charge demanded",
+     "value": "144000.00",
+     "page_no": 1,
+     "char_start": 288,
+     "char_end": 302,
+     "quote": "Rs. 1,44,000/-",
+     "confidence": "high",
+     "confirmed": true
+    }
+   ],
+   "questions": [
+    {
+     "id": "offer_of_possession",
+     "question": "Have you received a written offer of possession?",
+     "why": "If an offer was made, delay interest usually stops at that date, not today.",
+     "options": [
+      "No",
+      "Yes, with an occupancy certificate",
+      "Yes, without an occupancy certificate"
+     ],
+     "answer": null
+    },
+    {
+     "id": "payments_complete",
+     "question": "Are the payments listed here all the payments you made to the builder?",
+     "why": "Interest is worked out payment by payment; a missing receipt lowers the amount.",
+     "options": [
+      "Yes, that is all",
+      "No, some are missing"
+     ],
+     "answer": null
+    },
+    {
+     "id": "missed_instalments",
+     "question": "Did you miss or pay late any instalment the builder demanded?",
+     "why": "Builders often argue the buyer defaulted first; late payments can reduce the award.",
+     "options": [
+      "No, all paid on time",
+      "Yes, one or more were late",
+      "Not sure"
+     ],
+     "answer": null
+    },
+    {
+     "id": "relief",
+     "question": "Do you want to keep the flat, or withdraw and take a refund?",
+     "why": "This decides the relief: interest for every month of delay, or a refund with interest.",
+     "options": [
+      "Keep the flat and claim delay interest",
+      "Withdraw and claim a refund",
+      "Undecided: show both"
+     ],
+     "answer": null
+    },
+    {
+     "id": "escalation_paid",
+     "question": "Have you paid the extra charge the builder demanded?",
+     "why": "Paying without protest can be read as accepting the builder's new terms.",
+     "options": [
+      "No",
+      "Yes, under protest in writing",
+      "Yes, without protest"
+     ],
+     "answer": null
+    }
+   ],
+   "payments_total": "3240000.00",
+   "facts_to_check": 0
+  },
+  "/api/v1/cases/demo/documents/doc-1/pages/1": {
+   "page_no": 1,
+   "page_count": 2,
+   "text": "AGREEMENT FOR SALE (DEMO - FICTIONAL)\nThis Agreement for Sale is made at Greater Noida on 2nd May 2018 between Arvant Infra Private Limited, a\ncompany incorporated under the Companies Act, 2013 (the 'Promoter'), and Ms. Ananya Mehra (the\n'Allottee').\nThe Promoter is developing the project known as Skyline Residency, registered with the Real Estate\nRegulatory Authority under registration number UPRERAPRJ-DEMO-0417.\n1.1 The Promoter agrees to sell and the Allottee agrees to purchase Apartment No. C-1204 on the twelfth\nfloor of Tower C, having a carpet area of 1,450 square feet.\n1.2 The Total Price of the Apartment is Rs. 72,00,000/- (Rupees Seventy-Two Lakh only), payable as per the\nconstruction-linked plan in Schedule C.",
+   "text_source": "text_layer",
+   "ocr_confidence": null
+  },
+  "/api/v1/cases/demo/documents/doc-1/pages/2": {
+   "page_no": 2,
+   "page_count": 2,
+   "text": "7. POSSESSION OF THE APARTMENT\n7.1 The Promoter shall hand over possession of the Apartment to the Allottee on or before 30th June 2021,\nunless there is delay due to force majeure as defined in clause 9.\n7.2 If the Promoter fails to hand over possession by the date in clause 7.1, the Promoter shall pay the Allottee\ncompensation at Rs. 5/- per square foot of carpet area per month for the period of delay.\n7.3 The Allottee shall take possession within two months of the written offer of possession, failing which\nholding charges shall apply.",
+   "text_source": "text_layer",
+   "ocr_confidence": null
+  },
+  "/api/v1/cases/demo/documents/doc-2/pages/1": {
+   "page_no": 1,
+   "page_count": 2,
+   "text": "ARVANT INFRA PRIVATE LIMITED (DEMO - FICTIONAL)\nRECEIPT No. AR/0912\nReceived with thanks from Ms. Ananya Mehra the sum of Rs. 7,20,000/- by RTGS dated 12.03.2018 towards\nbooking of Apartment C-1204.",
+   "text_source": "text_layer",
+   "ocr_confidence": null
+  },
+  "/api/v1/cases/demo/documents/doc-2/pages/2": {
+   "page_no": 2,
+   "page_count": 2,
+   "text": "ARVANT INFRA PRIVATE LIMITED (DEMO - FICTIONAL)\nRECEIPT No. AR/1187\nReceived with thanks from Ms. Ananya Mehra the sum of Rs. 14,40,000/- by cheque dated 10.05.2018\ntowards allotment of Apartment C-1204.",
+   "text_source": "text_layer",
+   "ocr_confidence": null
+  },
+  "/api/v1/cases/demo/documents/doc-3/pages/1": {
+   "page_no": 1,
+   "page_count": 1,
+   "text": "ARVANT INFRA PRIVATE LIMITED (DEMO - FICTIONAL)\nDate: 10.02.2024\nSub: Revised completion schedule, Skyline Residency Tower C\nOwing to circumstances beyond our control, the revised completion date for Tower C is 31 December 2025.\nAllottees are requested to pay a cost escalation charge of Rs. 1,44,000/- before the offer of possession.",
+   "text_source": "text_layer",
+   "ocr_confidence": null
+  },
+  "/api/v1/cases/demo/documents/doc-4/pages/1": {
+   "page_no": 1,
+   "page_count": 1,
+   "text": "ARVANT INFRA PRIVATE LIMITED (DEMO - FICTIONAL)\nRECEIPT No. AR/1433\n\nReceived with thanks from Ms. Ananya Mehra\n\nthe sum of Rs. 10,80,000/- by RTGS dated 15.09.2018\n\ntowards instalment of Apartment C-1204.",
+   "text_source": "ocr",
+   "ocr_confidence": "90.90"
+  },
+  "/api/v1/cases/demo/documents/doc-4/pages/1/highlight?start=0&end=28": {
+   "rects": null,
+   "text_source": "ocr"
+  },
+  "/api/v1/cases/demo/documents/doc-4/pages/1/highlight?start=124&end=164": {
+   "rects": null,
+   "text_source": "ocr"
+  },
+  "/api/v1/cases/demo/documents/doc-4/pages/1/highlight?start=188&end=204": {
+   "rects": null,
+   "text_source": "ocr"
+  },
+  "/api/v1/cases/demo/documents/doc-2/pages/1/highlight?start=0&end=28": {
+   "rects": [
+    {
+     "x": 0.05238,
+     "y": 0.03834,
+     "w": 0.29679,
+     "h": 0.00936
+    }
+   ],
+   "text_source": "text_layer"
+  },
+  "/api/v1/cases/demo/documents/doc-2/pages/1/highlight?start=68&end=161": {
+   "rects": [
+    {
+     "x": 0.05384,
+     "y": 0.09878,
+     "w": 0.82277,
+     "h": 0.01224
+    }
+   ],
+   "text_source": "text_layer"
+  },
+  "/api/v1/cases/demo/documents/doc-2/pages/1/highlight?start=181&end=198": {
+   "rects": [
+    {
+     "x": 0.14278,
+     "y": 0.11898,
+     "w": 0.1545,
+     "h": 0.0121
+    }
+   ],
+   "text_source": "text_layer"
+  },
+  "/api/v1/cases/demo/documents/doc-2/pages/2/highlight?start=68&end=164": {
+   "rects": [
+    {
+     "x": 0.05384,
+     "y": 0.09878,
+     "w": 0.89297,
+     "h": 0.01224
+    }
+   ],
+   "text_source": "text_layer"
+  },
+  "/api/v1/cases/demo/documents/doc-1/pages/1/highlight?start=90&end=102": {
+   "rects": [
+    {
+     "x": 0.50176,
+     "y": 0.07871,
+     "w": 0.1172,
+     "h": 0.01213
+    }
+   ],
+   "text_source": "text_layer"
+  },
+  "/api/v1/cases/demo/documents/doc-1/pages/1/highlight?start=111&end=139": {
+   "rects": [
+    {
+     "x": 0.70134,
+     "y": 0.07859,
+     "w": 0.22369,
+     "h": 0.00966
+    }
+   ],
+   "text_source": "text_layer"
+  },
+  "/api/v1/cases/demo/documents/doc-1/pages/1/highlight?start=299&end=316": {
+   "rects": [
+    {
+     "x": 0.50273,
+     "y": 0.15939,
+     "w": 0.15543,
+     "h": 0.01224
+    }
+   ],
+   "text_source": "text_layer"
+  },
+  "/api/v1/cases/demo/documents/doc-1/pages/1/highlight?start=397&end=416": {
+   "rects": [
+    {
+     "x": 0.44307,
+     "y": 0.17959,
+     "w": 0.21846,
+     "h": 0.00967
+    }
+   ],
+   "text_source": "text_layer"
+  },
+  "/api/v1/cases/demo/documents/doc-1/pages/1/highlight?start=623&end=638": {
+   "rects": [
+    {
+     "x": 0.37852,
+     "y": 0.28071,
+     "w": 0.05137,
+     "h": 0.00954
+    },
+    {
+     "x": 0.4324,
+     "y": 0.2888,
+     "w": 0.00196,
+     "h": 0.00315
+    },
+    {
+     "x": 0.43678,
+     "y": 0.28071,
+     "w": 0.01889,
+     "h": 0.00954
+    },
+    {
+     "x": 0.45809,
+     "y": 0.2888,
+     "w": 0.00196,
+     "h": 0.00315
+    },
+    {
+     "x": 0.46247,
+     "y": 0.2806,
+     "w": 0.04076,
+     "h": 0.00966
+    }
+   ],
+   "text_source": "text_layer"
+  },
+  "/api/v1/cases/demo/documents/doc-1/pages/2/highlight?start=121&end=135": {
+   "rects": [
+    {
+     "x": 0.81353,
+     "y": 0.07871,
+     "w": 0.12558,
+     "h": 0.00955
+    }
+   ],
+   "text_source": "text_layer"
+  },
+  "/api/v1/cases/demo/documents/doc-1/pages/2/highlight?start=317&end=406": {
+   "rects": [
+    {
+     "x": 0.0531,
+     "y": 0.15939,
+     "w": 0.71871,
+     "h": 0.01224
+    }
+   ],
+   "text_source": "text_layer"
+  },
+  "/api/v1/cases/demo/documents/doc-3/pages/1/highlight?start=0&end=47": {
+   "rects": [
+    {
+     "x": 0.05238,
+     "y": 0.03817,
+     "w": 0.48292,
+     "h": 0.01226
+    }
+   ],
+   "text_source": "text_layer"
+  },
+  "/api/v1/cases/demo/documents/doc-3/pages/1/highlight?start=99&end=124": {
+   "rects": [
+    {
+     "x": 0.34695,
+     "y": 0.09878,
+     "w": 0.22435,
+     "h": 0.01224
+    }
+   ],
+   "text_source": "text_layer"
+  },
+  "/api/v1/cases/demo/documents/doc-3/pages/1/highlight?start=117&end=124": {
+   "rects": [
+    {
+     "x": 0.50263,
+     "y": 0.09878,
+     "w": 0.06867,
+     "h": 0.00966
+    }
+   ],
+   "text_source": "text_layer"
+  },
+  "/api/v1/cases/demo/documents/doc-3/pages/1/highlight?start=211&end=227": {
+   "rects": [
+    {
+     "x": 0.78397,
+     "y": 0.13931,
+     "w": 0.15777,
+     "h": 0.00955
+    }
+   ],
+   "text_source": "text_layer"
+  },
+  "/api/v1/cases/demo/documents/doc-3/pages/1/highlight?start=288&end=302": {
+   "rects": [
+    {
+     "x": 0.52941,
+     "y": 0.15951,
+     "w": 0.03829,
+     "h": 0.00954
+    },
+    {
+     "x": 0.57261,
+     "y": 0.1676,
+     "w": 0.00196,
+     "h": 0.00315
+    },
+    {
+     "x": 0.57645,
+     "y": 0.15955,
+     "w": 0.01942,
+     "h": 0.00936
+    },
+    {
+     "x": 0.59829,
+     "y": 0.1676,
+     "w": 0.00196,
+     "h": 0.00315
+    },
+    {
+     "x": 0.60267,
+     "y": 0.15939,
+     "w": 0.04076,
+     "h": 0.00966
+    }
+   ],
+   "text_source": "text_layer"
+  },
+  "/api/v1/cases/demo/hearing": {
+   "id": 12,
+   "status": "completed",
+   "error": null,
+   "cutoff": "2026-11-15",
+   "models": "gemini:gemini-3.5-flash-lite",
+   "started_at": "2026-11-15T17:39:25.953951Z",
+   "finished_at": "2026-11-15T17:39:25.949753Z",
+   "result": {
+    "award": {
+     "as_of": "2026-11-15",
+     "rate_pct": "10.900",
+     "available": true,
+     "principal": "3240000.00",
+     "rate_basis": "median of 3 rate(s) applied in similar orders decided before 2026-11-15",
+     "refund_total": "6221487.44",
+     "delay_interest": "1900291.07",
+     "possession_due": "2021-06-30"
+    },
+    "judge": {
+     "outcome": "partly_allowed",
+     "citations": [
+      {
+       "quote": "It is the failure of the promoter to fulfil its obligations and responsibilities as per the buyer’s agreement to hand over the possession within the stipulated period.",
+       "status": "verified",
+       "page_no": 16,
+       "reasons": [],
+       "char_end": 1708,
+       "order_id": 4043,
+       "precedent": "P8",
+       "char_start": 1541,
+       "decided_on": "2025-05-01",
+       "complaint_no": "RERA-GRG-595-2024",
+       "stored_quote": ".Itis the failure of the promoter to fulfil its obligations and responsibilities as per\nthe buyer’s agreement to hand over the possession within the stipulated period."
+      },
+      {
+       "quote": "The respondent shall not charge anything from the complainants which is not the part of the agreement.",
+       "status": "verified",
+       "page_no": 16,
+       "reasons": [],
+       "char_end": 1586,
+       "order_id": 8826,
+       "precedent": "P5",
+       "char_start": 1484,
+       "decided_on": "2023-03-22",
+       "complaint_no": "RERA-GRG-2397-2018",
+       "stored_quote": "The respondent shall not charge anything from the complainants\nwhich is not the part of the agreement."
+      }
+     ],
+     "reasoning": "The buyer has claimed delay possession charges since the promoter failed to hand over possession within the stipulated period under the agreement and is continuing with the project. As established in the precedents, where an allottee does not intend to withdraw from the project, they are entitled to interest for every month of delay under Section 18 of the Act read with Rule 15 of the Rules. The builder is also entitled to a force majeure extension of 6 months due to the outbreak of Covid-19 under the applicable notification for projects. Furthermore, the promoter is prohibited from charging anything from the complainants that is not a part of the agreement. Therefore, the complaint is partly allowed regarding the claim for delay possession charges and the restriction on extra charges, subject to any necessary adjustments.",
+     "weak_points": [
+      {
+       "fix": "The buyer should recalculate the due date of possession by adding the 6-month extension as supported by the precedents.",
+       "title": "Failure to account for force majeure extension",
+       "detail": "The buyer calculates delay from the original promised date without incorporating the 6-month Covid-19 force majeure extension granted to the project."
+      },
+      {
+       "fix": "The buyer can align their claims explicitly with Rule 15 and settled relief structures as seen in prior orders.",
+       "title": "Incomplete quantification of relief parameters",
+       "detail": "The buyer relies broadly on statutory provisions without specifying the exact rate or precise timelines applicable under the rules."
+      }
+     ],
+     "citations_removed": []
+    },
+    "summary": "Claim: delayed possession. Hearing as of 2026-11-15.\n- Builder: ARVANT INFRA PRIVATE LIMITED\n- Project: Skyline Residency Tower C\n- Unit: C-1204\n- Agreement date: 2018-05-02\n- Total price (Rs): 7200000.00\n- Possession promised by: 2021-06-30\n- Agreement's delay clause: compensation at Rs. 5/- per square foot of carpet area per month for the period of delay\n- Builder's revised completion date: 2025-12-31\n- Extra charge demanded (Rs): 144000.00\n- Payments by the buyer: 3, total Rs 3240000.00\n    2018-03-12: Rs 720000.00\n    2018-05-10: Rs 1440000.00\n    2018-09-15: Rs 1080000.00",
+    "arguments": {
+     "buyer": [
+      {
+       "body": "The promoter has failed to fulfill its obligations and responsibilities to hand over possession within the stipulated period under the buyer's agreement. Since the allottee is continuing with the project and does not intend to withdraw, the promoter is liable to pay interest for every month of delay till the handing over of possession. This is mandated under Section 18 of the Act read with Rule 15 of the rules.",
+       "side": "buyer",
+       "heading": "Entitlement to delay possession charges for delayed completion",
+       "citations": [
+        {
+         "quote": "It is the failure of the promoter to fulfil its obligations and responsibilities as per the buyer’s agreement to hand over the possession within the stipulated period.",
+         "status": "verified",
+         "page_no": 16,
+         "reasons": [],
+         "char_end": 1708,
+         "order_id": 4043,
+         "precedent": "P8",
+         "char_start": 1541,
+         "decided_on": "2025-05-01",
+         "complaint_no": "RERA-GRG-595-2024",
+         "stored_quote": ".Itis the failure of the promoter to fulfil its obligations and responsibilities as per\nthe buyer’s agreement to hand over the possession within the stipulated period."
+        }
+       ]
+      },
+      {
+       "body": "The promoter is not permitted to charge anything from the complainants that is not a part of the agreement. Therefore, any extra charges demanded outside the terms of the contract must not be levied. The respondent must adhere strictly to the agreed terms.",
+       "side": "buyer",
+       "heading": "Prohibition on charging amounts outside the agreement",
+       "citations": [
+        {
+         "quote": "The respondent shall not charge anything from the complainants which is not the part of the agreement.",
+         "status": "verified",
+         "page_no": 16,
+         "reasons": [],
+         "char_end": 1586,
+         "order_id": 8826,
+         "precedent": "P5",
+         "char_start": 1484,
+         "decided_on": "2023-03-22",
+         "complaint_no": "RERA-GRG-2397-2018",
+         "stored_quote": "The respondent shall not charge anything from the complainants\nwhich is not the part of the agreement."
+        }
+       ]
+      }
+     ],
+     "builder": [
+      {
+       "body": "The respondent builder is entitled to an extension of time on account of force majeure conditions due to the outbreak of Covid-19. As per the official notification, projects having a completion date on or after 25.03.2020 are granted an extension of 6 months. Therefore, this period must be added to the due date of handing over possession.",
+       "side": "builder",
+       "heading": "Entitlement to Covid-19 Force Majeure Extension",
+       "citations": [
+        {
+         "quote": "an extension of 6 months is granted for the projects having a completion date on or after 25.03.2020.",
+         "status": "verified",
+         "page_no": 26,
+         "reasons": [],
+         "char_end": 147,
+         "order_id": 2944,
+         "precedent": "P1",
+         "char_start": 46,
+         "decided_on": "2025-08-05",
+         "complaint_no": "RERA-GRG-4763-2024",
+         "stored_quote": "an extension of 6 months is granted for the projects having a\ncompletion date on or after 25.03.2020."
+        }
+       ]
+      },
+      {
+       "body": "The agreement for sale specifies that the promoter assures to hand over possession unless there is delay or failure due to force majeure, war, flood, drought, fire, cyclone, earthquake, epidemic, pandemic or reasons beyond the control of the promoter. When completion is delayed due to these conditions, the promoter is entitled to an extension of time for delivery of possession of the apartment.",
+       "side": "builder",
+       "heading": "Force Majeure Events and Circumstances Beyond Control",
+       "citations": [
+        {
+         "quote": "unless there is delay or failure due to “Force Majeure”, war, flood, drought, fire, cyclone, earthquake, epidemic, pandemic or any other calamity caused by nature, reasons beyond the control of the Promoter",
+         "status": "verified",
+         "page_no": 11,
+         "reasons": [],
+         "char_end": 1311,
+         "order_id": 1202,
+         "precedent": "P11",
+         "char_start": 1105,
+         "decided_on": "2026-01-13",
+         "complaint_no": "RERA-GRG-5041-2025",
+         "stored_quote": "unless there is delay or failure due to “Force Majeure”,\nwar, flood, drought, fire, cyclone, earthquake, epidemic,\npandemic or any other calamity caused by nature, reasons\nbeyond the control of the Promoter"
+        }
+       ]
+      },
+      {
+       "body": "The complainant allottee is required to pay outstanding dues, if any, after the adjustment of interest for the delayed period. Furthermore, the respondent shall not charge anything from the complainants which is not part of the agreement.",
+       "side": "builder",
+       "heading": "Adjustment of Outstanding Dues and Interest for Delayed Period",
+       "citations": [
+        {
+         "quote": "The complainants are directed to pay outstanding dues, if any, after ad)ustment ofinterest for the delayed period.",
+         "status": "verified",
+         "page_no": 16,
+         "reasons": [],
+         "char_end": 1136,
+         "order_id": 8826,
+         "precedent": "P5",
+         "char_start": 1023,
+         "decided_on": "2023-03-22",
+         "complaint_no": "RERA-GRG-2397-2018",
+         "stored_quote": "The complainants are directed to pay outstanding dues' if any' after\nad)ustment ofinterest for the delayed period"
+        }
+       ]
+      }
+     ],
+     "removed": []
+    },
+    "precedents": [
+     {
+      "ref": "P1",
+      "pages": [
+       26
+      ],
+      "outcome": null,
+      "order_id": 2944,
+      "decided_on": "2025-08-05",
+      "complaint_no": "RERA-GRG-4763-2024",
+      "interest_rate_pct": null
+     },
+     {
+      "ref": "P2",
+      "pages": [
+       22
+      ],
+      "outcome": "partly_allowed",
+      "order_id": 2854,
+      "decided_on": "2025-08-08",
+      "complaint_no": "RERA-GRG-6245-2024",
+      "interest_rate_pct": "10.900"
+     },
+     {
+      "ref": "P3",
+      "pages": [
+       22
+      ],
+      "outcome": null,
+      "order_id": 2833,
+      "decided_on": "2025-08-08",
+      "complaint_no": "RERA-GRG-6431-2024",
+      "interest_rate_pct": null
+     },
+     {
+      "ref": "P4",
+      "pages": [
+       12
+      ],
+      "outcome": null,
+      "order_id": 2249,
+      "decided_on": "2025-10-10",
+      "complaint_no": "RERA-GRG-94-2025",
+      "interest_rate_pct": null
+     },
+     {
+      "ref": "P5",
+      "pages": [
+       16
+      ],
+      "outcome": null,
+      "order_id": 8826,
+      "decided_on": "2023-03-22",
+      "complaint_no": "RERA-GRG-2397-2018",
+      "interest_rate_pct": null
+     },
+     {
+      "ref": "P6",
+      "pages": [
+       26
+      ],
+      "outcome": null,
+      "order_id": 3449,
+      "decided_on": "2025-07-01",
+      "complaint_no": "RERA-GRG-1046-2025",
+      "interest_rate_pct": null
+     },
+     {
+      "ref": "P7",
+      "pages": [
+       12
+      ],
+      "outcome": null,
+      "order_id": 6875,
+      "decided_on": "2024-03-15",
+      "complaint_no": "RERA-GRG-1556-2023",
+      "interest_rate_pct": null
+     },
+     {
+      "ref": "P8",
+      "pages": [
+       16
+      ],
+      "outcome": "partly_allowed",
+      "order_id": 4043,
+      "decided_on": "2025-05-01",
+      "complaint_no": "RERA-GRG-595-2024",
+      "interest_rate_pct": "11.100"
+     },
+     {
+      "ref": "P9",
+      "pages": [
+       12
+      ],
+      "outcome": null,
+      "order_id": 92,
+      "decided_on": "2026-09-29",
+      "complaint_no": "RERA-GRG-5139-2025",
+      "interest_rate_pct": null
+     },
+     {
+      "ref": "P10",
+      "pages": [
+       11
+      ],
+      "outcome": "partly_allowed",
+      "order_id": 11825,
+      "decided_on": "2021-02-09",
+      "complaint_no": "RERA-GRG-3803-2020",
+      "interest_rate_pct": "9.300"
+     },
+     {
+      "ref": "P11",
+      "pages": [
+       11
+      ],
+      "outcome": null,
+      "order_id": 1202,
+      "decided_on": "2026-01-13",
+      "complaint_no": "RERA-GRG-5041-2025",
+      "interest_rate_pct": null
+     },
+     {
+      "ref": "P12",
+      "pages": [
+       21
+      ],
+      "outcome": null,
+      "order_id": 3042,
+      "decided_on": "2025-07-29",
+      "complaint_no": "RERA-GRG-3227-2024",
+      "interest_rate_pct": null
+     }
+    ],
+    "outcome_shares": {
+     "note": "Only 3 of 12 similar orders have a verified outcome; at least 5 needed.",
+     "counts": {
+      "partly_allowed": 3
+     },
+     "precedents": 12,
+     "with_record": 3,
+     "insufficient": true
+    }
+   }
+  },
+  "/api/v1/cases/demo/hearing/active": null,
+  "/api/v1/cases/demo/estimate": {
+   "available": true,
+   "predicted": "partly_allowed",
+   "basis": "past orders with the same claim type and a delay of over 4 years",
+   "counts": {
+    "partly_allowed": 48,
+    "allowed": 10,
+    "dismissed": 5
+   },
+   "orders_used": 63,
+   "delay_months": 65,
+   "delay_band": "over 4 years",
+   "as_of": "2026-11-15",
+   "method": "claim type x delay rule",
+   "measured": {
+    "accuracy_pct": 72.9,
+    "test_cases": 59,
+    "note": "Measured on held-out orders decided from 2025; labels are machine-extracted and unchecked."
+   }
+  },
+  "/api/v1/cases/demo/draft": {
+   "case_id": "demo",
+   "claim_type": "delayed_possession",
+   "header": [
+    "BEFORE THE HARYANA REAL ESTATE REGULATORY AUTHORITY, GURUGRAM",
+    "Complaint under Section 31 of the Real Estate (Regulation and Development) Act, 2016",
+    "[Complainant's full name] ... Complainant  versus  ARVANT INFRA PRIVATE LIMITED ... Respondent"
+   ],
+   "sections": [
+    {
+     "heading": "1. Particulars of the project and the unit",
+     "paragraphs": [
+      "1.1 The Respondent, ARVANT INFRA PRIVATE LIMITED, is the promoter of the project Skyline Residency Tower C, registered under number UPRERAPRJ-DEMO-0417 (Annexure P-1: agreement.pdf, page 1).",
+      "1.2 The unit allotted to the Complainant is C-1204 (Annexure P-2: receipts.pdf, page 1)."
+     ]
+    },
+    {
+     "heading": "2. Facts of the case",
+     "paragraphs": [
+      "2.1 The parties executed an agreement for sale on 2 May 2018 (Annexure P-1: agreement.pdf, page 1), for a total price of Rs. 72,00,000/- (Annexure P-1: agreement.pdf, page 1).",
+      "2.2 Under the agreement the Respondent was to hand over possession on or before 30 June 2021 (Annexure P-1: agreement.pdf, page 2).",
+      "2.3 The Complainant has paid the Respondent Rs. 32,40,000/- in 3 payment(s): Rs. 7,20,000/- on 12 March 2018 (Annexure P-2: receipts.pdf, page 1); Rs. 14,40,000/- on 10 May 2018 (Annexure P-2: receipts.pdf, page 2); Rs. 10,80,000/- on 15 September 2018 (Annexure P-4: receipt_scan.png, page 1).",
+      "2.4 The agreement provides for compensation for delay as follows: compensation at Rs. 5/- per square foot of carpet area per month for the period of delay (Annexure P-1: agreement.pdf, page 2).",
+      "2.5 The Respondent has since stated a revised completion date of 31 December 2025 (Annexure P-3: builder_letter.pdf, page 1) and demanded a further sum of Rs. 1,44,000/- (Annexure P-3: builder_letter.pdf, page 1).",
+      "2.6 [Offer of possession: not yet answered]"
+     ]
+    },
+    {
+     "heading": "3. Grounds",
+     "paragraphs": [
+      "3.1 Section 18(1) of the Real Estate (Regulation and Development) Act, 2016 provides that where the promoter fails to give possession in accordance with the agreement for sale, an allottee who wishes to withdraw from the project is entitled to return of the amount paid with interest, and an allottee who does not intend to withdraw shall be paid interest for every month of delay till the handing over of possession, at the prescribed rate.",
+      "3.2 In Complaint No. RERA-GRG-595-2024, decided on 1 May 2025, the Haryana Real Estate Regulatory Authority, Gurugram recorded (page 16 of the order): “.Itis the failure of the promoter to fulfil its obligations and responsibilities as per the buyer’s agreement to hand over the possession within the stipulated period.”",
+      "3.3 In Complaint No. RERA-GRG-2397-2018, decided on 22 March 2023, the Haryana Real Estate Regulatory Authority, Gurugram recorded (page 16 of the order): “The respondent shall not charge anything from the complainants which is not the part of the agreement.”"
+     ]
+    },
+    {
+     "heading": "4. Relief sought",
+     "paragraphs": [
+      "(a) Interest under the proviso to Section 18(1) on each payment, at the rate prescribed under Rule 15 of the Haryana Real Estate (Regulation and Development) Rules, 2017, from 30 June 2021 until possession is handed over; calculated at 10.900% a year this comes to Rs. 19,00,291/- as on 15 November 2026;",
+      "(b) a direction to the Respondent to hand over possession within a fixed time;",
+      "(c) a declaration that the further sum of Rs. 1,44,000/- demanded by the Respondent is not payable;",
+      "(d) any other relief the Authority considers fit."
+     ]
+    },
+    {
+     "heading": "5. Annexures",
+     "paragraphs": [
+      "P-1: Builder-buyer agreement (agreement.pdf)",
+      "P-2: Payment receipts (receipts.pdf)",
+      "P-3: Letter from the respondent (builder_letter.pdf)",
+      "P-4: Payment receipts (receipt_scan.png)",
+      "P-5: Interest calculation"
+     ]
+    },
+    {
+     "heading": "6. Verification",
+     "paragraphs": [
+      "I, [Complainant's full name], the Complainant, verify that the contents of this complaint are true to my knowledge and belief and that nothing material has been concealed. [Place, date and signature]"
+     ]
+    }
+   ],
+   "notes": [
+    {
+     "label": "Interest rate",
+     "text": "The figure uses 10.900% (median of 3 rate(s) applied in similar orders decided before 2026-11-15). The Authority applies the rate prescribed on the date of its order; check the current rate before filing."
+    },
+    {
+     "label": "Weak point: Failure to account for force majeure extension",
+     "text": "The buyer should recalculate the due date of possession by adding the 6-month extension as supported by the precedents."
+    },
+    {
+     "label": "Weak point: Incomplete quantification of relief parameters",
+     "text": "The buyer can align their claims explicitly with Rule 15 and settled relief structures as seen in prior orders."
+    }
+   ],
+   "missing": [
+    "Complainant's full name, address and contact details",
+    "Whether a written offer of possession was received (answer the question in step 3)"
+   ],
+   "based_on_hearing": 12,
+   "verified_citations": 2,
+   "disclaimer": "Assembled by code from your verified facts and checked citations. It is a draft to be reviewed by you or your advocate before filing, not legal advice. It follows the Haryana authority at Gurugram; check which authority has jurisdiction over your project.",
+   "text": "BEFORE THE HARYANA REAL ESTATE REGULATORY AUTHORITY, GURUGRAM\n\nComplaint under Section 31 of the Real Estate (Regulation and Development) Act, 2016\n\n[Complainant's full name] ... Complainant  versus  ARVANT INFRA PRIVATE LIMITED ... Respondent\n\n1. Particulars of the project and the unit\n1.1 The Respondent, ARVANT INFRA PRIVATE LIMITED, is the promoter of the project Skyline Residency Tower C, registered under number UPRERAPRJ-DEMO-0417 (Annexure P-1: agreement.pdf, page 1).\n1.2 The unit allotted to the Complainant is C-1204 (Annexure P-2: receipts.pdf, page 1).\n\n2. Facts of the case\n2.1 The parties executed an agreement for sale on 2 May 2018 (Annexure P-1: agreement.pdf, page 1), for a total price of Rs. 72,00,000/- (Annexure P-1: agreement.pdf, page 1).\n2.2 Under the agreement the Respondent was to hand over possession on or before 30 June 2021 (Annexure P-1: agreement.pdf, page 2).\n2.3 The Complainant has paid the Respondent Rs. 32,40,000/- in 3 payment(s): Rs. 7,20,000/- on 12 March 2018 (Annexure P-2: receipts.pdf, page 1); Rs. 14,40,000/- on 10 May 2018 (Annexure P-2: receipts.pdf, page 2); Rs. 10,80,000/- on 15 September 2018 (Annexure P-4: receipt_scan.png, page 1).\n2.4 The agreement provides for compensation for delay as follows: compensation at Rs. 5/- per square foot of carpet area per month for the period of delay (Annexure P-1: agreement.pdf, page 2).\n2.5 The Respondent has since stated a revised completion date of 31 December 2025 (Annexure P-3: builder_letter.pdf, page 1) and demanded a further sum of Rs. 1,44,000/- (Annexure P-3: builder_letter.pdf, page 1).\n2.6 [Offer of possession: not yet answered]\n\n3. Grounds\n3.1 Section 18(1) of the Real Estate (Regulation and Development) Act, 2016 provides that where the promoter fails to give possession in accordance with the agreement for sale, an allottee who wishes to withdraw from the project is entitled to return of the amount paid with interest, and an allottee who does not intend to withdraw shall be paid interest for every month of delay till the handing over of possession, at the prescribed rate.\n3.2 In Complaint No. RERA-GRG-595-2024, decided on 1 May 2025, the Haryana Real Estate Regulatory Authority, Gurugram recorded (page 16 of the order): “.Itis the failure of the promoter to fulfil its obligations and responsibilities as per the buyer’s agreement to hand over the possession within the stipulated period.”\n3.3 In Complaint No. RERA-GRG-2397-2018, decided on 22 March 2023, the Haryana Real Estate Regulatory Authority, Gurugram recorded (page 16 of the order): “The respondent shall not charge anything from the complainants which is not the part of the agreement.”\n\n4. Relief sought\n(a) Interest under the proviso to Section 18(1) on each payment, at the rate prescribed under Rule 15 of the Haryana Real Estate (Regulation and Development) Rules, 2017, from 30 June 2021 until possession is handed over; calculated at 10.900% a year this comes to Rs. 19,00,291/- as on 15 November 2026;\n(b) a direction to the Respondent to hand over possession within a fixed time;\n(c) a declaration that the further sum of Rs. 1,44,000/- demanded by the Respondent is not payable;\n(d) any other relief the Authority considers fit.\n\n5. Annexures\nP-1: Builder-buyer agreement (agreement.pdf)\nP-2: Payment receipts (receipts.pdf)\nP-3: Letter from the respondent (builder_letter.pdf)\nP-4: Payment receipts (receipt_scan.png)\nP-5: Interest calculation\n\n6. Verification\nI, [Complainant's full name], the Complainant, verify that the contents of this complaint are true to my knowledge and belief and that nothing material has been concealed. [Place, date and signature]"
+  },
+  "/api/v1/cases/demo/questions": [
+   {
+    "id": 6,
+    "question": "What extra charge did the builder demand, and what new completion date did it give?",
+    "created_at": "2026-11-15T17:40:47.576736+00:00",
+    "mode": "hybrid",
+    "model": "gemini:gemini-3.5-flash-lite",
+    "answer": "The builder demanded a cost escalation charge of Rs. 1,44,000/- and set a revised completion date of 31 December 2025.",
+    "reason": null,
+    "citations": [
+     {
+      "ref": "D1",
+      "match": "exact",
+      "quote": "revised completion date for Tower C is 31 December 2025.",
+      "status": "verified",
+      "page_no": 1,
+      "char_end": 228,
+      "filename": "builder_letter.pdf",
+      "char_start": 172,
+      "document_id": "doc-3"
+     },
+     {
+      "ref": "D1",
+      "match": "exact",
+      "quote": "cost escalation charge of Rs. 1,44,000/-",
+      "status": "verified",
+      "page_no": 1,
+      "char_end": 302,
+      "filename": "builder_letter.pdf",
+      "char_start": 262,
+      "document_id": "doc-3"
+     }
+    ],
+    "retrieved": [
+     {
+      "ref": "D1",
+      "score": 0.03279,
+      "page_no": 1,
+      "chunk_id": 5,
+      "filename": "builder_letter.pdf",
+      "document_id": "doc-3"
+     },
+     {
+      "ref": "D2",
+      "score": 0.03175,
+      "page_no": 2,
+      "chunk_id": 2,
+      "filename": "agreement.pdf",
+      "document_id": "doc-1"
+     },
+     {
+      "ref": "D3",
+      "score": 0.03151,
+      "page_no": 1,
+      "chunk_id": 6,
+      "filename": "receipt_scan.png",
+      "document_id": "doc-4"
+     },
+     {
+      "ref": "D4",
+      "score": 0.03126,
+      "page_no": 1,
+      "chunk_id": 3,
+      "filename": "receipts.pdf",
+      "document_id": "doc-2"
+     },
+     {
+      "ref": "D5",
+      "score": 0.03078,
+      "page_no": 2,
+      "chunk_id": 4,
+      "filename": "receipts.pdf",
+      "document_id": "doc-2"
+     },
+     {
+      "ref": "D6",
+      "score": 0.01587,
+      "page_no": 1,
+      "chunk_id": 1,
+      "filename": "agreement.pdf",
+      "document_id": "doc-1"
+     }
+    ],
+    "insufficient": false,
+    "rejected_citations": []
+   },
+   {
+    "id": 5,
+    "question": "What does the agreement say the builder pays if possession is delayed?",
+    "created_at": "2026-11-15T17:40:45.968961+00:00",
+    "mode": "hybrid",
+    "model": "gemini:gemini-3.5-flash-lite",
+    "answer": "If the promoter fails to hand over possession by the agreed date, the agreement states that they shall pay the allottee compensation of Rs. 5/- per square foot of carpet area per month for the duration of the delay.",
+    "reason": null,
+    "citations": [
+     {
+      "ref": "D1",
+      "match": "exact",
+      "quote": "the Promoter shall pay the Allottee\ncompensation at Rs. 5/- per square foot of carpet area per month for the period of delay",
+      "status": "verified",
+      "page_no": 2,
+      "char_end": 405,
+      "filename": "agreement.pdf",
+      "char_start": 281,
+      "document_id": "doc-1"
+     }
+    ],
+    "retrieved": [
+     {
+      "ref": "D1",
+      "score": 0.03279,
+      "page_no": 2,
+      "chunk_id": 2,
+      "filename": "agreement.pdf",
+      "document_id": "doc-1"
+     },
+     {
+      "ref": "D2",
+      "score": 0.03226,
+      "page_no": 1,
+      "chunk_id": 1,
+      "filename": "agreement.pdf",
+      "document_id": "doc-1"
+     },
+     {
+      "ref": "D3",
+      "score": 0.03102,
+      "page_no": 1,
+      "chunk_id": 5,
+      "filename": "builder_letter.pdf",
+      "document_id": "doc-3"
+     },
+     {
+      "ref": "D4",
+      "score": 0.01587,
+      "page_no": 2,
+      "chunk_id": 4,
+      "filename": "receipts.pdf",
+      "document_id": "doc-2"
+     },
+     {
+      "ref": "D5",
+      "score": 0.01562,
+      "page_no": 1,
+      "chunk_id": 6,
+      "filename": "receipt_scan.png",
+      "document_id": "doc-4"
+     },
+     {
+      "ref": "D6",
+      "score": 0.01538,
+      "page_no": 1,
+      "chunk_id": 3,
+      "filename": "receipts.pdf",
+      "document_id": "doc-2"
+     }
+    ],
+    "insufficient": false,
+    "rejected_citations": []
+   },
+   {
+    "id": 2,
+    "question": "What is the name of the architect's pet dog?",
+    "created_at": "2026-11-13T08:53:39.181896+00:00",
+    "mode": "hybrid",
+    "model": "gemini:gemini-3.5-flash-lite",
+    "answer": "The uploaded documents do not contain enough to answer this question.",
+    "reason": "the model found the passages insufficient",
+    "citations": [],
+    "retrieved": [
+     {
+      "ref": "D1",
+      "score": 0.01639,
+      "page_no": 1,
+      "chunk_id": 1,
+      "filename": "agreement.pdf",
+      "document_id": "doc-1"
+     },
+     {
+      "ref": "D2",
+      "score": 0.01613,
+      "page_no": 1,
+      "chunk_id": 5,
+      "filename": "builder_letter.pdf",
+      "document_id": "doc-3"
+     },
+     {
+      "ref": "D3",
+      "score": 0.01587,
+      "page_no": 2,
+      "chunk_id": 2,
+      "filename": "agreement.pdf",
+      "document_id": "doc-1"
+     },
+     {
+      "ref": "D4",
+      "score": 0.01562,
+      "page_no": 1,
+      "chunk_id": 6,
+      "filename": "receipt_scan.png",
+      "document_id": "doc-4"
+     },
+     {
+      "ref": "D5",
+      "score": 0.01538,
+      "page_no": 1,
+      "chunk_id": 3,
+      "filename": "receipts.pdf",
+      "document_id": "doc-2"
+     },
+     {
+      "ref": "D6",
+      "score": 0.01515,
+      "page_no": 2,
+      "chunk_id": 4,
+      "filename": "receipts.pdf",
+      "document_id": "doc-2"
+     }
+    ],
+    "insufficient": true,
+    "rejected_citations": []
+   },
+   {
+    "id": 1,
+    "question": "By what date did the builder promise possession?",
+    "created_at": "2026-11-13T08:53:37.477902+00:00",
+    "mode": "hybrid",
+    "model": "gemini:gemini-3.5-flash-lite",
+    "answer": "The builder promised to hand over possession of the apartment on or before 30th June 2021, subject to force majeure delays.",
+    "reason": null,
+    "citations": [
+     {
+      "ref": "D1",
+      "match": "exact",
+      "quote": "The Promoter shall hand over possession of the Apartment to the Allottee on or before 30th June 2021",
+      "status": "verified",
+      "page_no": 2,
+      "char_end": 135,
+      "filename": "agreement.pdf",
+      "char_start": 35,
+      "document_id": "doc-1"
+     }
+    ],
+    "retrieved": [
+     {
+      "ref": "D1",
+      "score": 0.03279,
+      "page_no": 2,
+      "chunk_id": 2,
+      "filename": "agreement.pdf",
+      "document_id": "doc-1"
+     },
+     {
+      "ref": "D2",
+      "score": 0.03226,
+      "page_no": 1,
+      "chunk_id": 5,
+      "filename": "builder_letter.pdf",
+      "document_id": "doc-3"
+     },
+     {
+      "ref": "D3",
+      "score": 0.03126,
+      "page_no": 1,
+      "chunk_id": 3,
+      "filename": "receipts.pdf",
+      "document_id": "doc-2"
+     },
+     {
+      "ref": "D4",
+      "score": 0.03101,
+      "page_no": 1,
+      "chunk_id": 6,
+      "filename": "receipt_scan.png",
+      "document_id": "doc-4"
+     },
+     {
+      "ref": "D5",
+      "score": 0.03078,
+      "page_no": 2,
+      "chunk_id": 4,
+      "filename": "receipts.pdf",
+      "document_id": "doc-2"
+     },
+     {
+      "ref": "D6",
+      "score": 0.01587,
+      "page_no": 1,
+      "chunk_id": 1,
+      "filename": "agreement.pdf",
+      "document_id": "doc-1"
+     }
+    ],
+    "insufficient": false,
+    "rejected_citations": []
+   }
+  ],
+  "/api/v1/cases/demo/agent/runs": [
+   {
+    "id": 10,
+    "objective": "When was possession promised, how late is it, and what interest could the buyer claim at 10.85%?",
+    "model": "gemini:gemini-3.5-flash-lite",
+    "status": "completed",
+    "error": null,
+    "steps": [
+     {
+      "n": 1,
+      "ms": 1281,
+      "ok": true,
+      "args": {
+       "query": "possession promised date"
+      },
+      "agent": "orchestrator",
+      "action": "search_documents",
+      "thought": "To find when possession was promised and how late it is, the best next step is to search the buyer's documents for possession date and terms.",
+      "observation": {
+       "mode": "hybrid",
+       "source": "the buyer's uploaded documents",
+       "passages": [
+        {
+         "ref": "D1",
+         "file": "agreement.pdf",
+         "page": 2,
+         "text": "7. POSSESSION OF THE APARTMENT\n7.1 The Promoter shall hand over possession of the Apartment to the Allottee on or before 30th June 2021,\nunless there is delay due to force majeure as defined in clause 9.\n7.2 If the Promoter fails to hand over possession by the date in clause 7.1, the Promoter shall pay the Allottee\ncompensation at Rs. 5/- per square foot of carpet area per month for the period of delay.\n7.3 The Allottee shall take possession within two months of the written offer of possession, failing which\nholding charges shall apply."
+        },
+        {
+         "ref": "D2",
+         "file": "receipts.pdf",
+         "page": 1,
+         "text": "ARVANT INFRA PRIVATE LIMITED (DEMO - FICTIONAL)\nRECEIPT No. AR/0912\nReceived with thanks from Ms. Ananya Mehra the sum of Rs. 7,20,000/- by RTGS dated 12.03.2018 towards\nbooking of Apartment C-1204."
+        },
+        {
+         "ref": "D3",
+         "file": "builder_letter.pdf",
+         "page": 1,
+         "text": "ARVANT INFRA PRIVATE LIMITED (DEMO - FICTIONAL)\nDate: 10.02.2024\nSub: Revised completion schedule, Skyline Residency Tower C\nOwing to circumstances beyond our control, the revised completion date for Tower C is 31 December 2025.\nAllottees are requested to pay a cost escalation charge of Rs. 1,44,000/- before the offer of possession."
+        },
+        {
+         "ref": "D4",
+         "file": "receipts.pdf",
+         "page": 2,
+         "text": "ARVANT INFRA PRIVATE LIMITED (DEMO - FICTIONAL)\nRECEIPT No. AR/1187\nReceived with thanks from Ms. Ananya Mehra the sum of Rs. 14,40,000/- by cheque dated 10.05.2018\ntowards allotment of Apartment C-1204."
+        },
+        {
+         "ref": "D5",
+         "file": "receipt_scan.png",
+         "page": 1,
+         "text": "ARVANT INFRA PRIVATE LIMITED (DEMO - FICTIONAL)\nRECEIPT No. AR/1433\n\nReceived with thanks from Ms. Ananya Mehra\n\nthe sum of Rs. 10,80,000/- by RTGS dated 15.09.2018\n\ntowards instalment of Apartment C-1204."
+        }
+       ]
+      }
+     },
+     {
+      "n": 2,
+      "ms": 1202,
+      "ok": true,
+      "args": {
+       "rate_pct": 10.85
+      },
+      "agent": "orchestrator",
+      "action": "calculate_interest",
+      "thought": "I need to calculate the interest using the specified rate of 10.85% based on the verified payments found in the documents.",
+      "observation": {
+       "as_of": "2026-11-15",
+       "method": "simple interest, computed by code (app/calculator/interest.py)",
+       "rate_pct": "10.85",
+       "amount_paid": "3240000.00",
+       "delay_interest": "1891574.14",
+       "possession_due": "2021-06-30",
+       "refund_interest": "2967810.91",
+       "refund_total_with_interest": "6207810.91"
+      }
+     }
+    ],
+    "result": {
+     "agent": "orchestrator",
+     "error": null,
+     "answer": "Possession was promised by the promoter on or before 30th June 2021. The delay interest calculated at a rate of 10.85% amounts to Rs. 1891574.14 computed as of 2026-11-15, with an amount paid of Rs. 3240000.00. The exact duration of the delay is uncertain from the calculation details alone, and this is not legal advice.",
+     "grounded": true,
+     "citations": [
+      {
+       "ref": "D1",
+       "match": "exact",
+       "quote": "7.1 The Promoter shall hand over possession of the Apartment to the Allottee on or before 30th June 2021,",
+       "source": "document",
+       "status": "verified",
+       "page_no": 2,
+       "char_end": 136,
+       "filename": "agreement.pdf",
+       "char_start": 31,
+       "document_id": "doc-1"
+      }
+     ],
+     "steps_used": 2,
+     "stop_reason": "agent chose to finish",
+     "total_steps": 2,
+     "insufficient": false,
+     "hearing_run_id": null,
+     "rejected_citations": []
+    },
+    "started_at": "2026-11-15T17:39:30.524230Z",
+    "finished_at": "2026-11-15T17:39:36.302444Z"
+   },
+   {
+    "id": 9,
+    "objective": "Run a simulated hearing and explain the judge's assessment and the weak points.",
+    "model": "gemini:gemini-3.5-flash-lite",
+    "status": "completed",
+    "error": null,
+    "steps": [
+     {
+      "n": 1,
+      "ms": 13718,
+      "ok": true,
+      "args": {},
+      "agent": "orchestrator",
+      "action": "run_hearing",
+      "thought": "To explain the judge's assessment and weak points, the first logical step is to run the simulated hearing.",
+      "observation": {
+       "weak_points": [
+        "Failure to account for force majeure extension",
+        "Incomplete quantification of relief parameters"
+       ],
+       "judge_outcome": "partly_allowed",
+       "hearing_run_id": 12,
+       "judge_reasoning": "The buyer has claimed delay possession charges since the promoter failed to hand over possession within the stipulated period under the agreement and is continuing with the project. As established in the precedents, where an allottee does not intend to withdraw from the project, they are entitled to interest for every month of delay under Section 18 of the Act read with Rule 15 of the Rules. The builder is also entitled to a force majeure extension of 6 months due to the outbreak of Covid-19 under the applicable notification for projects. Furthermore, the promoter is prohibited from charging anything from the complainants that is not a part of the agreement. Therefore, the complaint is partly allowed regarding the claim for delay possession charges and the restriction on extra charges, subject to any necessary adjustments.",
+       "verified_citations": [
+        {
+         "ref": "H1",
+         "page": 16,
+         "quote": ".Itis the failure of the promoter to fulfil its obligations and responsibilities as per\nthe buyer’s agreement to hand over the possession within the stipulated period.",
+         "complaint_no": "RERA-GRG-595-2024"
+        },
+        {
+         "ref": "H2",
+         "page": 16,
+         "quote": "The respondent shall not charge anything from the complainants\nwhich is not the part of the agreement.",
+         "complaint_no": "RERA-GRG-2397-2018"
+        },
+        {
+         "ref": "H3",
+         "page": 26,
+         "quote": "an extension of 6 months is granted for the projects having a\ncompletion date on or after 25.03.2020.",
+         "complaint_no": "RERA-GRG-4763-2024"
+        },
+        {
+         "ref": "H4",
+         "page": 11,
+         "quote": "unless there is delay or failure due to “Force Majeure”,\nwar, flood, drought, fire, cyclone, earthquake, epidemic,\npandemic or any other calamity caused by nature, reasons\nbeyond the control of the Promoter",
+         "complaint_no": "RERA-GRG-5041-2025"
+        },
+        {
+         "ref": "H5",
+         "page": 16,
+         "quote": "The complainants are directed to pay outstanding dues' if any' after\nad)ustment ofinterest for the delayed period",
+         "complaint_no": "RERA-GRG-2397-2018"
+        }
+       ],
+       "buyer_arguments_kept": 2,
+       "builder_arguments_kept": 3,
+       "precedent_outcome_shares": {
+        "note": "Only 3 of 12 similar orders have a verified outcome; at least 5 needed.",
+        "counts": {
+         "partly_allowed": 3
+        },
+        "precedents": 12,
+        "with_record": 3,
+        "insufficient": true
+       },
+       "verified_judge_citations": 2,
+       "arguments_removed_by_citation_check": 0
+      }
+     }
+    ],
+    "result": {
+     "agent": "orchestrator",
+     "error": null,
+     "judge": {
+      "outcome": "partly_allowed",
+      "citations": [
+       {
+        "quote": "It is the failure of the promoter to fulfil its obligations and responsibilities as per the buyer’s agreement to hand over the possession within the stipulated period.",
+        "status": "verified",
+        "page_no": 16,
+        "reasons": [],
+        "char_end": 1708,
+        "order_id": 4043,
+        "precedent": "P8",
+        "char_start": 1541,
+        "decided_on": "2025-05-01",
+        "complaint_no": "RERA-GRG-595-2024",
+        "stored_quote": ".Itis the failure of the promoter to fulfil its obligations and responsibilities as per\nthe buyer’s agreement to hand over the possession within the stipulated period."
+       },
+       {
+        "quote": "The respondent shall not charge anything from the complainants which is not the part of the agreement.",
+        "status": "verified",
+        "page_no": 16,
+        "reasons": [],
+        "char_end": 1586,
+        "order_id": 8826,
+        "precedent": "P5",
+        "char_start": 1484,
+        "decided_on": "2023-03-22",
+        "complaint_no": "RERA-GRG-2397-2018",
+        "stored_quote": "The respondent shall not charge anything from the complainants\nwhich is not the part of the agreement."
+       }
+      ],
+      "reasoning": "The buyer has claimed delay possession charges since the promoter failed to hand over possession within the stipulated period under the agreement and is continuing with the project. As established in the precedents, where an allottee does not intend to withdraw from the project, they are entitled to interest for every month of delay under Section 18 of the Act read with Rule 15 of the Rules. The builder is also entitled to a force majeure extension of 6 months due to the outbreak of Covid-19 under the applicable notification for projects. Furthermore, the promoter is prohibited from charging anything from the complainants that is not a part of the agreement. Therefore, the complaint is partly allowed regarding the claim for delay possession charges and the restriction on extra charges, subject to any necessary adjustments.",
+      "weak_points": [
+       {
+        "fix": "The buyer should recalculate the due date of possession by adding the 6-month extension as supported by the precedents.",
+        "title": "Failure to account for force majeure extension",
+        "detail": "The buyer calculates delay from the original promised date without incorporating the 6-month Covid-19 force majeure extension granted to the project."
+       },
+       {
+        "fix": "The buyer can align their claims explicitly with Rule 15 and settled relief structures as seen in prior orders.",
+        "title": "Incomplete quantification of relief parameters",
+        "detail": "The buyer relies broadly on statutory provisions without specifying the exact rate or precise timelines applicable under the rules."
+       }
+      ],
+      "citations_removed": []
+     },
+     "answer": "In the simulated hearing, the judge partly allowed the complaint because the promoter failed to hand over possession within the stipulated period while continuing with the project. The buyer is entitled to interest for every month of delay under Section 18 of the Act read with Rule 15, and the builder is granted a force majeure extension of 6 months due to Covid-19. Additionally, the promoter is prohibited from charging anything outside the agreement. The weak points identified in the assessment are the failure to account for the force majeure extension and the incomplete quantification of relief parameters. Not legal advice.",
+     "grounded": true,
+     "citations": [
+      {
+       "ref": "H1",
+       "quote": ".Itis the failure of the promoter to fulfil its obligations and responsibilities as per\nthe buyer’s agreement to hand over the possession within the stipulated period.",
+       "source": "order",
+       "status": "verified",
+       "page_no": 16,
+       "order_id": 4043,
+       "decided_on": "2025-05-01",
+       "complaint_no": "RERA-GRG-595-2024"
+      },
+      {
+       "ref": "H3",
+       "quote": "an extension of 6 months is granted for the projects having a\ncompletion date on or after 25.03.2020.",
+       "source": "order",
+       "status": "verified",
+       "page_no": 26,
+       "order_id": 2944,
+       "decided_on": "2025-08-05",
+       "complaint_no": "RERA-GRG-4763-2024"
+      },
+      {
+       "ref": "H2",
+       "quote": "The respondent shall not charge anything from the complainants\nwhich is not the part of the agreement.",
+       "source": "order",
+       "status": "verified",
+       "page_no": 16,
+       "order_id": 8826,
+       "decided_on": "2023-03-22",
+       "complaint_no": "RERA-GRG-2397-2018"
+      }
+     ],
+     "steps_used": 1,
+     "stop_reason": "agent chose to finish",
+     "total_steps": 1,
+     "insufficient": false,
+     "hearing_run_id": 12,
+     "rejected_citations": []
+    },
+    "started_at": "2026-11-15T17:39:12.138470Z",
+    "finished_at": "2026-11-15T17:39:29.090353Z"
+   }
+  ],
+  "/api/v1/cases/demo/agent/runs/10": {
+   "id": 10,
+   "objective": "When was possession promised, how late is it, and what interest could the buyer claim at 10.85%?",
+   "model": "gemini:gemini-3.5-flash-lite",
+   "status": "completed",
+   "error": null,
+   "steps": [
+    {
+     "n": 1,
+     "ms": 1281,
+     "ok": true,
+     "args": {
+      "query": "possession promised date"
+     },
+     "agent": "orchestrator",
+     "action": "search_documents",
+     "thought": "To find when possession was promised and how late it is, the best next step is to search the buyer's documents for possession date and terms.",
+     "observation": {
+      "mode": "hybrid",
+      "source": "the buyer's uploaded documents",
+      "passages": [
+       {
+        "ref": "D1",
+        "file": "agreement.pdf",
+        "page": 2,
+        "text": "7. POSSESSION OF THE APARTMENT\n7.1 The Promoter shall hand over possession of the Apartment to the Allottee on or before 30th June 2021,\nunless there is delay due to force majeure as defined in clause 9.\n7.2 If the Promoter fails to hand over possession by the date in clause 7.1, the Promoter shall pay the Allottee\ncompensation at Rs. 5/- per square foot of carpet area per month for the period of delay.\n7.3 The Allottee shall take possession within two months of the written offer of possession, failing which\nholding charges shall apply."
+       },
+       {
+        "ref": "D2",
+        "file": "receipts.pdf",
+        "page": 1,
+        "text": "ARVANT INFRA PRIVATE LIMITED (DEMO - FICTIONAL)\nRECEIPT No. AR/0912\nReceived with thanks from Ms. Ananya Mehra the sum of Rs. 7,20,000/- by RTGS dated 12.03.2018 towards\nbooking of Apartment C-1204."
+       },
+       {
+        "ref": "D3",
+        "file": "builder_letter.pdf",
+        "page": 1,
+        "text": "ARVANT INFRA PRIVATE LIMITED (DEMO - FICTIONAL)\nDate: 10.02.2024\nSub: Revised completion schedule, Skyline Residency Tower C\nOwing to circumstances beyond our control, the revised completion date for Tower C is 31 December 2025.\nAllottees are requested to pay a cost escalation charge of Rs. 1,44,000/- before the offer of possession."
+       },
+       {
+        "ref": "D4",
+        "file": "receipts.pdf",
+        "page": 2,
+        "text": "ARVANT INFRA PRIVATE LIMITED (DEMO - FICTIONAL)\nRECEIPT No. AR/1187\nReceived with thanks from Ms. Ananya Mehra the sum of Rs. 14,40,000/- by cheque dated 10.05.2018\ntowards allotment of Apartment C-1204."
+       },
+       {
+        "ref": "D5",
+        "file": "receipt_scan.png",
+        "page": 1,
+        "text": "ARVANT INFRA PRIVATE LIMITED (DEMO - FICTIONAL)\nRECEIPT No. AR/1433\n\nReceived with thanks from Ms. Ananya Mehra\n\nthe sum of Rs. 10,80,000/- by RTGS dated 15.09.2018\n\ntowards instalment of Apartment C-1204."
+       }
+      ]
+     }
+    },
+    {
+     "n": 2,
+     "ms": 1202,
+     "ok": true,
+     "args": {
+      "rate_pct": 10.85
+     },
+     "agent": "orchestrator",
+     "action": "calculate_interest",
+     "thought": "I need to calculate the interest using the specified rate of 10.85% based on the verified payments found in the documents.",
+     "observation": {
+      "as_of": "2026-11-15",
+      "method": "simple interest, computed by code (app/calculator/interest.py)",
+      "rate_pct": "10.85",
+      "amount_paid": "3240000.00",
+      "delay_interest": "1891574.14",
+      "possession_due": "2021-06-30",
+      "refund_interest": "2967810.91",
+      "refund_total_with_interest": "6207810.91"
+     }
+    }
+   ],
+   "result": {
+    "agent": "orchestrator",
+    "error": null,
+    "answer": "Possession was promised by the promoter on or before 30th June 2021. The delay interest calculated at a rate of 10.85% amounts to Rs. 1891574.14 computed as of 2026-11-15, with an amount paid of Rs. 3240000.00. The exact duration of the delay is uncertain from the calculation details alone, and this is not legal advice.",
+    "grounded": true,
+    "citations": [
+     {
+      "ref": "D1",
+      "match": "exact",
+      "quote": "7.1 The Promoter shall hand over possession of the Apartment to the Allottee on or before 30th June 2021,",
+      "source": "document",
+      "status": "verified",
+      "page_no": 2,
+      "char_end": 136,
+      "filename": "agreement.pdf",
+      "char_start": 31,
+      "document_id": "doc-1"
+     }
+    ],
+    "steps_used": 2,
+    "stop_reason": "agent chose to finish",
+    "total_steps": 2,
+    "insufficient": false,
+    "hearing_run_id": null,
+    "rejected_citations": []
+   },
+   "started_at": "2026-11-15T17:39:30.524230Z",
+   "finished_at": "2026-11-15T17:39:36.302444Z"
+  },
+  "/api/v1/cases/demo/agent/runs/9": {
+   "id": 9,
+   "objective": "Run a simulated hearing and explain the judge's assessment and the weak points.",
+   "model": "gemini:gemini-3.5-flash-lite",
+   "status": "completed",
+   "error": null,
+   "steps": [
+    {
+     "n": 1,
+     "ms": 13718,
+     "ok": true,
+     "args": {},
+     "agent": "orchestrator",
+     "action": "run_hearing",
+     "thought": "To explain the judge's assessment and weak points, the first logical step is to run the simulated hearing.",
+     "observation": {
+      "weak_points": [
+       "Failure to account for force majeure extension",
+       "Incomplete quantification of relief parameters"
+      ],
+      "judge_outcome": "partly_allowed",
+      "hearing_run_id": 12,
+      "judge_reasoning": "The buyer has claimed delay possession charges since the promoter failed to hand over possession within the stipulated period under the agreement and is continuing with the project. As established in the precedents, where an allottee does not intend to withdraw from the project, they are entitled to interest for every month of delay under Section 18 of the Act read with Rule 15 of the Rules. The builder is also entitled to a force majeure extension of 6 months due to the outbreak of Covid-19 under the applicable notification for projects. Furthermore, the promoter is prohibited from charging anything from the complainants that is not a part of the agreement. Therefore, the complaint is partly allowed regarding the claim for delay possession charges and the restriction on extra charges, subject to any necessary adjustments.",
+      "verified_citations": [
+       {
+        "ref": "H1",
+        "page": 16,
+        "quote": ".Itis the failure of the promoter to fulfil its obligations and responsibilities as per\nthe buyer’s agreement to hand over the possession within the stipulated period.",
+        "complaint_no": "RERA-GRG-595-2024"
+       },
+       {
+        "ref": "H2",
+        "page": 16,
+        "quote": "The respondent shall not charge anything from the complainants\nwhich is not the part of the agreement.",
+        "complaint_no": "RERA-GRG-2397-2018"
+       },
+       {
+        "ref": "H3",
+        "page": 26,
+        "quote": "an extension of 6 months is granted for the projects having a\ncompletion date on or after 25.03.2020.",
+        "complaint_no": "RERA-GRG-4763-2024"
+       },
+       {
+        "ref": "H4",
+        "page": 11,
+        "quote": "unless there is delay or failure due to “Force Majeure”,\nwar, flood, drought, fire, cyclone, earthquake, epidemic,\npandemic or any other calamity caused by nature, reasons\nbeyond the control of the Promoter",
+        "complaint_no": "RERA-GRG-5041-2025"
+       },
+       {
+        "ref": "H5",
+        "page": 16,
+        "quote": "The complainants are directed to pay outstanding dues' if any' after\nad)ustment ofinterest for the delayed period",
+        "complaint_no": "RERA-GRG-2397-2018"
+       }
+      ],
+      "buyer_arguments_kept": 2,
+      "builder_arguments_kept": 3,
+      "precedent_outcome_shares": {
+       "note": "Only 3 of 12 similar orders have a verified outcome; at least 5 needed.",
+       "counts": {
+        "partly_allowed": 3
+       },
+       "precedents": 12,
+       "with_record": 3,
+       "insufficient": true
+      },
+      "verified_judge_citations": 2,
+      "arguments_removed_by_citation_check": 0
+     }
+    }
+   ],
+   "result": {
+    "agent": "orchestrator",
+    "error": null,
+    "judge": {
+     "outcome": "partly_allowed",
+     "citations": [
+      {
+       "quote": "It is the failure of the promoter to fulfil its obligations and responsibilities as per the buyer’s agreement to hand over the possession within the stipulated period.",
+       "status": "verified",
+       "page_no": 16,
+       "reasons": [],
+       "char_end": 1708,
+       "order_id": 4043,
+       "precedent": "P8",
+       "char_start": 1541,
+       "decided_on": "2025-05-01",
+       "complaint_no": "RERA-GRG-595-2024",
+       "stored_quote": ".Itis the failure of the promoter to fulfil its obligations and responsibilities as per\nthe buyer’s agreement to hand over the possession within the stipulated period."
+      },
+      {
+       "quote": "The respondent shall not charge anything from the complainants which is not the part of the agreement.",
+       "status": "verified",
+       "page_no": 16,
+       "reasons": [],
+       "char_end": 1586,
+       "order_id": 8826,
+       "precedent": "P5",
+       "char_start": 1484,
+       "decided_on": "2023-03-22",
+       "complaint_no": "RERA-GRG-2397-2018",
+       "stored_quote": "The respondent shall not charge anything from the complainants\nwhich is not the part of the agreement."
+      }
+     ],
+     "reasoning": "The buyer has claimed delay possession charges since the promoter failed to hand over possession within the stipulated period under the agreement and is continuing with the project. As established in the precedents, where an allottee does not intend to withdraw from the project, they are entitled to interest for every month of delay under Section 18 of the Act read with Rule 15 of the Rules. The builder is also entitled to a force majeure extension of 6 months due to the outbreak of Covid-19 under the applicable notification for projects. Furthermore, the promoter is prohibited from charging anything from the complainants that is not a part of the agreement. Therefore, the complaint is partly allowed regarding the claim for delay possession charges and the restriction on extra charges, subject to any necessary adjustments.",
+     "weak_points": [
+      {
+       "fix": "The buyer should recalculate the due date of possession by adding the 6-month extension as supported by the precedents.",
+       "title": "Failure to account for force majeure extension",
+       "detail": "The buyer calculates delay from the original promised date without incorporating the 6-month Covid-19 force majeure extension granted to the project."
+      },
+      {
+       "fix": "The buyer can align their claims explicitly with Rule 15 and settled relief structures as seen in prior orders.",
+       "title": "Incomplete quantification of relief parameters",
+       "detail": "The buyer relies broadly on statutory provisions without specifying the exact rate or precise timelines applicable under the rules."
+      }
+     ],
+     "citations_removed": []
+    },
+    "answer": "In the simulated hearing, the judge partly allowed the complaint because the promoter failed to hand over possession within the stipulated period while continuing with the project. The buyer is entitled to interest for every month of delay under Section 18 of the Act read with Rule 15, and the builder is granted a force majeure extension of 6 months due to Covid-19. Additionally, the promoter is prohibited from charging anything outside the agreement. The weak points identified in the assessment are the failure to account for the force majeure extension and the incomplete quantification of relief parameters. Not legal advice.",
+    "grounded": true,
+    "citations": [
+     {
+      "ref": "H1",
+      "quote": ".Itis the failure of the promoter to fulfil its obligations and responsibilities as per\nthe buyer’s agreement to hand over the possession within the stipulated period.",
+      "source": "order",
+      "status": "verified",
+      "page_no": 16,
+      "order_id": 4043,
+      "decided_on": "2025-05-01",
+      "complaint_no": "RERA-GRG-595-2024"
+     },
+     {
+      "ref": "H3",
+      "quote": "an extension of 6 months is granted for the projects having a\ncompletion date on or after 25.03.2020.",
+      "source": "order",
+      "status": "verified",
+      "page_no": 26,
+      "order_id": 2944,
+      "decided_on": "2025-08-05",
+      "complaint_no": "RERA-GRG-4763-2024"
+     },
+     {
+      "ref": "H2",
+      "quote": "The respondent shall not charge anything from the complainants\nwhich is not the part of the agreement.",
+      "source": "order",
+      "status": "verified",
+      "page_no": 16,
+      "order_id": 8826,
+      "decided_on": "2023-03-22",
+      "complaint_no": "RERA-GRG-2397-2018"
+     }
+    ],
+    "steps_used": 1,
+    "stop_reason": "agent chose to finish",
+    "total_steps": 1,
+    "insufficient": false,
+    "hearing_run_id": 12,
+    "rejected_citations": []
+   },
+   "started_at": "2026-11-15T17:39:12.138470Z",
+   "finished_at": "2026-11-15T17:39:29.090353Z"
+  }
+ }
+}

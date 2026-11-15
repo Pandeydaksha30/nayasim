@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Banner, ChevronIcon, FileIcon, UploadIcon } from "@/components/icons";
 import { authConfig } from "@/lib/auth-api";
-import { createCase, DOC_KINDS, type DocKind, extractFacts, uploadDocument } from "@/lib/cases-api";
+import { createCase, DOC_KINDS, type DocKind, extractFacts, guessKind, uploadDocument } from "@/lib/cases-api";
 import styles from "./new.module.css";
 
 interface Picked {
@@ -16,15 +16,6 @@ interface Picked {
   message?: string;
 }
 
-function guessKind(name: string): DocKind {
-  const n = name.toLowerCase();
-  if (n.includes("agreement") || n.includes("bba")) return "agreement";
-  if (n.includes("allot")) return "allotment_letter";
-  if (n.includes("receipt") || n.includes("rcpt")) return "receipt";
-  if (n.includes("order")) return "hearing_order";
-  if (n.includes("letter")) return "builder_letter";
-  return "other";
-}
 
 export default function NewCasePage() {
   const router = useRouter();

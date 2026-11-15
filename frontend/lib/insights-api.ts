@@ -2,34 +2,8 @@
  * Client for app/api/insights.py: order search, outcome estimate, complaint draft, classifier demo.
  * All of these are computed on the server from stored data; none calls an external model.
  */
-import { ApiError, BASE } from "./api";
-import type { Auth } from "./cases-api";
+import { type Auth, call } from "./http";
 
-async function call<T>(path: string, init?: RequestInit, auth?: Auth): Promise<T> {
-  let res: Response;
-  try {
-    res = await fetch(`${BASE}${path}`, {
-      cache: "no-store",
-      credentials: "same-origin",
-      ...init,
-      headers: { ...(init?.headers as Record<string, string> | undefined), ...auth?.headers },
-    });
-  } catch {
-    throw new ApiError("The NyayaSim service is not reachable. Start the backend and try again.");
-  }
-  if (!res.ok) {
-    let detail = `Request failed (HTTP ${res.status}).`;
-    try {
-      const body = await res.json();
-      if (typeof body.detail === "string") detail = body.detail;
-      else if (Array.isArray(body.detail)) detail = body.detail.map((d: { msg: string }) => d.msg).join("; ");
-    } catch {
-      /* keep the generic message */
-    }
-    throw new ApiError(detail, res.status);
-  }
-  return res.json() as Promise<T>;
-}
 
 export interface Measured {
   accuracy_pct: number;
@@ -103,3 +77,16 @@ export const classifyOrderText = (text: string) =>
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text }),
   });
+
+export interface PublicStats {
+  source: string;
+  orders_listed: number;
+  orders_read: number;
+  passages: number;
+  first_decided: string | null;
+  last_decided: string | null;
+  outcome_records: number;
+  outcome_records_reviewed: number;
+}
+/** Counts of the public order store, straight from the database. */
+export const getStats = () => call<PublicStats>("/api/v1/stats");

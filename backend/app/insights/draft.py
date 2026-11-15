@@ -19,6 +19,7 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.buyer.facts import USABLE
 from app.db.models import Case, CaseAnswer, CaseDocument, Fact, HearingRun
 
 KIND_LABEL = {
@@ -60,7 +61,7 @@ def build_draft(s: Session, case: Case) -> dict:
         )
     }
     annex = {doc_id: f"P-{i}" for i, doc_id in enumerate(docs, start=1)}
-    facts = list(s.scalars(select(Fact).where(Fact.case_id == case.id).order_by(Fact.id)))
+    facts = list(s.scalars(select(Fact).where(Fact.case_id == case.id, USABLE).order_by(Fact.id)))
     answers = {
         a.question_id: a.answer for a in s.scalars(select(CaseAnswer).where(CaseAnswer.case_id == case.id))
     }

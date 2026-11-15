@@ -20,6 +20,8 @@ ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0
 RUN addgroup -S web && adduser -S web -G web
 COPY --from=build --chown=web:web /app/.next/standalone ./
 COPY --from=build --chown=web:web /app/.next/static ./.next/static
+# Files served as they are: the page pictures of the recorded example case.
+COPY --from=build --chown=web:web /app/public ./public
 USER web
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://127.0.0.1:3000/terms >/dev/null || exit 1

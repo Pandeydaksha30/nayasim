@@ -14,6 +14,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.auth.deps import CurrentUser, case_for
+from app.auth.limits import user_limit
 from app.buyer.facts import PrivateDataBlocked
 from app.config import settings
 from app.db.models import HearingRun
@@ -105,7 +106,12 @@ def get_submit() -> Submit:
     return default_submit
 
 
-@router.post("/{case_id}/hearing", status_code=202, response_model=RunOut)
+@router.post(
+    "/{case_id}/hearing",
+    status_code=202,
+    response_model=RunOut,
+    dependencies=[user_limit("hearing", 6, 600)],
+)
 def run_hearing(
     case_id: uuid.UUID,
     s: SessionDep,

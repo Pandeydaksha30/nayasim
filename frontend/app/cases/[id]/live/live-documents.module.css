@@ -1,0 +1,5 @@
+.add { margin-bottom: 16px; }
+.docCell { max-width: 360px; }
+.doc { display: inline-flex; gap: 10px; align-items: center; min-width: 0; }
+.icon { color: var(--primary); display: inline-flex; }
+.next { margin-top: 14px; }

@@ -21,6 +21,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.buyer.facts import USABLE
 from app.calculator.interest import CalculationError, Payment, delay_interest, refund_with_interest
 from app.db.models import Fact
 from app.hearing.agents import LLM
@@ -90,7 +91,7 @@ def search_documents(ctx: ToolContext, args: dict) -> dict:
 def get_facts(ctx: ToolContext, args: dict) -> dict:
     from app.db.models import CaseDocument, CaseDocumentPage
 
-    rows = ctx.s.scalars(select(Fact).where(Fact.case_id == ctx.case_id).order_by(Fact.id)).all()
+    rows = ctx.s.scalars(select(Fact).where(Fact.case_id == ctx.case_id, USABLE).order_by(Fact.id)).all()
     out = []
     for f in rows:
         ref = next((r for r, p in ctx.fact_evidence.items() if p.chunk_id == -f.id), None)
@@ -164,7 +165,7 @@ def verify_quote(ctx: ToolContext, args: dict) -> dict:
 def _payments_and_due(ctx: ToolContext) -> tuple[list[Payment], date | None]:
     pays: list[Payment] = []
     due: date | None = None
-    for f in ctx.s.scalars(select(Fact).where(Fact.case_id == ctx.case_id).order_by(Fact.id)):
+    for f in ctx.s.scalars(select(Fact).where(Fact.case_id == ctx.case_id, USABLE).order_by(Fact.id)):
         if f.key == "payment":
             try:
                 d, a = f.value.split(";")
@@ -201,8 +202,10 @@ def calculate_interest(ctx: ToolContext, args: dict) -> dict:
         "rate_pct": str(rate_d),
         "as_of": as_of.isoformat(),
         "amount_paid": str(sum(p.amount for p in pays)),
-        "refund_interest": str(refund.total),
-        "delay_interest": str(delay.total) if delay else None,
+        # Interest only, never principal + interest: the names say exactly what each figure is.
+        "delay_interest": str(delay.interest) if delay else None,
+        "refund_interest": str(refund.interest),
+        "refund_total_with_interest": str(refund.total),
         "possession_due": due.isoformat() if due else None,
     }
 

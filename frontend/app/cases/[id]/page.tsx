@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
-import { EXAMPLE_ID } from "@/lib/case-source";
+import { isExample } from "@/lib/http";
 
 export default async function CaseIndex({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  // The example has a full report; real cases start at their facts until steps 6-8 exist.
-  redirect(`/cases/${id}/${id === EXAMPLE_ID ? "report" : "facts"}`);
+  // The example opens on its report; your own case starts with its facts.
+  redirect(`/cases/${id}/${isExample(id) ? "report" : "facts"}`);
 }

@@ -80,3 +80,6 @@
   .figure:last-child { border-bottom: 0; }
   .bar { grid-template-columns: 96px 1fr 40px; }
 }
+
+.sheetLabel { font-size: 11px; }
+.sheetBody .sheetRows { margin-top: 18px; }

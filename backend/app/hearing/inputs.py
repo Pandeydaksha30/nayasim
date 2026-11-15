@@ -14,6 +14,7 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.buyer.facts import USABLE
 from app.db.models import CaseAnswer, CaseRecord, Fact
 from app.retrieval.embedder import Embedder
 from app.retrieval.search import search
@@ -40,7 +41,7 @@ class CaseInput:
 
 def from_buyer_case(s: Session, case_id: uuid.UUID, claim_type: str, cutoff: date) -> CaseInput:
     ci = CaseInput(claim_type=claim_type, cutoff=cutoff)
-    for f in s.scalars(select(Fact).where(Fact.case_id == case_id).order_by(Fact.id)):
+    for f in s.scalars(select(Fact).where(Fact.case_id == case_id, USABLE).order_by(Fact.id)):
         values = ci.facts.setdefault(f.key, [])
         if f.value not in values:
             values.append(f.value)

@@ -271,7 +271,7 @@ def test_real_case_is_blocked_and_no_facts_is_refused(world):
         with pytest.raises(PrivateDataBlocked):
             run_case_hearing(s, ids["real"], llm, embedder=None, cutoff=CUTOFF)
         s.execute(text("UPDATE cases SET is_demo = true WHERE id = :i"), {"i": ids["real"]})
-        with pytest.raises(HearingNotPossible, match="No verified facts"):
+        with pytest.raises(HearingNotPossible, match="No usable facts"):
             run_case_hearing(s, ids["real"], llm, embedder=None, cutoff=CUTOFF)
     assert llm.prompts == []
 

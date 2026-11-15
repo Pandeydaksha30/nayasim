@@ -2,28 +2,8 @@
  * Client for app/api/rag.py (questions over the case's own documents) and app/api/agent.py
  * (agentic analysis). Citations returned here have been checked by code on the server.
  */
-import { ApiError, BASE } from "./api";
+import { call } from "./http";
 
-async function call<T>(path: string, init?: RequestInit): Promise<T> {
-  let res: Response;
-  try {
-    res = await fetch(`${BASE}${path}`, { cache: "no-store", credentials: "same-origin", ...init });
-  } catch {
-    throw new ApiError("The NyayaSim service is not reachable. Start the backend and try again.");
-  }
-  if (!res.ok) {
-    let detail = `Request failed (HTTP ${res.status}).`;
-    try {
-      const body = await res.json();
-      if (typeof body.detail === "string") detail = body.detail;
-      else if (Array.isArray(body.detail)) detail = body.detail.map((d: { msg: string }) => d.msg).join("; ");
-    } catch {
-      /* keep the generic message */
-    }
-    throw new ApiError(detail, res.status);
-  }
-  return res.json() as Promise<T>;
-}
 
 const json = (body: unknown): RequestInit => ({
   method: "POST",

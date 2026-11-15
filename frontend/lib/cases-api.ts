@@ -2,7 +2,10 @@
  * Cases API client (backend app/api/cases.py). Every function throws ApiError with the
  * server's message on failure; callers show it. Nothing is ever filled in locally.
  */
-import { ApiError, BASE } from "./api";
+import { ApiError } from "./api";
+import { type Auth, call, isExample } from "./http";
+
+export type { Auth };
 
 export type DocKind = "agreement" | "allotment_letter" | "receipt" | "builder_letter" | "hearing_order" | "other";
 
@@ -15,6 +18,16 @@ export const DOC_KINDS: { value: DocKind; label: string }[] = [
   { value: "other", label: "Other" },
 ];
 
+/** A first guess at the document type from its file name; the user can change it. */
+export function guessKind(name: string): DocKind {
+  const n = name.toLowerCase();
+  if (n.includes("agreement") || n.includes("bba")) return "agreement";
+  if (n.includes("allot")) return "allotment_letter";
+  if (n.includes("receipt") || n.includes("rcpt")) return "receipt";
+  if (n.includes("order")) return "hearing_order";
+  if (n.includes("letter")) return "builder_letter";
+  return "other";
+}
 export const kindLabel = (k: string) => DOC_KINDS.find((d) => d.value === k)?.label ?? k;
 
 export interface CaseSummary {
@@ -72,6 +85,8 @@ export interface CaseFull {
   facts: CaseFact[];
   questions: CaseQuestion[];
   payments_total: string;
+  /** Facts marked "Check" that are not confirmed yet: shown, but left out of every later step. */
+  facts_to_check: number;
 }
 
 export interface PageText {
@@ -89,35 +104,7 @@ export interface ExtractSummary {
   errors: { document: string; error: string }[];
 }
 
-/** Server components pass the signed-in user's cookie (lib/server-session.ts); the browser sends
- * it by itself. */
-export type Auth = { headers?: Record<string, string> };
 
-async function call<T>(path: string, init?: RequestInit, auth?: Auth): Promise<T> {
-  let res: Response;
-  try {
-    res = await fetch(`${BASE}${path}`, {
-      cache: "no-store",
-      credentials: "same-origin",
-      ...init,
-      headers: { ...(init?.headers as Record<string, string> | undefined), ...auth?.headers },
-    });
-  } catch {
-    throw new ApiError("The NyayaSim service is not reachable. Start the backend and try again.");
-  }
-  if (!res.ok) {
-    let detail = `Request failed (HTTP ${res.status}).`;
-    try {
-      const body = await res.json();
-      if (typeof body.detail === "string") detail = body.detail;
-      else if (Array.isArray(body.detail)) detail = body.detail.map((d: { msg: string }) => d.msg).join("; ");
-    } catch {
-      /* keep generic message */
-    }
-    throw new ApiError(detail, res.status);
-  }
-  return res.json() as Promise<T>;
-}
 
 const json = (body: unknown): RequestInit => ({
   headers: { "Content-Type": "application/json" },
@@ -140,6 +127,21 @@ export const extractFacts = (caseId: string) =>
   call<ExtractSummary>(`/api/v1/cases/${caseId}/facts/extract`, { method: "POST" });
 export const getPage = (caseId: string, docId: string, page: number) =>
   call<PageText>(`/api/v1/cases/${caseId}/documents/${docId}/pages/${page}`);
+export const deleteCase = (caseId: string) => call<{ deleted: boolean }>(`/api/v1/cases/${caseId}`, { method: "DELETE" });
+export const deleteDocument = (caseId: string, docId: string) =>
+  call<{ deleted: boolean; facts_removed: number }>(`/api/v1/cases/${caseId}/documents/${docId}`, { method: "DELETE" });
+/** Picture of the uploaded page. The example's pictures were recorded with it. */
+export const pageImageUrl = (caseId: string, docId: string, page: number) =>
+  isExample(caseId) ? `/example/pages/${docId}-${page}.png` : `/api/v1/cases/${caseId}/documents/${docId}/pages/${page}/image`;
+export interface PageHighlight {
+  /** Fractions of the page, origin top-left. null: the place cannot be known for certain (OCR). */
+  rects: { x: number; y: number; w: number; h: number }[] | null;
+  text_source: "text_layer" | "ocr";
+}
+export const getHighlight = (caseId: string, docId: string, page: number, start: number, end: number) =>
+  call<PageHighlight>(`/api/v1/cases/${caseId}/documents/${docId}/pages/${page}/highlight?start=${start}&end=${end}`);
+/** A fact later steps may rely on: matched exactly, or confirmed by the buyer. */
+export const isUsable = (f: CaseFact) => f.confirmed || f.confidence === "high";
 export const confirmFact = (caseId: string, factId: number) =>
   call<CaseFact>(`/api/v1/cases/${caseId}/facts/${factId}/confirm`, { method: "POST" });
 export const answerQuestion = (caseId: string, questionId: string, answer: string) =>
@@ -148,7 +150,7 @@ export const answerQuestion = (caseId: string, questionId: string, answer: strin
 /** Verified payment facts as calculator payments ("2018-03-12;720000.00"). */
 export function paymentsFromFacts(facts: CaseFact[]) {
   return facts
-    .filter((f) => f.key === "payment")
+    .filter((f) => f.key === "payment" && isUsable(f))
     .map((f) => {
       const [date, amount] = f.value.split(";");
       return { id: `f${f.id}`, date, amount: Number(amount), reference: `Receipt, p. ${f.page_no}` };

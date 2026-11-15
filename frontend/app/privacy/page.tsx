@@ -37,7 +37,7 @@ export default function PrivacyPage() {
 
       <h2>How long we keep it</h2>
       <p>
-        We keep your account and cases until you delete them. Deleting your account permanently removes your account,
+        We keep your account and cases until you delete them. You can delete a single document from its case, or a whole case from your list of cases: its file, its text, the facts read from it and the results built on it are removed at once. Deleting your account permanently removes your account,
         every case, uploaded document, extracted fact and report. Security records of sign-in events are kept for up
         to one year, so that misuse can be investigated, and are then deleted.
       </p>

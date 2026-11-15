@@ -88,3 +88,12 @@ def make_user(engine: Engine, email: str = "owner@example.com"):
         s.refresh(user)
         s.expunge(user)
     return user
+
+
+@pytest.fixture(autouse=True)
+def _fresh_rate_limits():
+    """Rate limits are per process; every test starts with none used."""
+    from app.auth.security import limiter
+
+    limiter.reset()
+    yield

@@ -84,3 +84,16 @@ State-changing requests must come from an allowed Origin (CSRF check). Someone e
 | Method | Path | Purpose |
 |---|---|---|
 | GET | `/health` | Health |
+
+## Added 15 Nov 2026
+
+| Method and path | Purpose | Sign-in |
+|---|---|---|
+| `DELETE /api/v1/cases/{id}` | Delete a case and everything derived from it | owner |
+| `DELETE /api/v1/cases/{id}/documents/{doc}` | Delete one document, its text, chunks and facts | owner |
+| `GET /api/v1/cases/{id}/documents/{doc}/pages/{n}/image` | PNG of the uploaded page | owner |
+| `GET /api/v1/cases/{id}/documents/{doc}/pages/{n}/highlight?start=&end=` | Where a span of the stored text sits on the page; `rects` is null for OCR pages | owner |
+| `GET /api/v1/stats` | Counts of the public order store | none |
+
+`GET /api/v1/cases/{id}` now also returns `facts_to_check`. Costly routes answer `429` when a user
+exceeds the limits listed in `CHANGES_2026-11-15.md`.

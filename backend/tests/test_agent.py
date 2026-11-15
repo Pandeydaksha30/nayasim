@@ -109,7 +109,7 @@ def test_step_limit_repeats_and_once_tools_are_enforced_by_code(api, db_engine):
         out = run_orchestrator(ctx_for(s, case_id, llm), "Analyse this case fully please", steps.append)
     assert len(steps) == 6 and out["stop_reason"] == "step limit (6) reached"
     assert steps[1]["ok"] is False and "identical call" in steps[1]["observation"]["error"]
-    assert steps[2]["ok"] is False and "No verified facts" in steps[2]["observation"]["error"]
+    assert steps[2]["ok"] is False and "No usable facts" in steps[2]["observation"]["error"]
     assert steps[3]["ok"] is False and "rate_pct" in steps[3]["observation"]["error"]
     assert out["insufficient"] and not out["grounded"]
 
@@ -180,6 +180,10 @@ def test_interest_tool_uses_the_calculator_on_verified_facts(api, db_engine):  #
     obs = steps[0]["observation"]
     assert steps[0]["ok"] and obs["amount_paid"] == "1000000" and obs["possession_due"] == "2021-06-30"
     assert float(obs["refund_interest"]) > float(obs["delay_interest"]) > 0
+    # Interest figures never include the principal; the refund total is principal + its interest.
+    assert float(obs["delay_interest"]) < float(obs["amount_paid"])
+    total = float(obs["amount_paid"]) + float(obs["refund_interest"])
+    assert float(obs["refund_total_with_interest"]) == total
 
 
 @pytest.fixture

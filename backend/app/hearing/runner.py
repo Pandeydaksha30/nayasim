@@ -45,7 +45,10 @@ def prepare_case_hearing(
     cutoff = cutoff or date.today()
     ci = from_buyer_case(s, case_id, case.claim_type, cutoff)
     if not ci.facts:
-        raise HearingNotPossible("No verified facts yet. Upload documents and find facts first.")
+        raise HearingNotPossible(
+            "No usable facts yet. Upload documents and find facts first; facts marked 'Check' count only "
+            "after you confirm them on the Facts page."
+        )
     precedents = build_precedents(s, ci, embedder)
     if not (s.new or s.dirty or s.deleted):
         s.commit()  # no transaction stays open during the model calls

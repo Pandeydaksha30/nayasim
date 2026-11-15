@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 from app.agent.jobs import agent_job
 from app.api.hearing import get_hearing_llm, get_search_embedder, get_submit
 from app.auth.deps import CurrentUser, case_for
+from app.auth.limits import user_limit
 from app.config import settings
 from app.db.models import AgentRun
 from app.db.session import get_session
@@ -60,7 +61,12 @@ def _out(r: AgentRun) -> AgentRunOut:
     )
 
 
-@router.post("/{case_id}/agent", status_code=202, response_model=AgentRunOut)
+@router.post(
+    "/{case_id}/agent",
+    status_code=202,
+    response_model=AgentRunOut,
+    dependencies=[user_limit("agent", 6, 600)],
+)
 def start_agent(
     case_id: uuid.UUID,
     body: AgentIn,

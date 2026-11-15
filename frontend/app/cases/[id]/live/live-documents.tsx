@@ -1,8 +1,11 @@
 import Link from "next/link";
-import { FileIcon, PlusIcon } from "@/components/icons";
+import { AddDocuments, DeleteDocumentButton } from "@/components/case-actions";
+import { FileIcon } from "@/components/icons";
 import { type CaseFull, kindLabel } from "@/lib/cases-api";
+import styles from "./live-documents.module.css";
 
 export default function LiveDocuments({ c }: { c: CaseFull }) {
+  const canEdit = !c.shared;
   return (
     <>
       <div className="section-title">
@@ -10,22 +13,22 @@ export default function LiveDocuments({ c }: { c: CaseFull }) {
           <h2>Documents</h2>
           <p>Everything this case is built from. Text is read from the file itself, or by OCR for scans and photos.</p>
         </div>
-        <Link className="btn" href="/cases/new"><PlusIcon /> New case</Link>
       </div>
+      {canEdit && <div className={styles.add}><AddDocuments caseId={c.id} /></div>}
       <div className="panel table-wrap">
         <table className="ledger stack">
           <thead>
-            <tr><th>Document</th><th>Type</th><th className="r">Pages</th><th>Reading</th></tr>
+            <tr><th>Document</th><th>Type</th><th className="r">Pages</th><th>Reading</th>{canEdit && <th className="r">Remove</th>}</tr>
           </thead>
           <tbody>
             {c.documents.length === 0 && (
-              <tr><td colSpan={4} className="muted">No documents uploaded yet.</td></tr>
+              <tr><td colSpan={canEdit ? 5 : 4} className="muted">No documents yet. Add your agreement and payment receipts to begin.</td></tr>
             )}
             {c.documents.map((d) => (
               <tr key={d.id}>
-                <td data-label="Document" style={{ maxWidth: 360 }}>
-                  <span style={{ display: "inline-flex", gap: 10, alignItems: "center", minWidth: 0 }}>
-                    <span style={{ color: "var(--primary)" }}><FileIcon /></span>
+                <td data-label="Document" className={styles.docCell}>
+                  <span className={styles.doc}>
+                    <span className={styles.icon}><FileIcon /></span>
                     <span className="cell-title cell-wrap">{d.filename}</span>
                   </span>
                 </td>
@@ -36,11 +39,22 @@ export default function LiveDocuments({ c }: { c: CaseFull }) {
                   {d.ocr_pages > 0 && d.ocr_pages < d.page_count && <span className="tag tag-mid">{d.ocr_pages} pages by OCR</span>}
                   {d.ocr_pages > 0 && d.ocr_pages === d.page_count && <span className="tag tag-mid">OCR</span>}
                 </td>
+                {canEdit && (
+                  <td data-label="Remove" className="r">
+                    <DeleteDocumentButton caseId={c.id} docId={d.id} filename={d.filename} />
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      {c.documents.length > 0 && (
+        <p className={`small muted ${styles.next}`}>
+          Next: <Link href={`/cases/${c.id}/facts`}>check the facts read from these documents</Link>.
+          {canEdit && c.is_demo && " After adding a document, use “Find facts again” there."}
+        </p>
+      )}
     </>
   );
 }

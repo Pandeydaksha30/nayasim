@@ -6,6 +6,7 @@ every case (not only demo cases) and send nothing outside this server.
 
 from __future__ import annotations
 
+import time
 import uuid
 from datetime import date
 from functools import lru_cache
@@ -14,13 +15,15 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
 from app.api.hearing import get_search_embedder
 from app.auth.deps import CurrentUser, case_for
-from app.db.models import CaseRecord, Fact
+from app.auth.limits import ip_limit, user_limit
+from app.buyer.facts import USABLE
+from app.db.models import CaseRecord, Fact, Order, OrderChunk
 from app.db.session import get_session
 from app.insights.draft import build_draft
 from app.insights.estimate import outcome_estimate
@@ -60,7 +63,7 @@ class SearchOut(BaseModel):
     hits: list[HitOut]
 
 
-@router.get("/search/orders", response_model=SearchOut)
+@router.get("/search/orders", response_model=SearchOut, dependencies=[user_limit("search", 60, 60)])
 async def search_orders(
     s: SessionDep,
     user: CurrentUser,
@@ -95,7 +98,9 @@ def case_estimate(case_id: uuid.UUID, s: SessionDep, user: CurrentUser) -> dict[
     """Rule-based outcome estimate from how past orders with the same claim type and delay ended."""
     case = case_for(s, case_id, user)
     promised = s.scalar(
-        select(Fact.value).where(Fact.case_id == case_id, Fact.key == "possession_promised").order_by(Fact.id)
+        select(Fact.value)
+        .where(Fact.case_id == case_id, Fact.key == "possession_promised", USABLE)
+        .order_by(Fact.id)
     )
     due = None
     if promised:
@@ -135,7 +140,7 @@ def _predict(task: str, text: str) -> dict[str, Any]:
     return {"label": ranked[0][0], "scores": {c: round(float(p), 3) for c, p in ranked}}
 
 
-@router.post("/predictions/order-text")
+@router.post("/predictions/order-text", dependencies=[user_limit("predict", 30, 60)])
 def classify_order_text(body: OrderTextIn, user: CurrentUser) -> dict[str, Any]:
     """The trained classifiers applied to the parties' part of an order (facts, relief sought, reply).
 
@@ -159,3 +164,35 @@ def classify_order_text(body: OrderTextIn, user: CurrentUser) -> dict[str, Any]:
         },
         "caveat": CAVEAT,
     }
+
+
+# ── Public figures for the website ──
+
+_stats_cache: tuple[float, dict[str, Any]] | None = None
+STATS_TTL_S = 600.0
+
+
+@router.get("/stats", dependencies=[ip_limit("stats", 60, 60)])
+def public_stats(s: SessionDep) -> dict[str, Any]:
+    """What the order store holds right now, counted from the database (cached for ten minutes).
+    Public: only counts of public regulator orders, nothing about users or their cases."""
+    global _stats_cache
+    if _stats_cache and time.monotonic() - _stats_cache[0] < STATS_TTL_S:
+        return _stats_cache[1]
+    read = Order.fetched_at.is_not(None)
+    first, last = s.execute(select(func.min(Order.decided_on), func.max(Order.decided_on)).where(read)).one()
+    out = {
+        "source": "HRERA Gurugram",
+        "orders_listed": s.scalar(select(func.count()).select_from(Order)) or 0,
+        "orders_read": s.scalar(select(func.count()).select_from(Order).where(read)) or 0,
+        "passages": s.scalar(select(func.count()).select_from(OrderChunk)) or 0,
+        "first_decided": first.isoformat() if first else None,
+        "last_decided": last.isoformat() if last else None,
+        "outcome_records": s.scalar(select(func.count()).select_from(CaseRecord)) or 0,
+        "outcome_records_reviewed": s.scalar(
+            select(func.count()).select_from(CaseRecord).where(CaseRecord.reviewed_at.is_not(None))
+        )
+        or 0,
+    }
+    _stats_cache = (time.monotonic(), out)
+    return out

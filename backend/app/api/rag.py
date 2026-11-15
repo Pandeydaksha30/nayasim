@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 
 from app.api.hearing import get_hearing_llm, get_search_embedder
 from app.auth.deps import CurrentUser, case_for
+from app.auth.limits import user_limit
 from app.buyer.chunks import ensure_indexed
 from app.config import settings
 from app.db.models import CaseDocument, CaseQuestion
@@ -41,7 +42,7 @@ def _index_missing(s: Session, case_id: uuid.UUID, embedder: Embedder | None) ->
         ensure_indexed(s, doc_id, embedder)
 
 
-@router.get("/{case_id}/passages")
+@router.get("/{case_id}/passages", dependencies=[user_limit("passages", 60, 60)])
 def passages(
     case_id: uuid.UUID,
     s: SessionDep,
@@ -77,7 +78,7 @@ class AskIn(BaseModel):
     question: str = Field(min_length=5, max_length=500)
 
 
-@router.post("/{case_id}/ask")
+@router.post("/{case_id}/ask", dependencies=[user_limit("ask", 20, 600)])
 def ask(
     case_id: uuid.UUID,
     body: AskIn,
@@ -108,6 +109,9 @@ def ask(
         # The history keeps which passages were used, not a second copy of the document text.
         "retrieved": [{k: v for k, v in r.items() if k != "text"} for r in result["retrieved"]],
     }
+    if case.user_id != user.id:
+        # A shared example case: answered, but nothing is written to a history every user can see.
+        return {"id": None, **result}
     row = CaseQuestion(case_id=case_id, question=body.question, result=stored)
     s.add(row)
     s.commit()  # before the response, so the history shows it at once

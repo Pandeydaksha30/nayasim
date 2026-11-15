@@ -371,3 +371,8 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 14px; }
   .topbar-actions .btn-quiet { display: none; }
   h1 { font-size: 22px; }
 }
+
+/* Example case note and steps closed for private cases */
+.case-note { margin: 14px 0 0; max-width: 92ch; font-size: 13px; color: var(--text-2); border-left: 2px solid var(--border-strong); padding-left: 12px; }
+.steps a.step-locked { color: var(--text-3); }
+.steps a.step-locked .n { background: var(--subtle); color: var(--text-3); border-color: var(--border); }
