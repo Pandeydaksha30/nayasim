@@ -58,3 +58,19 @@ def test_an_empty_api_key_means_no_key(monkeypatch):
     assert Settings(_env_file=None).gemini_api_key is None
     monkeypatch.setenv("GEMINI_API_KEY", "abc")
     assert Settings(_env_file=None).gemini_api_key.get_secret_value() == "abc"
+
+
+def test_search_works_without_the_embedding_model(monkeypatch):
+    """If the embedding model cannot load, the dependency gives None (keyword search), not an error."""
+    from app.api import hearing as hearing_api
+
+    calls = []
+
+    def broken():
+        calls.append(1)
+        raise ValueError("Could not load model from any source.")
+
+    monkeypatch.setattr(hearing_api, "_embedder", broken)
+    monkeypatch.setattr(hearing_api, "_embedder_failed_at", None)
+    assert hearing_api.get_search_embedder() is None
+    assert hearing_api.get_search_embedder() is None and len(calls) == 1  # not retried on every request

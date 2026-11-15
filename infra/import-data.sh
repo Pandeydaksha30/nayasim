@@ -42,9 +42,8 @@ fi
 echo "Copying $DUMP into the database container ..."
 "${COMPOSE[@]}" cp "$DUMP" postgres:/tmp/nyayasim-data.dump
 echo "Restoring (a few minutes for the full set) ..."
-"${COMPOSE[@]}" exec -T postgres pg_restore -U nyayasim -d nyayasim --data-only --disable-triggers \
-  --no-owner --exit-on-error /tmp/nyayasim-data.dump
-"${COMPOSE[@]}" exec -T postgres rm -f /tmp/nyayasim-data.dump
+# Inside `sh -c` so Git Bash on Windows does not rewrite /tmp/... into a Windows path.
+"${COMPOSE[@]}" exec -T postgres sh -c 'pg_restore -U nyayasim -d nyayasim --data-only --disable-triggers --no-owner --exit-on-error /tmp/nyayasim-data.dump; rc=$?; rm -f /tmp/nyayasim-data.dump; exit $rc'
 psql_q 'analyze' >/dev/null
 
 echo "Loaded: $(psql_q 'select count(*) from orders') orders, $(psql_q 'select count(*) from order_chunks') search chunks, $(psql_q 'select count(*) from case_records') case records."

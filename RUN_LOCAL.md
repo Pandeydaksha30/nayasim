@@ -14,6 +14,10 @@ Verified on 13 Nov 2026 on this machine (migrations run to 0010 automatically wh
 
 Needs: Docker Desktop, Node.js 20+ and `uv` (Python package manager; it downloads Python 3.12
 itself). Install uv once with `pip install uv` or from https://docs.astral.sh/uv/.
+**Extract the ZIP to a short path** such as `C:\NyayaSim`. Windows limits paths to 260 characters
+and the embedding model's cache uses long file names; in a deeply nested folder the model cannot
+be saved, and search then falls back to keywords only (seen in the fresh-install test).
+
 Run these from the project folder (the one containing `backend`, `frontend`, `infra`):
 
 ```powershell

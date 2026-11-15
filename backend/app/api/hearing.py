@@ -51,8 +51,30 @@ def _embedder() -> Embedder:
     )
 
 
+_embedder_failed_at: float | None = None
+EMBEDDER_RETRY_S = 300.0
+
+
 def get_search_embedder() -> Embedder | None:
-    return _embedder()
+    """The local embedding model, or None if it cannot be loaded (no network for the first
+    download, a full disk, a path over Windows' 260-character limit). With None, uploads still
+    work and search uses keywords only; loading is tried again after a few minutes."""
+    global _embedder_failed_at
+    import logging
+    import time
+
+    if _embedder_failed_at is not None and time.monotonic() - _embedder_failed_at < EMBEDDER_RETRY_S:
+        return None
+    try:
+        emb = _embedder()
+    except Exception:  # noqa: BLE001 - logged with traceback; the app keeps working without vectors
+        logging.getLogger("nyayasim.search").exception(
+            "Embedding model could not be loaded; search falls back to keywords"
+        )
+        _embedder_failed_at = time.monotonic()
+        return None
+    _embedder_failed_at = None
+    return emb
 
 
 class RunOut(BaseModel):
