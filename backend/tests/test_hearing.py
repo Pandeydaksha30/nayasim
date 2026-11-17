@@ -39,10 +39,8 @@ CUTOFF = date(2025, 1, 1)
 # ── Statistics and award (pure) ──
 
 
-def prec(outcome, rate=None, n=1):
-    return Precedent(
-        f"P{n}", n, f"C{n}", date(2023, 1, 1), outcome, Decimal(rate) if rate else None, [(1, "x")]
-    )
+def prec(outcome, rate=None, n=1, decided=date(2023, 1, 1)):
+    return Precedent(f"P{n}", n, f"C{n}", decided, outcome, Decimal(rate) if rate else None, [(1, "x")])
 
 
 def test_wilson_interval_matches_known_values():
@@ -68,16 +66,23 @@ def test_outcome_shares_need_enough_records():
     assert many["interval_90"][0] < 0.6 < many["interval_90"][1]
 
 
-def test_award_uses_median_precedent_rate_and_the_calculator():
+def test_award_uses_the_most_recent_precedent_rate_and_the_calculator():
     ci = CaseInput(
         "delayed_possession",
         CUTOFF,
         facts={"payment": ["2020-01-01;100000.00"], "possession_promised": ["2021-01-01"]},
     )
     a = award(
-        ci, [prec("allowed", "9.30", 1), prec("allowed", "10.00", 2), prec("allowed", "10.85", 3)], CUTOFF
+        ci,
+        [
+            prec("allowed", "9.30", 1, date(2021, 5, 1)),
+            prec("allowed", "10.00", 2, date(2024, 6, 1)),  # newest: its rate is used
+            prec("allowed", "10.85", 3, date(2023, 2, 1)),
+        ],
+        CUTOFF,
     )
-    assert a["available"] and a["rate_pct"] == "10.000" and "median of 3" in a["rate_basis"]
+    assert a["available"] and a["rate_pct"] == "10.000" and "C2" in a["rate_basis"]
+    assert "2024-06-01" in a["rate_basis"]
     # 1 Jan 2021 -> 1 Jan 2025 = 1,461 days; 1,00,000 x 10% x 1461/365 = 40,027.40
     assert a["delay_interest"] == "40027.40"
     no_rate = award(ci, [prec("allowed", n=1)], CUTOFF)

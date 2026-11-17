@@ -6,7 +6,7 @@ starts**, because unclear labels make both people and models disagree.
 
 ## Rules for everyone
 
-- Work alone. Do not discuss orders with the other annotator, and do not look at NyayaSim's own
+- Work alone. Do not discuss orders with the other annotator, and do not look at ContractIQ's own
   answers (the review sheet in `data/review/` shows them; don't open it while annotating).
 - Read the order's final directions (usually the last 2–4 pages) first, then search back for dates
   and amounts.

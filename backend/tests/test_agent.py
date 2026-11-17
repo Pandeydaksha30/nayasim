@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date
+from decimal import Decimal
 
 import pytest
 from sqlalchemy import text
@@ -182,8 +183,9 @@ def test_interest_tool_uses_the_calculator_on_verified_facts(api, db_engine):  #
     assert float(obs["refund_interest"]) > float(obs["delay_interest"]) > 0
     # Interest figures never include the principal; the refund total is principal + its interest.
     assert float(obs["delay_interest"]) < float(obs["amount_paid"])
-    total = float(obs["amount_paid"]) + float(obs["refund_interest"])
-    assert float(obs["refund_total_with_interest"]) == total
+    # Money is compared exactly (Decimal): float sums are off in the last digit on some dates.
+    total = Decimal(obs["amount_paid"]) + Decimal(obs["refund_interest"])
+    assert Decimal(obs["refund_total_with_interest"]) == total
 
 
 @pytest.fixture

@@ -1,6 +1,6 @@
 # Model training guide
 
-## What in NyayaSim is trained, and what is not
+## What in ContractIQ is trained, and what is not
 
 | Component | Kind | Learns from our data? |
 |---|---|---|

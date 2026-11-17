@@ -40,10 +40,10 @@ def _warm_models() -> None:
     them does not wait for scikit-learn to import. Missing model files are not an error here: the
     endpoint reports that itself."""
     try:
-        from app.api.insights import MODELS, _model
+        from app.api.insights import _model, _models_dir
 
         for task in ("claim_type", "outcome"):
-            if (MODELS / f"{task}_tfidf_lr.joblib").exists():
+            if (_models_dir() / f"{task}_tfidf_lr.joblib").exists():
                 _model(task)
     except Exception:  # noqa: BLE001 - optional warm-up; logged, never stops the API
         log.exception("Could not preload the classifiers")

@@ -32,7 +32,7 @@ owner: every signed-in user can read them, nobody can change them.
 | Pre-registering a victim's email, then waiting for them to use Google | When Google proves the inbox, an unconfirmed password on that email is removed and its sessions ended | `test_google_takes_over_unverified_squatter_account` |
 | Open redirect after sign-in | `next` must be a same-site path | `test_next_redirect_only_allows_local_paths` |
 | Reading another user's case | Owner check on every case route | `test_cases_are_private_to_their_owner` |
-| Clickjacking, sniffing, mixed content | `X-Frame-Options: DENY`, CSP `frame-ancestors 'none'`, `nosniff`, HSTS (Caddy + API in production) | header check in CSRF test |
+| Clickjacking, sniffing, mixed content | `X-Frame-Options: DENY`, CSP `frame-ancestors 'none'`, `nosniff`, HSTS (website and API in production) | header check in CSRF test |
 
 Audit log: `auth_events` records sign-ups, sign-ins, failures, lockouts, resets, password changes,
 Google linking and deletions with time, IP and user agent. A daily job removes expired sessions,
@@ -46,14 +46,14 @@ service; Terms and Privacy pages are drafts awaiting a lawyer's review.
 ## Setting up Google sign-in
 
 1. https://console.cloud.google.com → create a project → **APIs & Services → OAuth consent screen**:
-   External, app name "NyayaSim", your support email, scopes `openid`, `email`, `profile`.
+   External, app name "ContractIQ", your support email, scopes `openid`, `email`, `profile`.
 2. **Credentials → Create credentials → OAuth client ID → Web application.**
    Authorized redirect URIs (add each place the site runs):
    - `http://localhost:3100/api/v1/auth/google/callback` (local)
    - `https://your-domain/api/v1/auth/google/callback` (server)
 3. Copy the client ID and secret:
    - local: `NYAYASIM_GOOGLE_CLIENT_ID=...` and `NYAYASIM_GOOGLE_CLIENT_SECRET=...` in `backend\.env`
-   - server: `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` in `infra/.env.prod`
+   - server: `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` in the Render service's environment
 4. Restart the API. The "Continue with Google" button appears only when both are set.
 
 While the consent screen is in "Testing" mode, only Google accounts added as test users can sign in;
@@ -61,7 +61,7 @@ publish it for everyone.
 
 ## Setting up email
 
-Any SMTP service works. Set in `backend\.env` (local) or `infra/.env.prod` (server, without the
+Any SMTP service works. Set in `backend\.env` (local) or the Render service's environment (without the
 `NYAYASIM_` prefix): `SMTP_HOST`, `SMTP_PORT` (587 STARTTLS or 465 TLS), `SMTP_USER`,
 `SMTP_PASSWORD`, `SMTP_FROM`. Free options: Brevo (300 emails/day), or Gmail with an app password
 (for testing only). Without SMTP, emails are written to `data/outbox/` and their links logged:

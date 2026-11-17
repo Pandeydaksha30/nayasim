@@ -1,7 +1,7 @@
 # Demonstration guide
 
-For a 5 to 7 minute demonstration of NyayaSim running on this laptop. Start-up commands are in
-RUN_LOCAL.md; test evidence is in END_TO_END_TEST_REPORT.md.
+For a 5 to 7 minute demonstration of ContractIQ running on this laptop. Start-up commands are in
+RUN_LOCAL.md; test evidence is in TEST_REPORT.md.
 
 ## Before the professor arrives (15 minutes)
 
@@ -52,16 +52,27 @@ For a live upload: Dashboard, **New case**, tick the fictional demo option, then
 Wording of the answer varies slightly between runs; the value, the page and the "verified" mark
 should not.
 
+## Contract analysis (the mid-viva feature, now verified)
+
+On the same **Ask your documents** step, press **Analyse the contract** (about 10 to 30 seconds).
+Expected (live run of 17 Nov, 6 seconds, 5 clauses verified, 0 removed): clauses grouped by party
+(the promoter's duty to hand over possession by 30 June 2021, the Rs 5 per sq ft per month delay
+compensation, the allottee's duty to take possession within two months of the offer, and the
+builder's unilateral revision of the completion date flagged as one-sided), each with its kind (obligation, right, penalty,
+one-sided), the file, page and quote. Say: "At mid-viva this was an LLM summary with a score; now
+a clause is shown only if its quote is found on the page, and dropped clauses are counted."
+The exact clauses vary between runs; the quotes are always from the document.
+
 ## Agent analysis: exact steps
 
 1. Open the case, step **Agent analysis**.
 2. Paste this objective and press **Run analysis**:
    "Prepare a complete assessment of this buyer's case: what the documents say, relevant
-   precedents, money owed at 10.85%, the likely outcome, and a simulated hearing with the judge's
+   precedents, money owed at 10.80%, the likely outcome, and a simulated hearing with the judge's
    assessment."
 3. Expected (live run of 13 Nov, about 90 seconds): the step list fills in while it runs:
    `delegate` to **document_analysis** (which called `search_documents`), `delegate` to
-   **legal_research** (which called `search_orders`), `calculate_interest` with 10.85,
+   **legal_research** (which called `search_orders`), `calculate_interest` with 10.80,
    `estimate_outcome`, `run_hearing`; then an answer with citations marked verified (5 verified,
    0 removed in that run) and the judge assessment below it.
 4. Open "What came back" on a step to show the tool's observation. The "by" label shows which
@@ -70,7 +81,7 @@ should not.
    point. If a citation is removed, the page says how many: show it as the checker working.
 
 Shorter objective if time is tight: "When was possession promised, how late is it, and what
-interest could the buyer claim at 10.85%?" (about 20 seconds, no hearing).
+interest could the buyer claim at 10.80%?" (about 20 seconds, no hearing).
 
 ## Hearing simulation: exact steps
 
@@ -84,7 +95,7 @@ interest could the buyer claim at 10.85%?" (about 20 seconds, no hearing).
 
 ## 1. Introduction (30 seconds)
 
-"NyayaSim helps a home buyer prepare a RERA complaint for delayed possession or refund. The buyer
+"ContractIQ helps a home buyer prepare a RERA complaint for delayed possession or refund. The buyer
 uploads their papers; the system reads the facts, calculates what is owed, and simulates a hearing
 argued from real orders of the Haryana Real Estate Regulatory Authority, Gurugram. Its main design
 rule is that nothing is invented: every fact shows the page it came from, every cited order is

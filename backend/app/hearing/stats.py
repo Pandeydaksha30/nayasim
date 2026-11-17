@@ -4,8 +4,9 @@
   90% Wilson interval for "buyer wins" (allowed or partly allowed). Fewer than MIN_RECORDS
   records -> "insufficient precedent", no percentage.
 * Award: the deterministic calculator, using the buyer's verified payments and promised date,
-  at the median interest rate applied in the precedents that record one. No rate in any
-  precedent -> no award figure.
+  at the rate applied in the most recently decided precedent that records one. Rule 15 ties the
+  rate to SBI's MCLR "as on date" of the order, so the newest order is the closest guide; a median
+  across years would mix rates from different MCLR periods. No rate in any precedent -> no award.
 """
 
 from __future__ import annotations
@@ -13,7 +14,6 @@ from __future__ import annotations
 import math
 from datetime import date
 from decimal import Decimal
-from statistics import median
 
 from app.calculator.interest import Payment, delay_end, delay_interest, refund_with_interest
 from app.hearing.inputs import CaseInput, Precedent
@@ -53,18 +53,28 @@ def outcome_shares(precedents: list[Precedent]) -> dict:
 
 
 def award(ci: CaseInput, precedents: list[Precedent], as_of: date) -> dict:
-    rates = [p.interest_rate_pct for p in precedents if p.interest_rate_pct is not None]
+    rated = sorted(
+        (p for p in precedents if p.interest_rate_pct is not None), key=lambda p: p.decided_on, reverse=True
+    )
+    rates = [p.interest_rate_pct for p in rated]
     payments = [Payment(d, a, "") for d, a in ci.payments]
     promised = ci.first("possession_promised")
     if not payments:
         return {"available": False, "reason": "no verified payments"}
     if not rates:
         return {"available": False, "reason": "no similar order records an interest rate"}
-    rate = Decimal(str(median(rates))).quantize(Decimal("0.001"))
+    newest = rated[0] if rated else None
+    rate = Decimal(str(newest.interest_rate_pct)).quantize(Decimal("0.001")) if newest else Decimal(0)
     out = {
         "available": True,
         "rate_pct": str(rate),
-        "rate_basis": f"median of {len(rates)} rate(s) applied in similar orders decided before {ci.cutoff}",
+        "rate_basis": (
+            f"rate applied in the most recent similar order ({newest.complaint_no}, decided "
+            f"{newest.decided_on.isoformat()}): Rule 15, SBI MCLR + 2% as on that date. "
+            "Check the current MCLR."
+            if newest
+            else ""
+        ),
         "principal": str(sum((p.amount for p in payments), Decimal(0))),
         "as_of": as_of.isoformat(),
     }

@@ -1,192 +1,128 @@
-# NyayaSim deployment guide
+# ContractIQ deployment guide: Vercel + Render
 
-Release `v1.0.0-rc1`. What was verified for this release is in `RELEASE_STATUS.md`.
+**Status (17 Nov 2026): configuration written, not deployed.** No Vercel or Render project has
+been created and nothing below has been run on those platforms yet. Docker is no longer the
+deployment method (it is used only to run a local development database, see RUN_LOCAL.md).
 
-The whole application runs on one machine with Docker: database, API, website and (optionally)
-HTTPS. Nothing outside Docker is needed on the server.
+```text
+Browser ── https://<project>.vercel.app ── Next.js on Vercel (frontend/)
+                │  /api/* and /health are forwarded (next.config.ts rewrites, API_URL)
+                ▼
+          https://<service>.onrender.com ── FastAPI on Render, native Python 3.12 (backend/)
+                │                                   └─ persistent disk /var/data (uploads, model cache)
+                ▼
+          Render PostgreSQL 17 with pgvector
+```
 
-## 1. What is in the package
+The browser only talks to the Vercel address. The API is reached through Vercel's rewrite, so the
+session cookie belongs to the Vercel domain and no cross-site cookie settings are needed.
 
-| Path | What |
+## What you need
+
+- A GitHub repository with this project pushed (Vercel and Render deploy from GitHub).
+- A Vercel account (Hobby is enough for the website).
+- A Render account with a paid web-service plan: the persistent disk is not available on the free
+  plan, and the API needs about 2 GB of memory (render.yaml uses `standard`). Check current prices.
+- A Render PostgreSQL database with at least 1 GB of storage (the order data is about 0.6 GB).
+- Optional: an SMTP provider (needed so new users receive the confirmation email), a Google OAuth
+  client, a Gemini API key.
+
+## 1. Push the code
+
+```bash
+git push origin nyayasim/foundation
+```
+
+Merge it into the branch Render and Vercel should deploy (for example `main`).
+
+## 2. Database and API on Render
+
+1. Render dashboard: **New > Blueprint**, choose the repository. Render reads `render.yaml` and
+   proposes the database `contractiq-db` and the web service `contractiq-api`.
+2. Fill in the variables marked "sync: false" when asked:
+
+   | Variable | Value |
+   |---|---|
+   | `NYAYASIM_PUBLIC_URL` | the Vercel address, e.g. `https://contractiq.vercel.app` (you can set it after step 3 and redeploy) |
+   | `NYAYASIM_CORS_ORIGINS` | the same address |
+   | `GEMINI_API_KEY` | your key, or leave empty |
+   | `NYAYASIM_SMTP_*` | your email provider; without it confirmation emails are only written to `/var/data/outbox` |
+   | `NYAYASIM_GOOGLE_CLIENT_ID/SECRET` | optional; redirect URI `https://<vercel address>/api/v1/auth/google/callback` |
+
+3. Apply. The build runs `pip install uv && uv sync --frozen --no-dev` (exact locked packages,
+   Python from `backend/.python-version`). Every start runs `alembic upgrade head`, so the empty
+   database is created up to migration 0010, including `CREATE EXTENSION vector`.
+4. Check: `https://<service>.onrender.com/health` answers `{"status":"ok"}`.
+
+If the migration fails on `CREATE EXTENSION vector`, enable the pgvector extension for the
+database in the Render dashboard and redeploy.
+
+## 3. Website on Vercel
+
+1. Vercel dashboard: **Add New > Project**, import the repository.
+2. **Root Directory: `frontend`**. Framework: Next.js (also set in `frontend/vercel.json`).
+3. Environment variable (Production): `API_URL` = `https://<service>.onrender.com` (no trailing
+   slash). It is read at build time by the rewrites, so redeploy after changing it.
+4. Deploy, then put the Vercel address into Render's `NYAYASIM_PUBLIC_URL` and
+   `NYAYASIM_CORS_ORIGINS` if not done yet, and redeploy the API.
+
+## 4. Load the public order data
+
+Precedent search, the hearing and the outcome estimate need the public HRERA orders
+(`release/nyayasim-public-orders.dump`, 186 MB, public orders only, no user data). Use the
+database's **external** connection URL from the Render dashboard:
+
+```bash
+TARGET_URL='postgresql://contractiq:...@...render.com/contractiq' bash infra/import-data.sh release/nyayasim-public-orders.dump
+```
+
+The script uses `pg_restore`/`psql` 17 if installed, otherwise runs them with Docker on your
+machine. It refuses to load into a database that already has orders (`FORCE=1` replaces them).
+The two trained classifier files are in the repository (`data/models/*.joblib`); nothing to copy.
+
+## 5. Checks after deploying
+
+| Check | Expected |
 |---|---|
-| `backend/` | API source (FastAPI, Python 3.12), migrations, tests, `Dockerfile`, `pyproject.toml`, `uv.lock` |
-| `frontend/` | Website source (Next.js 15), `Dockerfile`, `package.json`, `package-lock.json`, `public/` |
-| `infra/` | `docker-compose.prod.yml`, `Caddyfile`, `deploy.sh`, `import-data.sh`, `export-data.sh`, `backup.sh`, `restore.sh`, `.env.prod.example` |
-| `release/nyayasim-public-orders.dump` | Public HRERA Gurugram orders with page text, search passages and embeddings. No user data. |
-| `data/models/*.joblib` | The two trained classifier files (used only by the classifier demo) |
-| `demo/sample-documents/` | Fictional sample documents |
-| `.env.example`, `backend/.env.example`, `frontend/.env.example`, `infra/.env.prod.example` | Templates with placeholders only |
+| `https://<vercel address>/health` | `{"status":"ok"}` (through the rewrite) |
+| `https://<vercel address>/api/v1/stats` | `orders_read` above 0 after step 4 |
+| Sign up, confirm the email, sign in | dashboard opens |
+| Upload a text PDF, open "Ask your documents", search a passage | passages with file and page |
+| Calculator page | figures appear; "Delay interest runs to" line shows the end date |
+| `/search` | results; "keywords and meaning" once the embedding model has downloaded |
+| Render logs | no tracebacks |
 
-Not in the package, by design: any `.env` file, keys, uploaded documents, virtual environments,
-`node_modules`, build output. The embedding model for search (`BAAI/bge-small-en-v1.5`, about
-67 MB) is downloaded by the API on first use and cached in its data volume; until then, and
-whenever the download fails, search uses keywords only.
+## 6. Settings that matter
 
-## 2. Requirements
-
-- Docker with the Compose plugin (Docker Desktop on Windows or macOS, Docker Engine on Linux).
-- 4 GB of memory free for Docker (the API needs about 2 GB for OCR and the search model).
-- 6 GB of disk: images about 3 GB, database about 0.5 GB with the order data.
-- Internet access while building, and once at first search for the embedding model.
-  The website build downloads its fonts from Google Fonts; if it stops with
-  `An error occurred in next/font`, run the same command again.
-- For a public site: a domain name pointing at the server, and ports 80 and 443 open.
-
-## 3. Deploy on a Linux server (public site with HTTPS)
-
-```bash
-unzip NYAYASIM_FINAL_DEPLOY.zip && cd NYAYASIM_FINAL_DEPLOY
-DOMAIN=your-domain.example DATA=release/nyayasim-public-orders.dump bash infra/deploy.sh
-```
-
-The script installs Docker if it is missing, writes `infra/.env.prod` with a random database
-password, builds the images, starts everything, runs the migrations, loads the order data,
-installs the classifier files and checks `https://DOMAIN/health`. Then open
-`https://DOMAIN/signup`.
-
-Set these in the same command, or edit `infra/.env.prod` afterwards and run the script again:
-
-| Variable | Needed for |
+| Variable (Render) | Meaning |
 |---|---|
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | **Required for a public site.** Without it nobody receives the confirmation email. |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | "Continue with Google". Redirect URI: `https://DOMAIN/api/v1/auth/google/callback` |
-| `GEMINI_API_KEY` | Not needed on a public server: AI steps run only for demo cases, and demo cases cannot be created in production. |
-| `SITE_PASSWORD` | Optional: one shared password in front of the whole site (private preview) |
+| `NYAYASIM_DATABASE_URL` | From the Render database. `postgres://` / `postgresql://` URLs are converted to the psycopg driver automatically |
+| `NYAYASIM_DATA_DIR` | `/var/data`, the persistent disk: uploads, outbox, embedding-model cache |
+| `NYAYASIM_COOKIE_SECURE` | `true` (HTTPS). Also hides `/docs` |
+| `NYAYASIM_PRIVATE_LLM_OK` | **Keep `false`**: `true` sends real users' documents to the model |
+| `NYAYASIM_ALLOW_DEMO_CASES` | Not set in production. Setting it to `true` lets any user mark a case as a fictional demo, which unlocks the AI steps for that case: use it only on a private deployment for an evaluation, never on a public site |
+| `NYAYASIM_FALLBACK_MODELS`, `NYAYASIM_MODEL_RETRIES` | Gemini fallback when the main model is busy |
 
-## 4. Deploy on one machine without a domain (local or behind a firewall)
+## 7. Differences from the Docker setup, and limitations
 
-Works on Windows (Git Bash), macOS and Linux. On Windows extract to a short path such as
-`C:\NyayaSim`.
+- **No OCR on Render.** Render's native Python runtime has no Tesseract. Text-layer PDFs work;
+  scanned pages and photos are refused with a clear message. OCR still works locally.
+- **Long requests through Vercel.** Fact extraction and document answers wait for the model. Vercel's
+  proxy to an external address has its own time limit (check Vercel's current documentation); if
+  a busy model exceeds it the browser gets an error although the API may finish. Hearings and agent
+  runs are background jobs and are not affected.
+- **One API instance.** Rate limits and running jobs live in memory; do not scale the service to
+  more than one instance.
+- **Backups.** Use Render's database backups (plan-dependent) or
+  `pg_dump "<external URL>" -Fc -f contractiq.dump`. The disk holds uploaded documents: Render disk
+  snapshots apply. Backups contain private documents and password hashes.
+- **AI steps closed for real cases.** As before: fact extraction, answers, clause analysis, the
+  agent and the hearing run only for demo cases until a no-retention model is configured.
+- **Not verified on the platforms:** plan names in `render.yaml`, pgvector availability on the chosen
+  database plan, memory use on Render, and the Vercel proxy limit. Check them on the first deploy.
 
-```bash
-cp infra/.env.prod.example infra/.env.prod
-```
+## 8. Updating and removing
 
-Edit `infra/.env.prod`: set `POSTGRES_PASSWORD` to a long random string. Keep
-`PUBLIC_WEB_URL=http://localhost:3000` and `COOKIE_SECURE=false`. Then:
-
-```bash
-docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod up -d --build
-```
-
-```bash
-bash infra/import-data.sh release/nyayasim-public-orders.dump
-```
-
-```bash
-docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod cp data/models/. api:/srv/data/models/
-```
-
-```bash
-docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod exec -u root api sh -c 'chown -R nyayasim:nyayasim /srv/data/models'
-```
-
-The second command matters: copied files belong to root, and the API must be able to save the
-search model into the same folder. Without it search stays on keywords only.
-
-Open `http://localhost:3000`. Without SMTP the confirmation email is written inside the API
-container; read the link with:
-
-```bash
-docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod exec api sh -c 'cat /srv/data/outbox/*'
-```
-
-## 5. Environment variables (`infra/.env.prod`)
-
-| Variable | Meaning | Default |
-|---|---|---|
-| `POSTGRES_PASSWORD` | Database password. Required. | none |
-| `PUBLIC_WEB_URL` | The address people open; also the only origin the API accepts changes from | `http://localhost:3000` |
-| `COOKIE_SECURE` | `true` whenever the address is `https://`. Also switches off `/docs`. | `false` |
-| `NYAYASIM_PRIVATE_LLM_OK` | **Leave `false`.** `true` would send real buyers' documents to the model. | `false` |
-| `GEMINI_API_KEY` | Model key for demo cases | empty |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google sign-in | empty (button hidden) |
-| `SMTP_*` | Outgoing email | empty (emails saved in the container) |
-| `API_BIND`, `WEB_BIND`, `API_PORT`, `WEB_PORT` | Where the ports are published | `127.0.0.1`, 8000, 3000 |
-| `DOMAIN`, `CADDYFILE`, `BASIC_AUTH_USER`, `BASIC_AUTH_HASH` | HTTPS profile | empty |
-
-`NYAYASIM_ALLOW_DEMO_CASES` is deliberately not passed to the production stack: on a public site
-anyone could tick "demo" for real documents.
-
-## 6. Database: initialisation and migrations
-
-There is nothing to run by hand. The `migrate` service runs `alembic upgrade head` on every start,
-before the API starts; a fresh database is created empty and brought to version `0010`.
-
-```bash
-docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod run --rm migrate
-```
-
-```bash
-docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod exec postgres psql -U nyayasim -d nyayasim -c "select version_num from alembic_version"
-```
-
-The first command applies migrations again by hand; the second shows the schema version.
-
-## 7. Health checks
-
-| Check | Command | Expected |
-|---|---|---|
-| API | `curl http://127.0.0.1:8000/health` | `{"status":"ok"}` |
-| API through the website | `curl http://localhost:3000/health` | `{"status":"ok"}` |
-| Order data loaded | `curl http://localhost:3000/api/v1/stats` | `orders_read` above 0 |
-| Website | `curl -I http://localhost:3000/` | `200` |
-| Example case (needs no database) | open `/cases/demo/report` | the recorded report |
-| Example page pictures | `curl -I http://localhost:3000/example/pages/doc-1-1.png` | `200`, `image/png` |
-| Containers | `docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod ps` | `api`, `web`, `postgres` healthy; `migrate` exited 0 |
-| Search uses meaning as well as keywords | sign in, search on `/search` | the result line says "Keyword and meaning-based search combined" |
-| Logs | `docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod logs --tail 100 api web` | no tracebacks |
-
-## 8. Backup and restore
-
-```bash
-bash infra/backup.sh backups
-```
-
-Writes `backups/nyayasim-db-<time>.dump` (every table) and `backups/nyayasim-files-<time>.tar.gz`
-(uploaded documents, outbox, model files). They contain private documents and password hashes:
-copy them off the server, keep them encrypted, delete old ones. Schedule it nightly, for example
-with cron: `15 2 * * * cd /home/ubuntu/NYAYASIM_FINAL_DEPLOY && bash infra/backup.sh /var/backups/nyayasim`.
-
-```bash
-CONFIRM=yes bash infra/restore.sh backups/nyayasim-db-<time>.dump backups/nyayasim-files-<time>.tar.gz
-```
-
-Replaces the current database and files with the backup, then applies any newer migrations.
-
-Public order data only (no user data): `bash infra/export-data.sh` and `bash infra/import-data.sh`.
-
-## 9. Updating
-
-Copy the new files over the old ones (keep `infra/.env.prod`), take a backup, then run
-`bash infra/deploy.sh` again. Migrations are applied before the new API starts.
-
-## 10. Stopping and removing
-
-```bash
-docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod down
-```
-
-Add `-v` to also delete the database and uploaded files. That cannot be undone.
-
-## 11. Privacy requirements and known limitations
-
-- **AI steps are closed for real cases.** Fact extraction, cited answers, the agent and the hearing
-  send text to Google Gemini, which may keep data on its free tier. They run only for cases marked
-  demo, and demo cases cannot be created on a production server. A real buyer can upload, view
-  the page as filed, search their own documents and public orders, use the calculator, and delete
-  their data. Do not set `NYAYASIM_PRIVATE_LLM_OK=true` without a written no-retention agreement
-  with the model provider.
-- **No encryption at rest.** Uploaded files and page text are stored as they are in the Docker
-  volumes. Use an encrypted disk on the server.
-- **No automatic expiry.** Data stays until the user deletes the document, the case or the account.
-- **Rate limits and background jobs live in the single API process.** Run one API container only.
-  A restart fails any hearing or agent run in progress; the user can start it again.
-- **No monitoring, alerting or scheduled backup is set up.** `infra/backup.sh` must be scheduled
-  by you.
-- **Terms and privacy pages are drafts** and have no grievance contact yet.
-- **Accuracy figures are exploratory.** Outcome labels were extracted by a model and none has been
-  checked by a person; the test period has been reused. The site says so wherever a figure is
-  shown. See `AUDIT_2026-11-15.md` section 6 before quoting any number.
-- **One authority.** Orders are from HRERA Gurugram only; 2,209 of 13,992 listed orders have text.
-- The local development setup (no Docker for the app) is in `RUN_LOCAL.md`.
+Push to the deployed branch: Render and Vercel rebuild automatically; migrations run before the new
+API starts. To remove everything, delete the Vercel project, the Render web service, its disk and
+the database (that deletes all users' data and cannot be undone).

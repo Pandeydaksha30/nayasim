@@ -1,6 +1,31 @@
-# Test report (13 Nov 2026)
+# Test report
 
-Everything below was run on this machine on 13 Nov 2026. Earlier results: END_TO_END_TEST_REPORT.md
+## 17 Nov 2026: ContractIQ release (rename, clause analysis, calculator audit, Vercel/Render config)
+
+| Test | Result |
+|---|---|
+| Backend tests (`pytest`, throwaway database migrated to 0010) | **267 passed, 0 failed** (was 260; +7: calculator sample cases, offer-of-possession API, clause analysis) |
+| `ruff check` | clean |
+| Website type check (`tsc --noEmit`) and production build (`next build`) | clean / succeeds |
+| End-to-end through the website (`scripts/e2e_check.py`) | setup 29, isolation 9, session 6, lifecycle 20, rag 9, facts 5, hearing 5, insights 16: **99 passed, 0 failed** (the facts, rag and hearing stages called Gemini on fictional documents) |
+| Clause analysis, live Gemini | 5 clauses verified, 0 removed, 6 s |
+| Calculator through the website, offer 01.03.2025 | delay interest to 01.05.2025 = Rs 4,14,542.47, equal to the hand calculation |
+| Branding (`/`, `/login`, `/signup`, `/calculator`) | titles, header and headings say ContractIQ; no "NyayaSim" text; icon served |
+| Import script against a second local database (Render mode) | connects and refuses to overwrite existing orders, as designed |
+
+Found and fixed during these runs: the classifier warm-up at startup still imported a renamed
+constant (logged, not fatal: the classifiers loaded on first use); an agent test compared money as
+floats. A first `insights` run failed 3 checks only because `setup` had just created a case with no
+facts or hearing yet; after `facts` and `hearing` it passed 16 of 16. One `lifecycle` run failed the
+page-picture check and passed 20 of 20 on the rerun; the picture endpoint returned a PNG when
+reproduced by hand.
+
+Not tested: anything on Vercel or Render (nothing has been deployed); the agent stage (not rerun
+today, unchanged apart from the interest tool's end date, which is covered by unit tests).
+
+## 13 Nov 2026
+
+Everything below was run on this machine on 13 Nov 2026. Earlier results: docs/history/END_TO_END_TEST_REPORT.md
 (12 Nov). Nothing here was tuned on the held-out evaluation questions or the frozen ML test set.
 
 ## Unit and integration tests (backend)

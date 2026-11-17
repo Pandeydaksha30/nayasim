@@ -1,4 +1,10 @@
-# Feature status (13 Nov 2026)
+# Feature status (17 Nov 2026)
+
+Update 17 Nov (ContractIQ): renamed from NyayaSim; contract clause analysis (rights, obligations,
+penalties per party, the mid-viva eContractIQ feature) added and tested with a scripted model;
+calculator audited and corrected (FINANCIAL_CALCULATOR_AUDIT.md); deployment moved to Vercel and
+Render (configured, not deployed). 267 backend tests pass; live Gemini runs of the new clause
+analysis have **not** been done yet.
 
 Update 13 Nov: document RAG, agent orchestration, Ask and Agent pages added and verified live
 (TEST_REPORT.md). Rows 6 to 10 below changed from Missing to verified.
@@ -7,7 +13,7 @@ Classes: **Working and verified** (run and checked, date given), **Implemented b
 (code exists, not exercised in a recorded check), **Partially implemented**, **Broken**,
 **Missing**. Nothing is running at the moment of this audit, so "verified" refers to the dated
 check. Update 12 Nov: the journey was re-run end to end and 49 of 49 checks passed
-(END_TO_END_TEST_REPORT.md).
+(docs/history/END_TO_END_TEST_REPORT.md).
 
 ## The requested demo journey
 
@@ -57,14 +63,14 @@ check. Update 12 Nov: the journey was re-run end to end and 49 of 49 checks pass
 | Fact extraction from uploaded documents | Working and verified (10 Nov, demo case) | Demo cases only; blocked for real cases by the privacy rule |
 | Fact confirmation, follow-up questions | Working and verified (10 Nov) | |
 | Interest calculator (page and API) | Working and verified (tests) | Deterministic Python |
-| Money and report pages of a case | Working and verified (12 Nov) | END_TO_END_TEST_REPORT.md |
+| Money and report pages of a case | Working and verified (12 Nov) | docs/history/END_TO_END_TEST_REPORT.md |
 | Complaint draft page | Working and verified (13 Nov) | Built by code from verified facts and verified citations; blanks where something is unknown |
 | Citation verifier | Working and verified (benchmark) | Precision 100%, recall 98.3% on held-out orders |
 | Order ingestion and OCR | Working and verified | 2,209 orders with text; latest download stopped at about 190 of 1,000 |
 | Embedding of order chunks | Partially implemented | 65,974 of 72,970 chunks embedded |
 | Classifier training and evaluation scripts | Working and verified (11 Nov) | Offline |
 | Prediction API endpoints | Working and verified (13 Nov) | Estimate and classifier demo |
-| Production stack (Docker Compose + Caddy, `infra/deploy.sh`) | Implemented but untested on a real server | Images built locally on 9 Nov; never deployed to a public host |
+| Deployment: Vercel (website) + Render native Python (API) + Render PostgreSQL | Configured, not deployed (17 Nov) | `render.yaml`, `frontend/vercel.json`, DEPLOYMENT_GUIDE.md. The earlier Docker stack was removed |
 | Public deployment | **Missing** | No server, no public URL |
 | Invalid file, empty upload, unsupported format handling | Implemented but untested in this audit | Unit tests cover some cases; to be exercised in Phase 4 |
 

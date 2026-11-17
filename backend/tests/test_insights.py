@@ -56,7 +56,7 @@ def test_draft_uses_only_verified_facts_and_verified_citations(api, db_engine): 
         "award": {
             "available": True,
             "rate_pct": "10.900",
-            "rate_basis": "median of 3 rate(s)",
+            "rate_basis": "rate applied in the most recent similar order",
             "delay_interest": "500000.00",
             "refund_total": "3000000.00",
             "as_of": "2026-11-12",

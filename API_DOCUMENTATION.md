@@ -1,9 +1,10 @@
 # API documentation
 
-Generated from the running FastAPI app (`app.openapi()`), 13 Nov 2026. Interactive version with
-request and response schemas: http://localhost:8000/docs (Swagger) while the backend runs.
+Generated from the FastAPI app (`app.openapi()`), 17 Nov 2026. Interactive version with
+request and response schemas: http://localhost:8000/docs while the backend runs locally (switched off under HTTPS).
 
-Authentication: session cookie `nyayasim_session` set by `POST /api/v1/auth/login` (HttpOnly, SameSite=Lax).
+Authentication: session cookie `nyayasim_session` set by `POST /api/v1/auth/login` (HttpOnly, SameSite=Lax; the
+internal name is kept from the earlier build so existing sessions stay valid).
 State-changing requests must come from an allowed Origin (CSRF check). Someone else's case answers 404.
 
 ## auth
@@ -39,11 +40,15 @@ State-changing requests must come from an allowed Origin (CSRF check). Someone e
 | GET | `/api/v1/cases` | List Cases |
 | POST | `/api/v1/cases` | Create Case |
 | GET | `/api/v1/cases/{case_id}` | Get Case |
+| DELETE | `/api/v1/cases/{case_id}` | Delete a case with everything derived from it: documents and their files, page text, search |
 | POST | `/api/v1/cases/{case_id}/documents` | Upload Document |
 | GET | `/api/v1/cases/{case_id}/documents/{document_id}/pages/{page_no}` | Get Page |
 | POST | `/api/v1/cases/{case_id}/facts/extract` | Extract Facts |
 | POST | `/api/v1/cases/{case_id}/facts/{fact_id}/confirm` | Confirm Fact |
 | PUT | `/api/v1/cases/{case_id}/answers/{question_id}` | Answer Question |
+| DELETE | `/api/v1/cases/{case_id}/documents/{document_id}` | Delete one document with its file, page text, search chunks and the facts read from it. |
+| GET | `/api/v1/cases/{case_id}/documents/{document_id}/pages/{page_no}/image` | A picture (PNG) of the uploaded page, for comparing a fact with the real document. |
+| GET | `/api/v1/cases/{case_id}/documents/{document_id}/pages/{page_no}/highlight` | Where the characters [start, end) of the stored page text sit on the page picture, as |
 
 ## hearing
 
@@ -62,6 +67,7 @@ State-changing requests must come from an allowed Origin (CSRF check). Someone e
 | GET | `/api/v1/cases/{case_id}/estimate` | Rule-based outcome estimate from how past orders with the same claim type and delay ended. |
 | GET | `/api/v1/cases/{case_id}/draft` | Complaint draft assembled by code from verified facts and checked citations. |
 | POST | `/api/v1/predictions/order-text` | The trained classifiers applied to the parties' part of an order (facts, relief sought, reply). |
+| GET | `/api/v1/stats` | What the order store holds right now, counted from the database (cached for ten minutes). |
 
 ## document questions
 
@@ -70,6 +76,8 @@ State-changing requests must come from an allowed Origin (CSRF check). Someone e
 | GET | `/api/v1/cases/{case_id}/passages` | Passages of this case's documents that match the words. No model is called. |
 | POST | `/api/v1/cases/{case_id}/ask` | An answer grounded in this case's documents, with citations checked by code. |
 | GET | `/api/v1/cases/{case_id}/questions` | Questions |
+| POST | `/api/v1/cases/{case_id}/clauses` | Rights, obligations and penalties of each party, each quoted and checked against the document. |
+| GET | `/api/v1/cases/{case_id}/clauses` | Latest Clauses |
 
 ## agent
 
@@ -84,16 +92,3 @@ State-changing requests must come from an allowed Origin (CSRF check). Someone e
 | Method | Path | Purpose |
 |---|---|---|
 | GET | `/health` | Health |
-
-## Added 15 Nov 2026
-
-| Method and path | Purpose | Sign-in |
-|---|---|---|
-| `DELETE /api/v1/cases/{id}` | Delete a case and everything derived from it | owner |
-| `DELETE /api/v1/cases/{id}/documents/{doc}` | Delete one document, its text, chunks and facts | owner |
-| `GET /api/v1/cases/{id}/documents/{doc}/pages/{n}/image` | PNG of the uploaded page | owner |
-| `GET /api/v1/cases/{id}/documents/{doc}/pages/{n}/highlight?start=&end=` | Where a span of the stored text sits on the page; `rects` is null for OCR pages | owner |
-| `GET /api/v1/stats` | Counts of the public order store | none |
-
-`GET /api/v1/cases/{id}` now also returns `facts_to_check`. Costly routes answer `429` when a user
-exceeds the limits listed in `CHANGES_2026-11-15.md`.

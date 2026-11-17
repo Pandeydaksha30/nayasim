@@ -1,6 +1,6 @@
-# NyayaSim architecture (13 Nov 2026)
+# ContractIQ architecture (13 Nov 2026)
 
-Current system. (`architecture/ARCHITECTURE.md` describes the earlier ContractIQ prototype with
+Current system. (`docs/history/midviva/econtractiq-architecture.md` describes the mid-viva eContractIQ prototype with
 ChromaDB and Groq and is kept only for history.)
 
 ```text

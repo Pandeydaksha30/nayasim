@@ -15,7 +15,7 @@ What is in place, how it is checked, and what is not done yet.
 | External model | Case text goes to Gemini only for fictional demo cases (`is_demo`) unless `NYAYASIM_PRIVATE_LLM_OK=true`; otherwise 403 | tests + e2e (`ask`, `agent`, `facts`, `hearing` on a private case → 403) |
 | Prompt injection | Passages are labelled as data in every prompt; the model has only read-only tools (except saving a hearing of the same case); its citations are checked by code, so injected text cannot add a false citation | design; `verify_cites` tests |
 | Uploads | 100-page and size caps, type check, files stored outside the web root | `tests/test_buyer.py` |
-| Secrets | `backend/.env` and `infra/.env.prod` are git-ignored; only `.example` templates are committed; API keys stay on the server | `.gitignore`; ZIP check |
+| Secrets | `backend/.env` is git-ignored; on Render and Vercel secrets are set in the dashboards; only `.example` templates are committed; API keys stay on the server | `.gitignore`; ZIP check |
 | Run limits | Agent: 6 steps, 7 minutes, model-call deadline, one running run per case (unique index) | `tests/test_agent.py` |
 
 ## Known gaps (not done)

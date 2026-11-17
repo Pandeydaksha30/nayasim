@@ -1,83 +1,98 @@
-# NyayaSim
+# ContractIQ
 
-Before a home buyer files a RERA complaint against a builder, NyayaSim reads their papers, works
-out what they are owed, and simulates a hearing argued from real orders of the Haryana Real Estate
-Regulatory Authority (Gurugram). Every fact is tied to a page, every citation is checked against
-the stored order, and all money is calculated by ordinary code.
+**Real-estate contract intelligence and legal dispute support.** A home buyer uploads their
+builder–buyer agreement and papers; ContractIQ answers questions about the contract with the
+clause and page, lists each party's rights and obligations, extracts and verifies the key facts,
+computes what the buyer is owed, retrieves real precedents from public RERA orders, simulates a
+hearing with advocate, defence and judge agents, and drafts the complaint and report.
 
-**Status (13 Nov 2026):** runs locally end to end, including question answering over uploaded
-documents and an agent that chooses its own tools; all unit tests and live end-to-end checks pass
-(TEST_REPORT.md). **Not deployed to a public address.** Accuracy figures are
-reported as measured and are modest; labels have not yet been checked by people.
+The rule throughout: **nothing is shown unless it can be traced to a source.** Every answer,
+clause, fact and citation is checked by code against the stored document or order, and all money
+is calculated by deterministic code, never by the language model.
 
-## What it does
+ContractIQ began as eContractIQ (mid-viva: contract Q&A and benefits/obligations analysis). How it
+grew, and what is new versus carried over: **PROJECT_EVOLUTION.md**.
 
-| Feature | State | Where |
-|---|---|---|
-| Accounts: sign-up, email confirmation, login, password reset, account deletion | Working | `backend/app/auth/`, `docs/accounts.md` |
-| Upload of PDFs and images, text read locally (OCR for scans) | Working | `backend/app/buyer/documents.py` |
-| Facts read from the documents, each with page and quote, confirmed by the buyer | Working (fictional demo cases only, see Privacy) | `docs/buyer-documents.md` |
-| Delay interest and refund calculator | Working | `backend/app/calculator/` |
-| Search over 2,209 public orders: keyword + vector, with a decision-date cutoff | Working: page `/search`, and inside the hearing | `docs/search.md` |
-| Citation checker | Working; precision 100%, recall 98.3% on held-out orders | `docs/citations.md` |
-| Simulated hearing (buyer advocate, builder advocate, citation gate, judge) and report | Working (demo cases only) | `docs/hearing.md` |
-| Rule-based outcome estimate on the report; trained classifiers for pasted order text | Working | `backend/app/api/insights.py`, `MODEL_TRAINING_GUIDE.md` |
-| Google sign-in | Working locally with a configured Google client | `docs/accounts.md` |
-| Complaint draft, built by code from verified facts and verified citations | Working | `backend/app/insights/draft.py` |
-| Production stack (Docker Compose + Caddy) | Written, never run on a public server | `docs/deploy.md`, `DEPLOYMENT_CHECKLIST.md` |
+**Status (17 Nov 2026):** runs locally end to end; 267 backend tests pass. Deployment to Vercel
+(website) and Render (API and PostgreSQL) is configured but **not yet deployed**.
 
-| Ask your documents: per-case chunks and local embeddings in pgvector, cited answers checked by code | Working (answers for demo cases; passage search for all) | `backend/app/rag/`, `ARCHITECTURE.md` |
-| Agent analysis: LangGraph loop, model chooses tools, bounded, every step shown, citations checked | Working (demo cases) | `backend/app/agent/`, `ARCHITECTURE.md` |
+## Features
+
+| Feature | Where |
+|---|---|
+| Upload PDFs and images; text layer read locally, OCR for scans (locally) | `backend/app/buyer/documents.py` |
+| **Ask your contract**: retrieval over the case's own documents (pgvector), answers with verified quotes, or "not enough in the documents" | `backend/app/rag/answer.py` |
+| **Contract analysis**: rights, obligations, penalties and one-sided terms of each party, every clause quoted and checked | `backend/app/rag/clauses.py` |
+| Fact extraction with page and quote; the buyer confirms; unconfirmed facts are never used later | `backend/app/buyer/facts.py` |
+| **Financial claim calculator**: delay interest and refund, deterministic, audited | `backend/app/calculator/interest.py`, `FINANCIAL_CALCULATOR_AUDIT.md` |
+| Legal precedent retrieval over 2,209 HRERA Gurugram orders (~73,000 passages), keyword + vector | `backend/app/retrieval/search.py` |
+| Citation verification (precision 100%, recall 98.3% on held-out orders) | `backend/app/verifier/citations.py` |
+| Simulated hearing: buyer's advocate, builder's advocate (defence), citation gate, judge | `backend/app/hearing/graph.py` |
+| Agent analysis: the model chooses tools and specialist agents, bounded, every step saved | `backend/app/agent/` |
+| Report with outcome estimate and weak points; complaint draft built from verified facts | `backend/app/insights/` |
+| Accounts, email confirmation, Google sign-in, per-user isolation, rate limits | `backend/app/auth/` |
 
 ## Technology
 
-Next.js 15 / React 19 / TypeScript; FastAPI on Python 3.12; PostgreSQL 17 with pgvector; local
-`bge-small` embeddings (fastembed); Tesseract OCR; LangGraph; Google Gemini (free tier);
-scikit-learn. Sessions are server-side with an HttpOnly cookie (not JWT).
+Next.js 15 / React 19 / TypeScript (Vercel); FastAPI on Python 3.12 (Render); PostgreSQL 17 with
+pgvector (Render PostgreSQL); local `bge-small-en-v1.5` embeddings (fastembed); Tesseract OCR;
+LangGraph; Google Gemini; scikit-learn.
 
-## Run it
+## Run, demonstrate, deploy
 
-Exact commands, addresses and troubleshooting: **RUN_LOCAL.md**.
-Website http://localhost:3100, API documentation http://localhost:8000/docs.
-
-## Demonstrate it
-
-**DEMO_GUIDE.md**: a 5 to 7 minute sequence, sample fictional documents in
-`demo/sample-documents/`, and what to do if the model is unavailable.
-
-## Measured results (held-out test orders)
-
-| Component | Result |
+| | |
 |---|---|
-| Citation checker | Precision 100%, recall 98.3% |
-| Outcome prediction, best method (claim x delay rule) | 72.9% |
-| Outcome prediction, language model with the parties' filings | 67.8%, macro-F1 0.653 |
-| Outcome prediction, trained classifier | 50.8% |
-| Claim type, relief-section rule plus trained model | 74.3%, macro-F1 0.455 |
+| Run locally | **RUN_LOCAL.md** (website http://localhost:3100, API http://localhost:8000/docs) |
+| Demonstration script | **DEMO_GUIDE.md**, fictional documents in `demo/sample-documents/` |
+| Deploy | **DEPLOYMENT_GUIDE.md** (`render.yaml`, `frontend/vercel.json`) |
 
-Details and method: `MODEL_EVALUATION.md`, `MODEL_TRAINING_GUIDE.md`, `AGENT_STATUS.md`.
+## Measured results
+
+| Component | Result | Note |
+|---|---|---|
+| Citation checker | Precision 100%, recall 98.3% | held-out orders |
+| Document Q&A (40 questions over fictional documents) | 30/30 correct with correct citation; 10/10 unanswerable refused | small, easy set |
+| Outcome prediction, best method (claim × delay rule) | 72.9% | exploratory |
+| Claim type (relief-section rule + model) | 74.3%, macro-F1 0.455 | exploratory |
+
+Outcome labels were extracted by a model and have not been checked by people; see
+`MODEL_EVALUATION.md` before quoting a prediction figure.
 
 ## Privacy
 
-Uploaded documents stay on the machine. Text is sent to the language model only for cases marked
-as fictional demos, because the free model tier may retain data; the API refuses real cases
-(HTTP 403) until a zero-retention model is configured. `backend/.env` and `data/` are never
-committed.
+Text of a case is sent to the language model only for cases marked as fictional demos, because the
+model tier in use may retain data; the API refuses real cases (HTTP 403) until a no-retention model
+is configured. Retrieval and the calculator run on the server for every case.
 
-## Documents
+## Documentation
 
 | File | Content |
 |---|---|
-| `PROJECT_AUDIT.md` | Components, routes, configuration, current state |
-| `FEATURE_STATUS.md` | Each feature: verified, untested, partial, missing |
-| `RUN_LOCAL.md` | Start-up commands |
-| `TEST_REPORT.md` | Test results of 13 Nov 2026 |
-| `ARCHITECTURE.md`, `API_DOCUMENTATION.md`, `SECURITY.md`, `DEPLOYMENT_GUIDE.md` | Design, endpoints, security controls, deployment |
-| `DEMO_GUIDE.md` | Demonstration script |
-| `DEPLOYMENT_CHECKLIST.md` | What a public deployment needs |
-| `HANDOFF.md` | Project rules and history |
+| `PROJECT_EVOLUTION.md` | Problem statement; mid-viva vs intermediate vs final comparison |
+| `ARCHITECTURE.md` | Design and data flow |
+| `FINANCIAL_CALCULATOR_AUDIT.md` | Formulas, legal sources, sample cases, limitations |
+| `API_DOCUMENTATION.md` | Endpoints |
+| `SECURITY.md` | Security controls and gaps |
+| `FEATURE_STATUS.md`, `TEST_REPORT.md` | What works and how it was tested |
+| `MODEL_EVALUATION.md`, `MODEL_TRAINING_GUIDE.md` | Prediction models |
+| `docs/` | Component notes; `docs/history/` holds earlier reports and the mid-viva code |
+
+## Project layout
+
+```text
+backend/    FastAPI app (app/), migrations, tests, eval set, scripts, uv.lock
+frontend/   Next.js website, vercel.json
+infra/      local development database (docker-compose.yml), data export/import scripts
+data/       classifier files (tracked); uploads, outbox, model cache (not tracked)
+release/    public order data file for import (not tracked)
+benchmark/  frozen evaluation split
+demo/       fictional sample documents
+docs/       component notes and history
+scripts/    local start scripts (PowerShell)
+render.yaml Render blueprint
+```
 
 ## Limits
 
-This is a preparation aid, not legal advice. Outcome prediction is not reliable enough to act on.
-Data covers one authority (HRERA Gurugram).
+Decision support, not legal advice. Prediction is not reliable enough to act on. Orders cover one
+authority (HRERA Gurugram).
