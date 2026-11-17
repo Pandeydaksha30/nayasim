@@ -105,3 +105,47 @@ def test_invalid_inputs_raise(payments, rate, message):
 def test_negative_extension_rejected():
     with pytest.raises(CalculationError):
         add_months(date(2021, 1, 1), -1)
+
+
+# ── End date of delay interest and worked sample cases (FINANCIAL_CALCULATOR_AUDIT.md) ──
+# Expected figures were computed separately as P x rate x days / 36,500 and rounded to the paisa.
+RATE_2026 = Decimal("10.80")  # SBI MCLR 8.80% + 2%, as applied in HRERA Gurugram orders, Jul-Oct 2026
+DUE = date(2021, 6, 30)
+PAID = [Payment(date(2020, 1, 1), Decimal("1000000"))]
+
+
+def test_delay_end_is_the_earliest_of_date_offer_plus_two_months_and_handover():
+    from app.calculator.interest import delay_end
+
+    assert delay_end(date(2026, 11, 17)) == (date(2026, 11, 17), "the calculation date")
+    assert delay_end(date(2026, 11, 17), date(2025, 3, 1)) == (
+        date(2025, 5, 1),
+        "offer of possession plus two months",
+    )
+    assert delay_end(date(2026, 11, 17), date(2025, 3, 1), date(2025, 3, 15)) == (
+        date(2025, 3, 15),
+        "actual handing over of possession",
+    )
+    # An offer made after the calculation date does not extend the period.
+    assert delay_end(date(2025, 1, 1), date(2025, 3, 1))[0] == date(2025, 1, 1)
+
+
+@pytest.mark.parametrize(
+    ("until", "days", "interest"),
+    [
+        (date(2026, 11, 17), 1966, "581720.55"),  # no offer yet: to the calculation date
+        (date(2025, 5, 1), 1401, "414542.47"),  # offer 01.03.2025: to offer + 2 months
+        (date(2025, 3, 15), 1354, "400635.62"),  # handed over 15.03.2025, earlier
+    ],
+)
+def test_sample_delay_cases(until, days, interest):
+    r = delay_interest(PAID, DUE, until, RATE_2026)
+    assert r.rows[0].days == days and r.interest == Decimal(interest)
+
+
+def test_sample_payment_after_due_date_and_refund():
+    late = delay_interest([Payment(date(2022, 1, 10), Decimal("500000"))], DUE, date(2025, 5, 1), RATE_2026)
+    assert late.rows[0].interest_from == date(2022, 1, 10) and late.interest == Decimal("178569.86")
+    refund = refund_with_interest(PAID, date(2026, 11, 17), RATE_2026)
+    assert refund.rows[0].days == 2512 and refund.interest == Decimal("743276.71")
+    assert refund.total == Decimal("1743276.71")  # principal returned + interest

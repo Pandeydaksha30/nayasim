@@ -1,14 +1,18 @@
 """Deterministic delay-interest and refund calculator.
 
-All money figures in NyayaSim come from here, never from an LLM.
+All money figures in ContractIQ come from here, never from an LLM. Full audit with sources:
+FINANCIAL_CALCULATOR_AUDIT.md.
 
 Method (simple interest, computed payment by payment):
 
 * Delay interest (RERA Act s.18(1) proviso, buyer keeps the unit): each payment earns
-  interest from the later of its payment date and the possession due date, up to the
-  as-of date.
-* Refund (s.18(1)(a)/(b), buyer withdraws): each payment earns interest from its own
+  interest from the later of its payment date and the possession due date, up to the end
+  date from ``delay_end`` (calculation date, or offer of possession + 2 months, or handover,
+  whichever is earliest).
+* Refund (s.18(1)(a) and s.19(4), buyer withdraws): each payment earns interest from its own
   payment date up to the as-of date, and the principal is returned.
+* Rate: "interest at the rate prescribed" = SBI highest MCLR + 2% (Haryana RERA Rules 2017,
+  Rule 15). An input, because MCLR changes.
 
 The annual rate and any extension of the possession date are *inputs* with a stated
 source, not constants: both change over time (e.g. the rate is tied to SBI's MCLR
@@ -71,6 +75,24 @@ def add_months(d: date, months: int) -> date:
     month = month_index % 12 + 1
     day = min(d.day, calendar.monthrange(year, month)[1])
     return date(year, month, day)
+
+
+def delay_end(
+    as_of: date, offer_of_possession: date | None = None, handed_over: date | None = None
+) -> tuple[date, str]:
+    """Last day delay interest runs to, and why.
+
+    HRERA Gurugram orders allow delay possession charges "till offer of possession plus two months
+    or actual handing over of possession, whichever is earlier" (s.18(1) proviso read with
+    s.19(10), which gives the allottee two months after the occupancy certificate to take
+    possession). Without an offer or handover, interest runs to ``as_of``.
+    """
+    options = [(as_of, "the calculation date")]
+    if offer_of_possession is not None:
+        options.append((add_months(offer_of_possession, 2), "offer of possession plus two months"))
+    if handed_over is not None:
+        options.append((handed_over, "actual handing over of possession"))
+    return min(options, key=lambda o: o[0])
 
 
 def _validate(payments: list[Payment], annual_rate_pct: Decimal) -> None:

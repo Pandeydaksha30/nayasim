@@ -1,15 +1,16 @@
 import { Banner } from "@/components/icons";
 import InterestCalculator from "@/components/interest-calculator";
-import { type CaseFull, paymentsFromFacts } from "@/lib/cases-api";
+import { type CaseFull, isUsable, paymentsFromFacts } from "@/lib/cases-api";
 
-// No legal rate is asserted here: the starting value is illustrative and labelled as such.
+// The rule is verified (774 stored HRERA orders reproduce Rule 15); the figure changes with SBI's MCLR.
 const RATE_BASIS =
-  "10.85% is an illustrative starting value, not the rate for your case. Enter the rate the authority applies " +
-  "under its state rules (tied to SBI's MCLR), checked against the current circular.";
+  "Haryana RERA Rules 2017, Rule 15: SBI highest MCLR + 2%. HRERA Gurugram orders of Jul–Oct 2026 apply " +
+  "10.80% (MCLR 8.80% + 2%). Check SBI's MCLR on the date of your order (sbi.co.in).";
 
 export default function LiveMoney({ c }: { c: CaseFull }) {
   const payments = paymentsFromFacts(c.facts);
   const promised = c.facts.find((f) => f.key === "possession_promised")?.value;
+  const offer = c.facts.find((f) => f.key === "offer_of_possession_date" && isUsable(f))?.value;
   const today = new Date().toISOString().slice(0, 10);
 
   return (
@@ -37,7 +38,8 @@ export default function LiveMoney({ c }: { c: CaseFull }) {
             possessionPromised={promised ?? ""}
             extensionMonths={0}
             extensionBasis="Add months only if an extension order applies to your project."
-            ratePct={10.85}
+            ratePct={10.8}
+            offerOfPossession={offer}
             rateBasis={RATE_BASIS}
             asOf={today}
           />

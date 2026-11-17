@@ -13,7 +13,7 @@ import { fmtDate, fmtINR } from "@/lib/format";
 const POLL_MS = 2500;
 
 const SUGGESTIONS = [
-  "When was possession promised, how late is it, and what interest could the buyer claim at 10.85%?",
+  "When was possession promised, how late is it, and what interest could the buyer claim at 10.80%?",
   "Find past orders on delayed possession similar to this case and summarise how they ended.",
   "Run a simulated hearing and explain the judge's assessment and the weak points.",
 ];

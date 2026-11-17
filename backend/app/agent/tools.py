@@ -22,7 +22,13 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.buyer.facts import USABLE
-from app.calculator.interest import CalculationError, Payment, delay_interest, refund_with_interest
+from app.calculator.interest import (
+    CalculationError,
+    Payment,
+    delay_end,
+    delay_interest,
+    refund_with_interest,
+)
 from app.db.models import Fact
 from app.hearing.agents import LLM
 from app.retrieval.case_search import Passage, search_case
@@ -162,6 +168,17 @@ def verify_quote(ctx: ToolContext, args: dict) -> dict:
     return {"verified": False, "reason": bad[0]["reason"]}
 
 
+def _offer_date(ctx: ToolContext) -> date | None:
+    for f in ctx.s.scalars(
+        select(Fact).where(Fact.case_id == ctx.case_id, USABLE, Fact.key == "offer_of_possession_date")
+    ):
+        try:
+            return date.fromisoformat(f.value)
+        except ValueError:
+            continue
+    return None
+
+
 def _payments_and_due(ctx: ToolContext) -> tuple[list[Payment], date | None]:
     pays: list[Payment] = []
     due: date | None = None
@@ -183,7 +200,7 @@ def _payments_and_due(ctx: ToolContext) -> tuple[list[Payment], date | None]:
 def calculate_interest(ctx: ToolContext, args: dict) -> dict:
     rate = args.get("rate_pct")
     if rate is None:
-        raise ToolError("argument 'rate_pct' (annual interest rate, e.g. 10.85) is required")
+        raise ToolError("argument 'rate_pct' (annual interest rate, e.g. 10.80) is required")
     try:
         rate_d = Decimal(str(rate))
     except InvalidOperation as e:
@@ -192,9 +209,10 @@ def calculate_interest(ctx: ToolContext, args: dict) -> dict:
     if not pays:
         raise ToolError("no verified payments in the case facts; interest cannot be calculated")
     as_of = ctx.cutoff
+    until, until_basis = delay_end(as_of, _offer_date(ctx))
     try:
         refund = refund_with_interest(pays, as_of, rate_d)
-        delay = delay_interest(pays, due, as_of, rate_d) if due else None
+        delay = delay_interest(pays, due, until, rate_d) if due else None
     except CalculationError as e:
         raise ToolError(str(e)) from e
     return {
@@ -207,6 +225,8 @@ def calculate_interest(ctx: ToolContext, args: dict) -> dict:
         "refund_interest": str(refund.interest),
         "refund_total_with_interest": str(refund.total),
         "possession_due": due.isoformat() if due else None,
+        "delay_interest_until": until.isoformat(),
+        "delay_interest_until_basis": until_basis,
     }
 
 

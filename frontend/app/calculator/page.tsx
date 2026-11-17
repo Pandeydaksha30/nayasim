@@ -2,6 +2,8 @@ import Link from "next/link";
 import InterestCalculator from "@/components/interest-calculator";
 
 export const metadata = { title: "Delay interest calculator" };
+// The "calculate up to" date is today, not the build date.
+export const dynamic = "force-dynamic";
 
 export default function CalculatorPage() {
   return (
@@ -21,9 +23,9 @@ export default function CalculatorPage() {
         possessionPromised="2021-12-31"
         extensionMonths={0}
         extensionBasis="Add months only if an extension order applies to your project."
-        ratePct={10.85}
-        rateBasis="UP RERA Rules r.15: SBI highest MCLR + 1%. Illustrative figure; check SBI's current MCLR."
-        asOf="2026-11-07"
+        ratePct={10.8}
+        rateBasis="Haryana RERA Rules 2017, Rule 15: SBI highest MCLR + 2%. HRERA Gurugram orders of Jul–Oct 2026 apply 10.80% (MCLR 8.80% + 2%). Check SBI's MCLR on the date of your order (sbi.co.in); other states' rules may differ."
+        asOf={new Date().toISOString().slice(0, 10)}
       />
     </main>
   );

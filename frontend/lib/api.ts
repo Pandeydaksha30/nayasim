@@ -18,6 +18,8 @@ export interface InterestInput {
   annualRatePct: number;
   asOf: string;
   rateSource: string;
+  /** Delay interest stops at offer of possession + 2 months (HRERA practice). Optional. */
+  offerOfPossession?: string;
 }
 
 export interface InterestRowOut {
@@ -38,6 +40,8 @@ export interface InterestResultOut {
 
 export interface InterestOutput {
   possession_due: string;
+  delay_until: string;
+  delay_until_basis: string;
   annual_rate_pct: string;
   rate_source: string;
   method: string;
@@ -66,6 +70,7 @@ export async function computeInterest(input: InterestInput, signal?: AbortSignal
         annual_rate_pct: String(input.annualRatePct),
         as_of: input.asOf,
         rate_source: input.rateSource,
+        offer_of_possession: input.offerOfPossession || null,
       }),
     });
   } catch (e) {

@@ -16,6 +16,7 @@ from app.calculator.interest import (
     InterestResult,
     Payment,
     add_months,
+    delay_end,
     delay_interest,
     refund_with_interest,
 )
@@ -37,6 +38,10 @@ class InterestRequest(BaseModel):
     extension_months: int = Field(0, ge=0, le=60)
     annual_rate_pct: Annotated[Decimal, Field(ge=0, le=50, max_digits=6, decimal_places=3)]
     as_of: date
+    # Delay interest stops at offer of possession + 2 months or actual handover, whichever is
+    # earlier (practice of HRERA Gurugram orders; FINANCIAL_CALCULATOR_AUDIT.md). Both optional.
+    offer_of_possession: date | None = None
+    possession_handed_over: date | None = None
     # Where the rate comes from (rule, circular, date). Echoed back so the figure is never shown unsourced.
     rate_source: str = Field("", max_length=500)
 
@@ -59,6 +64,8 @@ class ResultOut(BaseModel):
 
 class InterestResponse(BaseModel):
     possession_due: date
+    delay_until: date
+    delay_until_basis: str
     annual_rate_pct: str
     rate_source: str
     method: str
@@ -90,12 +97,15 @@ def calculate_interest(req: InterestRequest) -> InterestResponse:
     payments = [Payment(p.paid_on, p.amount, p.reference) for p in req.payments]
     try:
         due = add_months(req.possession_promised, req.extension_months)
-        delay = delay_interest(payments, due, req.as_of, req.annual_rate_pct)
+        until, basis = delay_end(req.as_of, req.offer_of_possession, req.possession_handed_over)
+        delay = delay_interest(payments, due, until, req.annual_rate_pct)
         refund = refund_with_interest(payments, req.as_of, req.annual_rate_pct)
     except CalculationError as e:
         raise HTTPException(status_code=422, detail=str(e)) from e
     return InterestResponse(
         possession_due=due,
+        delay_until=until,
+        delay_until_basis=basis,
         annual_rate_pct=str(req.annual_rate_pct),
         rate_source=req.rate_source,
         method="Simple interest per payment, 365-day year, each row rounded half-up to the paisa.",

@@ -15,7 +15,7 @@ from datetime import date
 from decimal import Decimal
 from statistics import median
 
-from app.calculator.interest import Payment, delay_interest, refund_with_interest
+from app.calculator.interest import Payment, delay_end, delay_interest, refund_with_interest
 from app.hearing.inputs import CaseInput, Precedent
 
 MIN_RECORDS = 5
@@ -71,10 +71,14 @@ def award(ci: CaseInput, precedents: list[Precedent], as_of: date) -> dict:
     refund = refund_with_interest(payments, as_of, rate)
     out["refund_total"] = str(refund.total)
     if promised:
+        offer = ci.first("offer_of_possession_date")
+        until, basis = delay_end(as_of, date.fromisoformat(offer) if offer else None)
         out["delay_interest"] = str(
-            delay_interest(payments, date.fromisoformat(promised), as_of, rate).interest
+            delay_interest(payments, date.fromisoformat(promised), until, rate).interest
         )
         out["possession_due"] = promised
+        out["delay_until"] = until.isoformat()
+        out["delay_until_basis"] = basis
     else:
         out["delay_interest"] = None
         out["delay_note"] = "promised possession date not verified"

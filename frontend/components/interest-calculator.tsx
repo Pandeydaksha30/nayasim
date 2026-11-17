@@ -15,6 +15,8 @@ interface Props {
   ratePct: number;
   rateBasis: string;
   asOf: string;
+  /** Offer of possession, if one was made: delay interest stops two months after it. */
+  offerOfPossession?: string;
   editablePayments?: boolean;
 }
 
@@ -31,6 +33,7 @@ export default function InterestCalculator(props: Props) {
   const [ext, setExt] = useState(props.extensionMonths);
   const [rate, setRate] = useState(props.ratePct);
   const [asOf, setAsOf] = useState(props.asOf);
+  const [offer, setOffer] = useState(props.offerOfPossession ?? "");
   const [mode, setMode] = useState<"delay" | "refund">("delay");
   const [state, setState] = useState<State>({ kind: "loading" });
 
@@ -44,7 +47,7 @@ export default function InterestCalculator(props: Props) {
     const t = setTimeout(() => {
       setState((s) => (s.kind === "ok" ? s : { kind: "loading" }));
       computeInterest(
-        { payments, possessionPromised: promised, extensionMonths: ext, annualRatePct: rate, asOf, rateSource: props.rateBasis },
+        { payments, possessionPromised: promised, extensionMonths: ext, annualRatePct: rate, asOf, rateSource: props.rateBasis, offerOfPossession: offer },
         ctrl.signal,
       )
         .then((data) => setState({ kind: "ok", data }))
@@ -57,7 +60,7 @@ export default function InterestCalculator(props: Props) {
       clearTimeout(t);
       ctrl.abort();
     };
-  }, [payments, promised, ext, rate, asOf, props.rateBasis]);
+  }, [payments, promised, ext, rate, asOf, offer, props.rateBasis]);
 
   const data = state.kind === "ok" ? state.data : null;
   const shown = data ? (mode === "delay" ? data.delay : data.refund) : null;
@@ -85,9 +88,18 @@ export default function InterestCalculator(props: Props) {
           <span className="field-label">Calculate up to</span>
           <input type="date" value={asOf} onChange={(e) => setAsOf(e.target.value)} />
         </label>
+        <label>
+          <span className="field-label">Offer of possession (if any)</span>
+          <input type="date" value={offer} onChange={(e) => setOffer(e.target.value)} />
+        </label>
         <div className={styles.basis}>
           <p>
             <b>Due date used:</b> <span className="num">{data ? fmtDate(data.possession_due) : "—"}</span>. {props.extensionBasis}
+          </p>
+          <p>
+            <b>Delay interest runs to:</b> <span className="num">{data ? fmtDate(data.delay_until) : "—"}</span>
+            {data ? ` (${data.delay_until_basis})` : ""}. HRERA orders stop it at the offer of possession plus two months,
+            or at actual handover if earlier.
           </p>
           <p>
             <b>Rate:</b> {props.rateBasis}

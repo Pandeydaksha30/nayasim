@@ -65,3 +65,15 @@ def test_cors_allows_only_configured_origin():
     )
     assert ok.headers.get("access-control-allow-origin") == "http://localhost:3100"
     assert "access-control-allow-origin" not in bad.headers
+
+
+def test_offer_of_possession_stops_delay_interest_two_months_later():
+    # Offer 1 Sep 2021 -> delay interest to 1 Nov 2021. R1: 304 days = 8,328.77; R2: 123 days = 3,369.86.
+    data = client.post("/api/v1/calculations/interest", json=body(offer_of_possession="2021-09-01")).json()
+    assert data["delay_until"] == "2021-11-01"
+    assert data["delay_until_basis"] == "offer of possession plus two months"
+    assert [r["interest"] for r in data["delay"]["rows"]] == ["8328.77", "3369.86"]
+    # The refund is unaffected: it runs to the date the money is returned.
+    assert data["refund"]["interest"] == "25068.50"
+    # Without an offer, the calculation date is the end.
+    assert client.post("/api/v1/calculations/interest", json=body()).json()["delay_until"] == "2022-01-01"
