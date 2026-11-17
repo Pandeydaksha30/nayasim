@@ -7,11 +7,11 @@ export const metadata: Metadata = { title: "Terms of Use" };
 export default function TermsPage() {
   return (
     <LegalDoc title="Terms of Use" updated="9 November 2026">
-      <p>These terms apply when you create an account on NyayaSim or use the site.</p>
+      <p>These terms apply when you create an account on ContractIQ or use the site.</p>
 
-      <h2>1. What NyayaSim is</h2>
+      <h2>1. What ContractIQ is</h2>
       <p>
-        NyayaSim is a decision-support tool for people preparing a complaint before a Real Estate Regulatory Authority.
+        ContractIQ is a decision-support tool for people preparing a complaint before a Real Estate Regulatory Authority.
         It reads documents you provide, calculates amounts using the rules you can see, and describes how similar past
         orders were decided. <b>It is not legal advice</b>, it is not a law firm, and using it does not create an
         advocate–client relationship. Before you file, take advice from an advocate.
@@ -41,12 +41,12 @@ export default function TermsPage() {
       <h2>5. Acceptable use</h2>
       <p>
         Do not try to access other users&apos; data, probe or overload the service, get around rate limits or security
-        controls, or use NyayaSim to harass anyone or file knowingly false complaints.
+        controls, or use ContractIQ to harass anyone or file knowingly false complaints.
       </p>
 
       <h2>6. Early access</h2>
       <p>
-        NyayaSim is in early access and is provided free of charge, as it is. Features may change or be removed, and the
+        ContractIQ is in early access and is provided free of charge, as it is. Features may change or be removed, and the
         service may be unavailable at times. To the extent the law allows, we are not liable for losses arising from
         reliance on its output.
       </p>

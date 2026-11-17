@@ -144,10 +144,10 @@ def _send_verify(s: Session, user: User) -> None:
     )
     send_mail(
         user.email,
-        "Confirm your email for NyayaSim",
-        f"Hello {user.name or 'there'},\n\nConfirm your email address to finish setting up your NyayaSim "
+        "Confirm your email for ContractIQ",
+        f"Hello {user.name or 'there'},\n\nConfirm your email address to finish setting up your ContractIQ "
         f"account:\n\n{link}\n\nThe link works once and expires in 24 hours. If you did not sign up, "
-        "you can ignore this email.\n\n— NyayaSim",
+        "you can ignore this email.\n\n— ContractIQ",
         link,
     )
 
@@ -157,10 +157,10 @@ def _send_reset(s: Session, user: User) -> None:
     link = f"{settings.public_url.rstrip('/')}/reset-password?token={token}"
     send_mail(
         user.email,
-        "Reset your NyayaSim password",
+        "Reset your ContractIQ password",
         f"Hello {user.name or 'there'},\n\nSomeone (hopefully you) asked to reset the password for this "
         f"account. Choose a new password here:\n\n{link}\n\nThe link works once and expires in 1 hour. "
-        "If you did not ask for this, ignore this email; your password stays the same.\n\n— NyayaSim",
+        "If you did not ask for this, ignore this email; your password stays the same.\n\n— ContractIQ",
         link,
     )
 
@@ -206,9 +206,9 @@ def signup(body: SignupIn, request: Request, s: SessionDep) -> Message:
             send_mail(
                 email,
                 "Someone tried to sign up with your email",
-                "Someone tried to create a NyayaSim account with this email address, which already has an "
+                "Someone tried to create a ContractIQ account with this email address, which already has an "
                 f"account. If that was you, sign in instead:\n\n{settings.public_url.rstrip('/')}/login\n\n"
-                "Forgot your password? Use 'Forgot password' on the sign-in page.\n\n— NyayaSim",
+                "Forgot your password? Use 'Forgot password' on the sign-in page.\n\n— ContractIQ",
             )
         except MailError:
             pass  # the response must not differ from a new sign-up; failure is logged by send_mail

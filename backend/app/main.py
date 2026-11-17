@@ -1,4 +1,4 @@
-"""NyayaSim API entry point.
+"""ContractIQ API entry point.
 
 Run:  uv run uvicorn app.main:app --reload --port 8000
 """
@@ -84,7 +84,7 @@ async def lifespan(_: FastAPI):
 # The interactive API pages are a development aid: off wherever the site runs over HTTPS.
 _docs = not settings.cookie_secure
 app = FastAPI(
-    title="NyayaSim API",
+    title="ContractIQ API",
     version="0.3.0",
     lifespan=lifespan,
     docs_url="/docs" if _docs else None,
@@ -94,7 +94,7 @@ app = FastAPI(
 
 app.add_middleware(SecurityMiddleware)
 
-# Only the configured frontend origins; no wildcard with credentials (fixed from ContractIQ).
+# Only the configured frontend origins; no wildcard with credentials (the mid-viva eContractIQ used "*").
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,

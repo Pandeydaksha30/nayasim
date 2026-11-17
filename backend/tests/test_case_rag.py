@@ -201,3 +201,56 @@ def test_citation_check_uses_the_stored_text_not_the_models_wording():
     )
     good, bad = check_citations([DocCite(ref="D1", quote="The Total Price is Rs. 27,00,000/- only")], [p])
     assert not good and bad
+
+
+def test_clause_analysis_keeps_only_quoted_clauses_and_is_saved(api, db_engine):  # noqa: F811
+    from app.rag.clauses import ClauseItem, ClauseList
+
+    client, _, _ = api
+    case_id = demo_case(client)
+
+    class Clauses:
+        name = "scripted"
+
+        def propose(self, prompt, schema):
+            assert schema is ClauseList and "PASSAGES:" in prompt
+            labels = [line.split("]")[0][1:] for line in prompt.splitlines() if line.startswith("[D")]
+            page2 = next(lb for lb in labels if f"[{lb}] agreement.pdf, page 2" in prompt)
+            return ClauseList(
+                items=[
+                    ClauseItem(
+                        party="Promoter",
+                        kind="obligation",
+                        summary="Must hand over possession by 30 June 2021.",
+                        ref=page2,
+                        quote="hand over possession of the Apartment on or before 30th June 2021",
+                    ),
+                    ClauseItem(
+                        party="Promoter",
+                        kind="penalty",
+                        summary="Invented penalty.",
+                        ref=page2,
+                        quote="the Promoter shall pay a penalty of Rs. 9 crore",
+                    ),
+                ]
+            )
+
+    use_model(Clauses())
+    res = client.post(f"/api/v1/cases/{case_id}/clauses")
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert [i["summary"] for i in body["items"]] == ["Must hand over possession by 30 June 2021."]
+    assert body["items"][0]["page_no"] == 2 and body["items"][0]["status"] == "verified"
+    assert len(body["removed"]) == 1
+    # Saved, returned again, and kept out of the question history.
+    again = client.get(f"/api/v1/cases/{case_id}/clauses").json()
+    assert again["id"] == body["id"] and len(again["items"]) == 1
+    assert all(
+        q["question"] != "[contract clause analysis]"
+        for q in client.get(f"/api/v1/cases/{case_id}/questions").json()
+    )
+    # A private case is never sent to the model; another user gets 404.
+    private = client.post("/api/v1/cases", json={"title": "Real"}).json()["id"]
+    assert client.post(f"/api/v1/cases/{private}/clauses").status_code == 403
+    app.dependency_overrides[current_user] = lambda: make_user(db_engine, "intruder2@example.com")
+    assert client.get(f"/api/v1/cases/{case_id}/clauses").status_code == 404

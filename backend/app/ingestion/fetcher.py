@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 
 from app.db.models import FetchLog
 
-USER_AGENT = "NyayaSim research crawler (slow, sequential; contact via project maintainer)"
+USER_AGENT = "ContractIQ research crawler (slow, sequential; contact via project maintainer)"
 
 
 @dataclass(frozen=True)

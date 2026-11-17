@@ -54,12 +54,12 @@ class LocalEmbedder:
     """fastembed (ONNX, CPU). Model files are downloaded once and cached locally."""
 
     def __init__(self, model: str, query_prefix: str = "", doc_prefix: str = "") -> None:
-        from pathlib import Path
-
         from fastembed import TextEmbedding
 
         # Kept in the project's git-ignored data/models so the download happens once.
-        cache = Path(__file__).resolve().parents[3] / "data" / "models"
+        from app.config import settings
+
+        cache = settings.data_dir / "models"
         self._model = TextEmbedding(model_name=model, cache_dir=str(cache))
         self.name = f"fastembed:{model}"
         self.query_prefix, self.doc_prefix = query_prefix, doc_prefix

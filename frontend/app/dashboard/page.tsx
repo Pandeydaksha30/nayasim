@@ -49,7 +49,7 @@ export default async function CasesPage() {
         <section className={`panel ${styles.empty}`}>
           <h2>Start with your agreement and receipts</h2>
           <p className="muted">
-            Upload the builder-buyer agreement and your payment receipts. NyayaSim reads them, shows each fact on the page it
+            Upload the builder-buyer agreement and your payment receipts. ContractIQ reads them, shows each fact on the page it
             came from, and works out the delay interest payment by payment.
           </p>
           <div className={styles.emptyActions}>

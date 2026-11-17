@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { IBM_Plex_Mono, Inter, Source_Serif_4 } from "next/font/google";
 import EarlyAccessNotice from "@/components/early-access-notice";
-import { ScaleIcon } from "@/components/icons";
+import { ContractIQMark } from "@/components/icons";
 import TopNav from "@/components/top-nav";
 import UserMenu from "@/components/user-menu";
 import { getUser } from "@/lib/server-session";
@@ -15,8 +15,10 @@ const serif = Source_Serif_4({ subsets: ["latin"], weight: ["400", "600"], varia
 const mono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: { default: "NyayaSim — RERA dispute preparation", template: "%s · NyayaSim" },
-  description: "See how a RERA hearing on your facts is likely to go, before you file.",
+  title: { default: "ContractIQ — real-estate contract intelligence", template: "%s · ContractIQ" },
+  description:
+    "Understand your builder–buyer contract, ask it questions with cited answers, work out what you are owed, and see how a RERA hearing on your facts could go.",
+  applicationName: "ContractIQ",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -27,9 +29,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <a href="#content" className="skip-link">Skip to content</a>
         <header className="topbar">
           <div className="topbar-inner">
-            <Link href={user ? "/dashboard" : "/"} className="brand" aria-label="NyayaSim home">
-              <span className="brand-mark"><ScaleIcon size={17} /></span>
-              <span>NyayaSim</span>
+            <Link href={user ? "/dashboard" : "/"} className="brand" aria-label="ContractIQ home">
+              <span className="brand-mark"><ContractIQMark size={18} /></span>
+              <span>Contract<span className="brand-iq">IQ</span></span>
             </Link>
             <TopNav signedIn={!!user} />
             <div className="spacer" />
@@ -48,7 +50,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <footer className="footer">
           <div className="footer-inner">
             <p>
-              NyayaSim gives decision support and drafting help. It is not legal advice and does not replace an advocate.
+              ContractIQ gives decision support and drafting help. It is not legal advice and does not replace an advocate.
               Predictions come from past orders and can be wrong.
             </p>
             <nav aria-label="Legal">

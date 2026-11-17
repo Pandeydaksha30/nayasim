@@ -12,12 +12,11 @@ import smtplib
 import ssl
 from datetime import UTC, datetime
 from email.message import EmailMessage
-from pathlib import Path
 
 from app.config import settings
 
 log = logging.getLogger("nyayasim.mail")
-OUTBOX = Path(__file__).resolve().parents[3] / "data" / "outbox"
+OUTBOX = settings.data_dir / "outbox"
 
 
 class MailError(RuntimeError):

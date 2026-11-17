@@ -1,0 +1,64 @@
+# Render Blueprint for the ContractIQ API (FastAPI, native Python runtime) and its PostgreSQL.
+# Render dashboard: New > Blueprint > pick this repository. The website runs on Vercel
+# (frontend/vercel.json). Step-by-step instructions: DEPLOYMENT_GUIDE.md.
+#
+# Not yet deployed or tested on Render. Check plan names and prices in the Render dashboard
+# before applying: they change, and the persistent disk needs a paid web-service plan.
+
+databases:
+  - name: contractiq-db
+    databaseName: contractiq
+    user: contractiq
+    postgresMajorVersion: "17"      # pgvector is available on Render PostgreSQL (CREATE EXTENSION vector)
+    plan: basic-1gb                 # the order data needs about 0.6 GB of storage
+
+services:
+  - type: web
+    name: contractiq-api
+    runtime: python
+    rootDir: backend
+    plan: standard                  # 2 GB memory: the local embedding model and PDF reading need it
+    # uv installs the exact locked packages (uv.lock) and the Python version in .python-version.
+    buildCommand: pip install uv==0.13.7 && uv sync --frozen --no-dev
+    # Migrations run before every start: a fresh database is created up to the current version.
+    startCommand: .venv/bin/alembic upgrade head && .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips "*"
+    healthCheckPath: /health
+    # Uploaded documents, email outbox and the embedding-model cache. Without a disk they are
+    # lost on every deploy and restart.
+    disk:
+      name: contractiq-data
+      mountPath: /var/data
+      sizeGB: 5
+    envVars:
+      - key: NYAYASIM_DATABASE_URL
+        fromDatabase:
+          name: contractiq-db
+          property: connectionString
+      - key: NYAYASIM_DATA_DIR
+        value: /var/data
+      # The Vercel address, e.g. https://contractiq.vercel.app (no trailing slash). Both must be set.
+      - key: NYAYASIM_PUBLIC_URL
+        sync: false
+      - key: NYAYASIM_CORS_ORIGINS
+        sync: false
+      - key: NYAYASIM_COOKIE_SECURE
+        value: "true"
+      # Keep false: true would send real buyers' documents to a model that may retain data.
+      - key: NYAYASIM_PRIVATE_LLM_OK
+        value: "false"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: NYAYASIM_SMTP_HOST
+        sync: false
+      - key: NYAYASIM_SMTP_PORT
+        value: "587"
+      - key: NYAYASIM_SMTP_USER
+        sync: false
+      - key: NYAYASIM_SMTP_PASSWORD
+        sync: false
+      - key: NYAYASIM_SMTP_FROM
+        sync: false
+      - key: NYAYASIM_GOOGLE_CLIENT_ID
+        sync: false
+      - key: NYAYASIM_GOOGLE_CLIENT_SECRET
+        sync: false

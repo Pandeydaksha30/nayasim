@@ -14,7 +14,7 @@ const STEPS = [
 export default function MethodPage() {
   return (
     <main className="page page-narrow">
-      <h1>How NyayaSim works</h1>
+      <h1>How ContractIQ works</h1>
       <p className="muted" style={{ marginTop: 6 }}>
         What happens to your papers, where the numbers come from, and what the report can and cannot tell you.
       </p>
@@ -52,16 +52,16 @@ export default function MethodPage() {
       <section id="data" className="panel panel-body" style={{ marginTop: 16 }}>
         <h2 style={{ fontSize: 16, marginBottom: 8 }}>Your documents</h2>
         <p className="muted" style={{ margin: 0 }}>
-          Documents are stored on the server that runs NyayaSim and are not shared with anyone. Their text is read on that server.
+          Documents are stored on the server that runs ContractIQ and are not shared with anyone. Their text is read on that server.
           Real documents are not sent to any AI model until a model that keeps no data is set up; only documents marked as fictional
           demo documents are. Each case is visible only to the account that created it, and deleting your account (in Account settings) deletes every case and document with it. Automatic deletion after a retention period and encryption at rest are not built yet, and compliance with the
-          Digital Personal Data Protection Act, 2023 will be reviewed before NyayaSim is opened to the public.
+          Digital Personal Data Protection Act, 2023 will be reviewed before ContractIQ is opened to the public.
         </p>
       </section>
 
       <div style={{ marginTop: 16 }}>
         <Banner tone="info">
-          <b>What it is not.</b> NyayaSim is not a law firm and does not give legal advice. Only an enrolled advocate can advise or
+          <b>What it is not.</b> ContractIQ is not a law firm and does not give legal advice. Only an enrolled advocate can advise or
           represent you. Use the report to prepare, and have an advocate review it before you file.
         </Banner>
       </div>

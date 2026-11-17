@@ -1,5 +1,5 @@
 /*
- * NyayaSim design system — light enterprise theme.
+ * ContractIQ design system — light enterprise theme.
  * References: Stripe Dashboard (layout, indigo accent, callouts) and Lexis+ (white cards, authority).
  * Light only: the product never switches to a dark theme with the OS setting.
  * Tokens follow the Tailwind slate / indigo / emerald / amber / rose scales.
@@ -98,6 +98,7 @@ p { margin: 0 0 12px; }
 .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--text); font-weight: 700; font-size: 17px; letter-spacing: -0.02em; }
 .brand:hover { text-decoration: none; color: var(--text); }
 .brand-mark { width: 30px; height: 30px; border-radius: 8px; background: var(--navy); color: #fff; display: grid; place-items: center; }
+.brand-iq { color: var(--primary); }
 .brand small { font-weight: 500; color: var(--text-3); font-size: 12px; letter-spacing: 0; margin-left: 2px; }
 
 .topnav { display: flex; gap: 4px; height: 100%; }

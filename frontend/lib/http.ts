@@ -1,7 +1,7 @@
 /**
  * The one place every API request goes through.
  *
- * Real cases: a fetch to the NyayaSim API, errors thrown as ApiError with the server's message.
+ * Real cases: a fetch to the ContractIQ API, errors thrown as ApiError with the server's message.
  *
  * The public example case ("demo"): answered from lib/example-snapshot.json, a recording of the
  * API's own answers for a real run on fictional documents (backend/scripts/export_example.py).
@@ -42,7 +42,7 @@ export async function call<T>(path: string, init?: RequestInit, auth?: Auth): Pr
       headers: { ...(init?.headers as Record<string, string> | undefined), ...auth?.headers },
     });
   } catch {
-    throw new ApiError("The NyayaSim service is not reachable. Please try again in a moment.");
+    throw new ApiError("The ContractIQ service is not reachable. Please try again in a moment.");
   }
   if (!res.ok) {
     let detail = `Request failed (HTTP ${res.status}).`;

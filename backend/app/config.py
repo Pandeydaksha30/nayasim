@@ -1,5 +1,7 @@
 """Settings read from environment variables (or backend/.env)."""
 
+from pathlib import Path
+
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -17,6 +19,21 @@ class Settings(BaseSettings):
     database_url: str = (
         "postgresql+psycopg://nyayasim:nyayasim_local_only@127.0.0.1:5432/nyayasim?connect_timeout=10"
     )
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def _use_psycopg_driver(cls, v):
+        """Render (and most hosts) give `postgres://` or `postgresql://`; SQLAlchemy needs the driver."""
+        if isinstance(v, str):
+            for prefix in ("postgres://", "postgresql://"):
+                if v.startswith(prefix):
+                    return "postgresql+psycopg://" + v[len(prefix) :]
+        return v
+
+    # Uploaded files, email outbox and the embedding-model cache. Default: data/ next to backend/.
+    # On Render, point it at the persistent disk (e.g. /var/data): the service's own disk is wiped
+    # on every deploy.
+    data_dir: Path = Path(__file__).resolve().parents[2] / "data"
 
     # Gemini key for field extraction. Read from GEMINI_API_KEY (Google's own variable name),
     # normally set in backend/.env, which git ignores. Never logged or printed.
@@ -85,7 +102,7 @@ class Settings(BaseSettings):
     smtp_port: int = 587
     smtp_user: str = ""
     smtp_password: SecretStr | None = None
-    smtp_from: str = "NyayaSim <no-reply@localhost>"
+    smtp_from: str = "ContractIQ <no-reply@localhost>"
 
     @property
     def google_enabled(self) -> bool:

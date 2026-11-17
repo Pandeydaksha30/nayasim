@@ -53,6 +53,31 @@ export const searchPassages = (caseId: string, q: string) =>
   call<{ mode: string; hits: PassageHit[] }>(`/api/v1/cases/${caseId}/passages?q=${encodeURIComponent(q)}`);
 export const listQuestions = (caseId: string) => call<AskResult[]>(`/api/v1/cases/${caseId}/questions`);
 
+/** One clause of the contract analysis; its quote was found on the page by code. */
+export interface ClauseItem {
+  party: string;
+  kind: "obligation" | "right" | "penalty" | "one_sided";
+  summary: string;
+  filename: string;
+  page_no: number;
+  quote: string;
+}
+
+export interface ClauseAnalysis {
+  id: number | null;
+  created_at?: string | null;
+  items: ClauseItem[];
+  removed: { party: string; summary: string; reason: string }[];
+  reason: string | null;
+  passages_read: number;
+  mode: string;
+  model: string;
+}
+
+export const analyseClauses = (caseId: string) =>
+  call<ClauseAnalysis>(`/api/v1/cases/${caseId}/clauses`, { method: "POST" });
+export const latestClauses = (caseId: string) => call<ClauseAnalysis | null>(`/api/v1/cases/${caseId}/clauses`);
+
 export interface AgentStep {
   n: number;
   agent: string;

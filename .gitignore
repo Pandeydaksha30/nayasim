@@ -22,4 +22,8 @@ uploads/
 chroma_db/
 
 # Downloaded orders and other local data
-data/
+data/*
+# The two trained classifier files are small, built from public orders, and needed by a deploy.
+!data/models/
+data/models/*
+!data/models/*_tfidf_lr.joblib

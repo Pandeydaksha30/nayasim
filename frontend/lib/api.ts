@@ -1,5 +1,5 @@
 /**
- * Client for the NyayaSim API. Money always comes from the Python calculator;
+ * Client for the ContractIQ API. Money always comes from the Python calculator;
  * the frontend only formats it. Errors are thrown, never replaced with a fallback figure.
  */
 import type { Payment } from "./types";

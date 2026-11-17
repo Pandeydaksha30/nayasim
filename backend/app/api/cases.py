@@ -264,7 +264,7 @@ async def upload_document(
         raise HTTPException(413, "Files must be 25 MB or smaller.")
     if not _upload_slots.acquire(blocking=False):
         raise HTTPException(
-            503, "NyayaSim is reading other documents right now. Please try again in a minute."
+            503, "ContractIQ is reading other documents right now. Please try again in a minute."
         )
     try:
         # OCR is slow, blocking work: run it on a worker thread so the server keeps answering

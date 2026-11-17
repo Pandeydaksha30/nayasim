@@ -184,7 +184,7 @@ export default function NewCasePage() {
         </label>
       ) : (
         <p className="small muted" style={{ marginTop: 20 }}>
-          Your documents are stored and read on the NyayaSim server and are not sent to any AI service that keeps data.
+          Your documents are stored and read on the ContractIQ server and are not sent to any AI service that keeps data.
           Automatic fact-finding for real documents will switch on once a model that keeps no data is set up.
         </p>
       )}

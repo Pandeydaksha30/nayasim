@@ -19,6 +19,15 @@ export const ScaleIcon = ({ size = 16, className }: P) => (
   </svg>
 );
 
+/** ContractIQ logo mark: a contract page with a folded corner and a check (every fact verified). */
+export const ContractIQMark = ({ size = 16, className }: P) => (
+  <svg {...base(size)} className={className}>
+    <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+    <path d="M14 3v5h5" />
+    <path d="M8.5 14.5l2.2 2.2 4.8-4.8" />
+  </svg>
+);
+
 export const InfoIcon = ({ size = 16, className }: P) => (
   <svg {...base(size)} className={className}>
     <circle cx="12" cy="12" r="9" />

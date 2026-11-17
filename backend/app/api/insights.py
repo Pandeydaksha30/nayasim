@@ -23,6 +23,7 @@ from app.api.hearing import get_search_embedder
 from app.auth.deps import CurrentUser, case_for
 from app.auth.limits import ip_limit, user_limit
 from app.buyer.facts import USABLE
+from app.config import settings
 from app.db.models import CaseRecord, Fact, Order, OrderChunk
 from app.db.session import get_session
 from app.insights.draft import build_draft
@@ -33,7 +34,17 @@ from app.retrieval.search import search
 
 router = APIRouter(prefix="/api/v1", tags=["insights"])
 SessionDep = Annotated[Session, Depends(get_session)]
-MODELS = Path(__file__).resolve().parents[3] / "data" / "models"
+# Trained classifier files: the data directory first (a server's persistent disk), then the copy
+# kept in the repository (data/models/*.joblib), so a fresh deploy has them without a manual step.
+_REPO_MODELS = Path(__file__).resolve().parents[3] / "data" / "models"
+
+
+def _models_dir() -> Path:
+    for d in (settings.data_dir / "models", _REPO_MODELS):
+        if any(d.glob("*_tfidf_lr.joblib")):
+            return d
+    return _REPO_MODELS
+
 
 # Measured once on the held-out test orders (MODEL_TRAINING_GUIDE.md). Shown with every prediction.
 MEASURED = {
@@ -123,7 +134,7 @@ class OrderTextIn(BaseModel):
 
 @lru_cache(maxsize=2)
 def _model(task: str):
-    path = MODELS / f"{task}_tfidf_lr.joblib"
+    path = _models_dir() / f"{task}_tfidf_lr.joblib"
     if not path.exists():
         raise HTTPException(
             503, f"The {task} model has not been trained on this server (run scripts.train_classifier)."

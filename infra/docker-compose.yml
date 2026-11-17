@@ -1,4 +1,5 @@
-# Local database for NyayaSim (PostgreSQL 17 + pgvector).
+# Local development database for ContractIQ (PostgreSQL 17 + pgvector). Not used for deployment:
+# production uses Render PostgreSQL (render.yaml).
 # Start:  docker compose -f infra/docker-compose.yml up -d
 # Second copy on another port (e.g. a fresh install next to this one):
 #   PG_PORT=5433 docker compose -p nyayasim-fresh -f infra/docker-compose.yml up -d postgres
@@ -19,11 +20,6 @@ services:
       interval: 5s
       retries: 10
 
-  redis:
-    image: redis:7.4-alpine
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:6379:6379"
 
 volumes:
   pgdata:

@@ -9,6 +9,7 @@ import { Citations, Passages } from "@/components/evidence";
 import styles from "@/components/evidence.module.css";
 import { Banner } from "@/components/icons";
 import { type AskResult, type PassageHit, askCase, listQuestions, searchPassages } from "@/lib/agent-api";
+import ClauseAnalysis from "./clause-analysis";
 
 const SUGGESTIONS = [
   "When was possession promised?",
@@ -119,6 +120,8 @@ export default function AskClient({ caseId, isDemo, readOnly }: { caseId: string
             </div>
           </section>
         )}
+
+        <ClauseAnalysis caseId={caseId} canRun={isDemo && !readOnly} />
 
         {history.length > 0 && (
           <section className="panel">

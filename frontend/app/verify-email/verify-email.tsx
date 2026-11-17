@@ -50,7 +50,7 @@ export default function VerifyEmail({ token }: { token: string }) {
     <>
       <div className={styles.iconBadge}><CheckIcon size={20} /></div>
       <h1>Confirm your email</h1>
-      <p className={styles.lede}>One click and your NyayaSim account is ready.</p>
+      <p className={styles.lede}>One click and your ContractIQ account is ready.</p>
       <button className={`btn btn-primary ${styles.submit}`} onClick={confirm} disabled={state === "busy"}>
         {state === "busy" ? "Confirming…" : "Confirm email address"}
       </button>

@@ -90,7 +90,7 @@ export default function SignupForm({ next, google }: { next: string; google: boo
           <input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} />
           <span>
             I agree to the <Link href="/terms" target="_blank">Terms of Use</Link> and{" "}
-            <Link href="/privacy" target="_blank">Privacy Policy</Link>, and understand NyayaSim is not legal advice.
+            <Link href="/privacy" target="_blank">Privacy Policy</Link>, and understand ContractIQ is not legal advice.
           </span>
         </label>
         <button className={`btn btn-primary ${styles.submit}`} disabled={busy}>

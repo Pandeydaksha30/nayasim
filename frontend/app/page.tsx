@@ -10,14 +10,16 @@ export const dynamic = "force-dynamic";
 
 const STEPS = [
   ["Upload your papers", "Agreement, allotment letter, receipts and builder letters, including scans and Hindi text."],
+  ["Ask your contract", "Ask questions about your agreement in plain words. Every answer quotes the clause and page it comes from, or says the documents do not say."],
   ["Check the facts", "Dates, payments and the promised possession date, each shown with the line on the page it came from."],
   ["Answer what is missing", "Only the questions your documents do not answer, such as whether possession was offered."],
   ["See the money", "Delay interest and refund worked out payment by payment at the prescribed rate, by ordinary code."],
   ["Read the hearing", "Arguments for both sides and a bench view, citing only past orders whose quotes are found in the record."],
+  ["Get the report and draft", "A report with the likely outcome and weak points, and a complaint draft built from your verified facts."],
 ] as const;
 
 const LIMITS = [
-  ["Not legal advice", "NyayaSim helps you prepare. It does not replace an advocate, and it does not file anything for you."],
+  ["Not legal advice", "ContractIQ helps you prepare. It does not replace an advocate, and it does not file anything for you."],
   ["Predictions can be wrong", "Outcome shares describe how similar past orders ended. Your bench may decide differently."],
   ["One authority for now", "Past orders come from HRERA Gurugram. Other authorities are planned, not yet covered."],
   ["Early access", "Features are still being tested. Accuracy figures will be published only after they are checked."],
@@ -46,11 +48,12 @@ export default async function HomePage() {
       <section className={styles.hero}>
         <div className={styles.heroInner}>
           <div>
-            <div className={styles.kicker}>For home buyers with a RERA claim</div>
+            <div className={styles.kicker}>Real-estate contract intelligence · RERA dispute support</div>
             <h1 className={styles.title}>Prepare your complaint with the record in front of you.</h1>
             <p className={styles.lede}>
-              NyayaSim reads your builder–buyer papers, works out what you are owed, and shows how the authority
-              decided cases like yours, with every figure traceable to a page.
+              ContractIQ reads your builder–buyer agreement, answers your questions about it with the clause and page,
+              works out what you are owed, and shows how the authority decided cases like yours. Every figure is
+              traceable to a page.
             </p>
             <div className={styles.ctas}>
               {user ? (

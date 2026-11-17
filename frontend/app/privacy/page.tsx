@@ -7,7 +7,7 @@ export default function PrivacyPage() {
   return (
     <LegalDoc title="Privacy Policy" updated="9 November 2026">
       <p>
-        This policy explains what NyayaSim collects when you use it, why, and what you can do about it. It is written
+        This policy explains what ContractIQ collects when you use it, why, and what you can do about it. It is written
         with the Digital Personal Data Protection Act, 2023 in mind.
       </p>
 

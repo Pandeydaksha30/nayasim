@@ -10,7 +10,7 @@ export default function LegalDoc({ title, updated, children }: { title: string; 
         <div style={{ margin: "18px 0 28px" }}>
           <Banner tone="warn">
             <b>Draft for early access.</b> This text has not yet been reviewed by a lawyer and will be revised before
-            NyayaSim opens to the public.
+            ContractIQ opens to the public.
           </Banner>
         </div>
         {children}

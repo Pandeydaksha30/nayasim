@@ -71,7 +71,7 @@ export default async function CaseLayout({
           </dl>
           {example && (
             <p className="case-note">
-              The buyer and the documents in this example are fictional. Everything else is a recording of what NyayaSim
+              The buyer and the documents in this example are fictional. Everything else is a recording of what ContractIQ
               produced from them: the past orders are real HRERA Gurugram orders, and no figure or quote was written by hand.
             </p>
           )}

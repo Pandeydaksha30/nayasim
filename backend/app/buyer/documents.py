@@ -14,10 +14,11 @@ from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.db.models import Case, CaseDocument, CaseDocumentPage
 from app.ingestion.pdf_text import OcrConfig, extract_image, extract_pages, pdf_page_count
 
-UPLOAD_ROOT = Path(__file__).resolve().parents[3] / "data" / "uploads"
+UPLOAD_ROOT = settings.data_dir / "uploads"
 MAX_BYTES = 25 * 1024 * 1024
 # A buyer's papers are rarely over 60 pages (agreements run 30-80). The cap stops one upload from
 # keeping OCR busy for hours: a 25 MB file could otherwise hold thousands of scanned pages.

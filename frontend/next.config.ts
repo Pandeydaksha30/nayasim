@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
-// Where this server forwards /api/* (the FastAPI backend). Read at build time for the Docker
-// image (frontend/Dockerfile sets http://api:8000) and at dev-server start locally.
+// Where this server forwards /api/* (the FastAPI backend). Read at build time: on Vercel set
+// API_URL to the Render service address (https://<service>.onrender.com); locally the default.
 const API_URL = process.env.API_URL ?? "http://127.0.0.1:8000";
 const dev = process.env.NODE_ENV !== "production";
 
@@ -26,11 +26,10 @@ const nextConfig: NextConfig = {
   // `npm run build:check` builds into .next-check so it can run while `npm run dev` uses .next.
   // (Building into the dev server's folder breaks it with "Cannot find module './NNN.js'".)
   distDir: process.env.NEXT_DIST_DIR || ".next",
-  // Self-contained server for the Docker image (frontend/Dockerfile).
-  output: "standalone",
   poweredByHeader: false,
   // Model calls (fact extraction, document answers) can take minutes when Gemini is busy and the
-  // backend retries. Without this the /api forwarding gives up after 30 s with a bare HTTP 500.
+  // backend retries. Without this the local /api forwarding gives up after 30 s with a bare HTTP 500.
+  // On Vercel the platform's own proxy limit applies instead (DEPLOYMENT_GUIDE.md).
   experimental: { proxyTimeout: 600_000 },
   async rewrites() {
     return [

@@ -1,5 +1,5 @@
 /**
- * Layout for the sign-in, sign-up and email-link pages: a statement panel with what NyayaSim
+ * Layout for the sign-in, sign-up and email-link pages: a statement panel with what ContractIQ
  * does (facts only, no marketing claims) beside the form.
  */
 import styles from "./auth.module.css";
@@ -13,9 +13,9 @@ const POINTS = [
 export default function AuthShell({ children }: { children: React.ReactNode }) {
   return (
     <div className={styles.shell}>
-      <aside className={styles.aside} aria-label="About NyayaSim">
-        <div className={styles.kicker}>RERA dispute preparation</div>
-        <p className={styles.statement}>Know how your hearing is likely to go before you file.</p>
+      <aside className={styles.aside} aria-label="About ContractIQ">
+        <div className={styles.kicker}>Real-estate contract intelligence</div>
+        <p className={styles.statement}>Understand your contract and know how your hearing is likely to go before you file.</p>
         <ol className={styles.points}>
           {POINTS.map((p, i) => (
             <li key={p.title}>

@@ -55,7 +55,7 @@ export default function LoginForm({
 
   return (
     <>
-      <h1>Sign in to NyayaSim</h1>
+      <h1>Sign in to ContractIQ</h1>
       <p className={styles.lede}>Pick up your cases where you left them.</p>
 
       {error && (
@@ -94,7 +94,7 @@ export default function LoginForm({
       )}
 
       <div className={styles.alt}>
-        New to NyayaSim? <Link href={`/signup${next !== "/dashboard" ? `?next=${encodeURIComponent(next)}` : ""}`}>Create an account</Link>
+        New to ContractIQ? <Link href={`/signup${next !== "/dashboard" ? `?next=${encodeURIComponent(next)}` : ""}`}>Create an account</Link>
       </div>
     </>
   );

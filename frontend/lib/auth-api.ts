@@ -25,7 +25,7 @@ async function send<T>(path: string, method: string, body?: unknown): Promise<T>
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
-    throw new ApiError("We couldn't reach NyayaSim. Check your connection and try again.");
+    throw new ApiError("We couldn't reach ContractIQ. Check your connection and try again.");
   }
   if (!res.ok) {
     let detail = `Something went wrong (HTTP ${res.status}). Please try again.`;
